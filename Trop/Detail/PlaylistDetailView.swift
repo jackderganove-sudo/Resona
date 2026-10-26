@@ -416,9 +416,15 @@ struct PlaylistDetailView: View {
         .toolbar {
             if isEditable {
                 ToolbarItem(placement: .primaryAction) {
-                                        Button(action: { showAddSongs = true }, label: {
+                    Button(action: { showAddSongs = true }, label: {
                         Image(systemName: "plus")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(ThemeStore.shared.dark.onSurface)
+                            .frame(width: 40, height: 40)
+                            .background(ThemeStore.shared.dark.surfaceContainerHigh.opacity(0.92), in: Circle())
                     })
+                    .buttonStyle(.expressive(scale: 0.88))
+                    .accessibilityLabel(Text("Add Songs"))
                 }
             }
         }
@@ -678,7 +684,7 @@ struct AddSongToPlaylistView: View {
                                         Task { await addSong(song) }
                                     }
                                     .font(.subheadline)
-                                    .buttonStyle(.borderedProminent)
+                                    .buttonStyle(.m3Filled)
                                     .controlSize(.small)
                                 }
                             }

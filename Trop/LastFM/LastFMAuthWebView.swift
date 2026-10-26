@@ -41,7 +41,7 @@ struct LastFMAuthWebView: View {
                         Image(systemName: "exclamationmark.triangle").font(.largeTitle).foregroundStyle(.orange)
                         Text(err).multilineTextAlignment(.center).padding(.horizontal)
                         Button("Retry") { Task { await fetchToken() } }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.m3Filled)
                     }
                     .padding()
                 }

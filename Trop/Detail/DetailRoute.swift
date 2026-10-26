@@ -39,6 +39,12 @@ struct DetailRouteDestinationView: View {
     let route: DetailRoute
 
     var body: some View {
+        destination
+            .m3BackButton()
+    }
+
+    @ViewBuilder
+    private var destination: some View {
         switch route {
         case .album(let browseId):
             AlbumDetailView(browseId: browseId)

@@ -340,7 +340,7 @@ struct ArtistDetailView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(
-            Color(.systemBackground)
+            ThemeStore.shared.dark.surface
                 .opacity(barProgress)
                 .ignoresSafeArea(edges: .top)
                 .allowsHitTesting(false)
@@ -353,7 +353,7 @@ struct ArtistDetailView: View {
 
     private var topBarBackButton: some View {
         topBarCircleButton(
-            systemName: "chevron.left",
+            systemName: "arrow.left",
             accessibilityLabel: "Back",
             action: { dismiss() }
         )
@@ -390,9 +390,10 @@ struct ArtistDetailView: View {
                     .opacity(barProgress)
             }
             .frame(width: 40, height: 40)
-            .contentShape(Rectangle())
+            .background(ThemeStore.shared.dark.surfaceContainerHigh.opacity(0.55 + 0.4 * barProgress), in: Circle())
+            .contentShape(Circle())
         })
-        .buttonStyle(.plain)
+        .buttonStyle(.expressive(scale: 0.88))
         .accessibilityLabel(accessibilityLabel)
     }
 

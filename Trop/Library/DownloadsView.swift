@@ -52,7 +52,7 @@ struct DownloadsView: View {
                 Text("Download Settings")
                     .font(.subheadline.weight(.semibold))
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.m3Filled)
             .tint(settings.accentColor)
         }
         .miniPlayerTracksScroll()

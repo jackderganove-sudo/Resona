@@ -50,7 +50,7 @@ struct LastFMSettingsView: View {
                             avatarURL = nil
                             lastError = nil
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.m3Tonal)
                         .controlSize(.small)
                         .tint(.red)
                     }
@@ -82,7 +82,7 @@ struct LastFMSettingsView: View {
                                 isBusy = true
                                 showWebView = true
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.m3Filled)
                             .controlSize(.small)
                         }
                     }

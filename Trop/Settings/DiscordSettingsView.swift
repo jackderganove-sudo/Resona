@@ -69,7 +69,7 @@ struct DiscordSettingsView: View {
                             DiscordRpcManager.shared.logout()
                             currentUser = nil
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.m3Tonal)
                         .controlSize(.small)
                         .tint(.red)
                     }
@@ -105,7 +105,7 @@ struct DiscordSettingsView: View {
                                     }
                                 }
                             }
-                                .buttonStyle(.borderedProminent)
+                                .buttonStyle(.m3Filled)
                                 .controlSize(.small)
                         }
                     }

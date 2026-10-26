@@ -228,3 +228,92 @@ struct M3SectionHeader: View {
         .padding(.horizontal, M3Metrics.screenPadding)
     }
 }
+
+// MARK: - Buttons (replace system .bordered / .borderedProminent)
+
+enum M3ButtonVariant {
+    case filled, tonal, outlined, text
+}
+
+/// Material 3 common button: capsule, 40 pt high, press morph + squish.
+struct M3ButtonStyle: ButtonStyle {
+    var variant: M3ButtonVariant = .filled
+    @Environment(\.m3) private var m3
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        let radius: CGFloat = configuration.isPressed ? 10 : 20
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        configuration.label
+            .font(.m3(.labelLarge, weight: .medium))
+            .foregroundStyle(foreground.opacity(isEnabled ? 1 : 0.38))
+            .padding(.horizontal, variant == .text ? 12 : 24)
+            .frame(minHeight: 40)
+            .background(background.opacity(isEnabled ? 1 : 0.12), in: shape)
+            .overlay {
+                if variant == .outlined {
+                    shape.strokeBorder(m3.outline, lineWidth: 1)
+                }
+            }
+            .contentShape(shape)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(M3Motion.fastSpatial, value: configuration.isPressed)
+            .sensoryFeedback(.impact(weight: .light, intensity: 0.6), trigger: configuration.isPressed) { _, pressed in pressed }
+    }
+
+    private var foreground: Color {
+        switch variant {
+        case .filled: m3.onPrimary
+        case .tonal: m3.onSecondaryContainer
+        case .outlined, .text: m3.primary
+        }
+    }
+
+    private var background: Color {
+        switch variant {
+        case .filled: m3.primary
+        case .tonal: m3.secondaryContainer
+        case .outlined, .text: .clear
+        }
+    }
+}
+
+extension ButtonStyle where Self == M3ButtonStyle {
+    static var m3Filled: M3ButtonStyle { M3ButtonStyle(variant: .filled) }
+    static var m3Tonal: M3ButtonStyle { M3ButtonStyle(variant: .tonal) }
+    static var m3Outlined: M3ButtonStyle { M3ButtonStyle(variant: .outlined) }
+    static var m3Text: M3ButtonStyle { M3ButtonStyle(variant: .text) }
+}
+
+// MARK: - Back button (replaces the system navigation back button)
+
+private struct M3BackButtonModifier: ViewModifier {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.m3) private var m3
+
+    func body(content: Content) -> some View {
+        content
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "arrow.left")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(m3.onSurface)
+                            .frame(width: 40, height: 40)
+                            .background(m3.surfaceContainerHigh.opacity(0.92), in: Circle())
+                    }
+                    .buttonStyle(.expressive(scale: 0.88))
+                    .accessibilityLabel(Text("Back"))
+                }
+            }
+    }
+}
+
+extension View {
+    /// Round Material back button instead of the system chevron. The
+    /// edge-swipe back gesture is provided by ContentView.
+    func m3BackButton() -> some View { modifier(M3BackButtonModifier()) }
+}

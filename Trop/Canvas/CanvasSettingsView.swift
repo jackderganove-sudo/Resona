@@ -40,7 +40,7 @@ struct CanvasSettingsView: View {
                         }
                         Spacer()
                         Button("Logout", role: .destructive, action: logout)
-                            .buttonStyle(.bordered)
+                            .buttonStyle(.m3Tonal)
                             .controlSize(.small)
                             .tint(.red)
                     }
@@ -72,7 +72,7 @@ struct CanvasSettingsView: View {
                                 isBusy = true
                                 showWebView = true
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.m3Filled)
                             .controlSize(.small)
                         }
                     }
