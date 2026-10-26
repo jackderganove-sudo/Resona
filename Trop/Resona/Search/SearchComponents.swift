@@ -124,22 +124,21 @@ struct GenreTile: View {
 
         ZStack(alignment: .bottomLeading) {
             LinearGradient(colors: [dark.color, light.color], startPoint: .topLeading, endPoint: .bottomTrailing)
-            GeometryReader { geo in
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(RGB(h: hsv.h, s: min(1, hsv.s * 1.1), v: hsv.v * 0.78).color.opacity(0.75))
-                    .frame(width: geo.size.height - 20, height: geo.size.height - 20)
-                    .position(x: geo.size.width - (geo.size.height - 20) / 2 - 12, y: geo.size.height / 2)
-            }
+            // Name gets the full width and may wrap to two lines (the empty
+            // decorative square that looked like a missing image is gone).
             Text(LocalizedStringKey(title))
-                .font(.m3(.titleLarge, weight: .medium))
+                .font(.m3(.titleMedium, weight: .semibold))
                 .foregroundStyle(.white)
-                .lineLimit(1)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
+                .multilineTextAlignment(.leading)
                 .shadow(color: .black.opacity(0.18), radius: 4, y: 1)
-                .padding(.horizontal, 18)
-                .padding(.bottom, 16)
+                .frame(maxWidth: .infinity, alignment: .bottomLeading)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 14)
         }
-        .frame(height: 100)
-        .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
+        .frame(height: 92)
+        .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
     }
 
     /// Deterministic colour per title from a palette close to YouTube
