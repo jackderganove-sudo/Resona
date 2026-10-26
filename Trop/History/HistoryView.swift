@@ -143,16 +143,25 @@ struct HistoryScreenView: View {
             ForEach(displayableSections.indices, id: \.self) { sectionIndex in
                 let section = displayableSections[sectionIndex]
                 Section {
-                    ForEach(section.entries, id: \.event) { entry in
-                        localRow(entry)
+                    // Back-to-back plays of the same song collapse into one
+                    // row with a "3×" badge.
+                    ForEach(Self.collapse(section.entries), id: \.first.event) { run in
+                        localRow(run.first, events: run.events)
+                            .overlay(alignment: .trailing) {
+                                if run.events.count > 1 {
+                                    PlayCountBadge(count: run.events.count)
+                                        .padding(.trailing, 54)
+                                        .allowsHitTesting(false)
+                                }
+                            }
                             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                             .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                     }
                 } header: {
                     Text(LocalizedStringKey(section.title))
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
+                        .font(.m3(.titleMedium, weight: .medium))
+                        .foregroundStyle(ThemeStore.shared.dark.primary)
                         .textCase(nil)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -162,8 +171,26 @@ struct HistoryScreenView: View {
         .miniPlayerTracksScroll()
     }
 
+    /// Consecutive history entries of the same song.
+    struct HistoryRun {
+        let first: DatabaseService.HistoryEntry
+        var events: [Event]
+    }
+
+    static func collapse(_ entries: [DatabaseService.HistoryEntry]) -> [HistoryRun] {
+        var runs: [HistoryRun] = []
+        for entry in entries {
+            if let last = runs.last, last.first.event.songId == entry.event.songId {
+                runs[runs.count - 1].events.append(entry.event)
+            } else {
+                runs.append(HistoryRun(first: entry, events: [entry.event]))
+            }
+        }
+        return runs
+    }
+
     @ViewBuilder
-    private func localRow(_ entry: DatabaseService.HistoryEntry) -> some View {
+    private func localRow(_ entry: DatabaseService.HistoryEntry, events: [Event]) -> some View {
         let song: SongItem = {
             if let entity = entry.song {
                 return SongItem(entity: entity)
@@ -187,9 +214,9 @@ struct HistoryScreenView: View {
             if isSelecting {
                 Button {
                     if isSelected {
-                        selectedEvents.remove(entry.event)
+                        selectedEvents.subtract(events)
                     } else {
-                        selectedEvents.insert(entry.event)
+                        selectedEvents.formUnion(events)
                     }
                 } label: {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
@@ -203,9 +230,9 @@ struct HistoryScreenView: View {
             SongRowView(song: song, onTap: {
                 if isSelecting {
                     if isSelected {
-                        selectedEvents.remove(entry.event)
+                        selectedEvents.subtract(events)
                     } else {
-                        selectedEvents.insert(entry.event)
+                        selectedEvents.formUnion(events)
                     }
                 } else {
                     PlaybackQueue.play(song, in: allItems, log: Log.historyView, context: "History play")
@@ -213,7 +240,7 @@ struct HistoryScreenView: View {
             })
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                 Button(role: .destructive) {
-                    Task { await viewModel.deleteEvents([entry.event]) }
+                    Task { await viewModel.deleteEvents(events) }
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
@@ -222,6 +249,15 @@ struct HistoryScreenView: View {
     }
 
     // MARK: - Remote
+
+    /// Drops back-to-back repeats of the same song.
+    static func collapseRemote(_ songs: [SongItem]) -> [SongItem] {
+        var result: [SongItem] = []
+        for song in songs where result.last?.videoId != song.videoId {
+            result.append(song)
+        }
+        return result
+    }
 
     private var remoteHistoryContent: some View {
         Group {
@@ -251,7 +287,7 @@ struct HistoryScreenView: View {
             ForEach(viewModel.remoteSections.indices, id: \.self) { sectionIndex in
                 let section = viewModel.remoteSections[sectionIndex]
                 Section {
-                    ForEach(section.songs, id: \.videoId) { song in
+                    ForEach(Self.collapseRemote(section.songs), id: \.videoId) { song in
                         SongRowView(song: song, onTap: {
                             PlaybackQueue.play(song, in: section.songs, log: Log.historyView, context: "History play")
                         })
@@ -260,9 +296,8 @@ struct HistoryScreenView: View {
                     }
                 } header: {
                     Text(LocalizedStringKey(section.title))
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
+                        .font(.m3(.titleMedium, weight: .medium))
+                        .foregroundStyle(ThemeStore.shared.dark.primary)
                         .textCase(nil)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -272,4 +307,19 @@ struct HistoryScreenView: View {
         .miniPlayerTracksScroll()
     }
 
+}
+
+/// "3×" badge for collapsed repeats.
+private struct PlayCountBadge: View {
+    @Environment(\.m3) private var m3
+    let count: Int
+
+    var body: some View {
+        Text(verbatim: "\(count)×")
+            .font(.m3(.labelMedium, weight: .medium).monospacedDigit())
+            .foregroundStyle(m3.onSecondaryContainer)
+            .padding(.horizontal, 8)
+            .frame(height: 22)
+            .background(m3.secondaryContainer, in: Capsule())
+    }
 }
