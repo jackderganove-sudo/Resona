@@ -176,6 +176,8 @@ enum M3Motion {
     static let navigationBar = spring(damping: 1, stiffness: 200)
     /// Player sheet expand/collapse (NoBouncy, MediumLow).
     static let bottomSheet = spring(damping: 1, stiffness: 400)
+    /// Lyrics glide to the next line (reference video: ~0.55 s, soft settle).
+    static let lyricsScroll = spring(damping: 0.86, stiffness: 150)
     /// Theme colour cross-fade when the artwork changes.
     static let colorChange = Animation.easeInOut(duration: 0.6)
 }

@@ -2,12 +2,9 @@
 //  LyricsView.swift
 //  Trop / Resona
 //
-//  Karaoke lyrics in the "BetterLyrics" style of the reference app:
-//  the current line is large, bright and glowing with a gradient fill that
-//  sweeps across it over the line's duration; other lines dim and blur with
-//  their distance; the list auto-scrolls smoothly so the active line sits at
-//  35 % of the height; tapping a line seeks to it. Data handling (instrumental
-//  gaps, romanization, offsets, provider refresh) is unchanged from Trop.
+//  Lyrics screen: header, the karaoke stage (Resona/Lyrics/LyricsStage) and
+//  the bottom transport. Data handling (instrumental gaps, romanization,
+//  offsets, provider refresh) is unchanged from Trop.
 //
 
 import SwiftUI
@@ -33,11 +30,6 @@ struct LyricsView<ProgressSlider: View>: View {
     @State private var frameDriver: DisplayLinkDriver?
     @State private var lastGapRefresh: CFTimeInterval = 0
 
-    // Scrolling
-    @State private var isManualScrolling = false
-    @State private var resumeTask: Task<Void, Never>?
-    @State private var scrollProxy: ScrollViewProxy?
-    @State private var hasPositionedInitialLyrics = false
 
     // Bottom controls
     @State private var editingProgress: Double = 0
@@ -142,157 +134,65 @@ struct LyricsView<ProgressSlider: View>: View {
         }
     }
 
+    @ViewBuilder
     private var lyricsList: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .bottom) {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(alignment: settings.lyricsAlignment.textAlignment.horizontal, spacing: 0) {
-                            Color.clear.frame(height: geo.size.height * 0.3)
-
-                            if let provider = LyricsState.shared.providerName {
-                                Text("Lyrics from \(provider)")
-                                    .font(.poppins(12, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.5))
-                                    .frame(maxWidth: .infinity, alignment: settings.lyricsAlignment.textAlignment)
-                                    .padding(.horizontal, 28)
-                                    .padding(.bottom, 12)
-                            }
-
-                            ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
-                                lineRow(index: index, line: line)
-                                    .id(line.id)
-                            }
-
-                            Color.clear.frame(height: geo.size.height * 0.6)
-                        }
-                    }
-                    .scrollIndicators(.hidden)
-                    .mask(edgeFade)
-                    .onScrollPhaseChange { _, phase in
-                        if phase == .tracking || phase == .interacting {
-                            beginManualScroll()
-                        } else if phase == .idle, isManualScrolling {
-                            scheduleResume()
-                        }
-                    }
-                    .onAppear {
-                        scrollProxy = proxy
-                        scrollToActive(animated: false)
-                    }
-                    .onChange(of: activeIndex) { _, _ in
-                        guard !isManualScrolling else { return }
-                        scrollToActive(animated: hasPositionedInitialLyrics)
-                        hasPositionedInitialLyrics = true
-                    }
+        if isSynced {
+            VStack(spacing: 0) {
+                if let provider = LyricsState.shared.providerName {
+                    providerLabel(provider)
                 }
-
-                if isManualScrolling && isSynced {
-                    Button {
-                        resumeAutoScroll()
-                    } label: {
-                        Label("Re-sync", systemImage: "arrow.triangle.2.circlepath")
-                            .font(.poppins(14, weight: .medium))
-                            .foregroundStyle(m3.onPrimaryContainer)
-                            .padding(.horizontal, 18)
-                            .frame(height: 40)
-                            .background(m3.primaryContainer, in: Capsule())
-                    }
-                    .buttonStyle(.expressive)
-                    .padding(.bottom, 12)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                LyricsStage(
+                    lines: lines,
+                    activeIndex: activeIndex,
+                    romanized: { romanization(for: $0) },
+                    fontSize: settings.lyricsFontSize,
+                    alignment: settings.lyricsAlignment,
+                    onSeek: { seek(to: $0) }
+                ) { index in
+                    gapIndicator(after: index)
                 }
             }
-            .animation(M3Motion.defaultSpatial, value: isManualScrolling)
+        } else {
+            // Unsynced lyrics: plain readable list.
+            ScrollView {
+                LazyVStack(alignment: settings.lyricsAlignment.textAlignment.horizontal, spacing: settings.lyricsFontSize * 0.7) {
+                    if let provider = LyricsState.shared.providerName {
+                        providerLabel(provider)
+                    }
+                    ForEach(lines) { line in
+                        LyricsLineText(text: line.text, fontSize: settings.lyricsFontSize, alignment: settings.lyricsAlignment)
+                            .foregroundStyle(.white.opacity(0.92))
+                            .frame(maxWidth: .infinity, alignment: settings.lyricsAlignment.textAlignment)
+                            .padding(.horizontal, 28)
+                    }
+                }
+                .padding(.vertical, 24)
+            }
+            .scrollIndicators(.hidden)
         }
     }
 
-    /// Soft fade at the top and bottom of the scrolling lyrics.
-    private var edgeFade: some View {
-        LinearGradient(
-            stops: [
-                .init(color: .clear, location: 0),
-                .init(color: .black, location: 0.08),
-                .init(color: .black, location: 0.86),
-                .init(color: .clear, location: 1)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-
-    // MARK: - Line
-
-    private func lineRow(index: Int, line: LyricLine) -> some View {
-        let gap = instrumentalGaps.last(where: { $0.afterIndex == index })
-        let showRing = settings.showIntervalIndicator && gap.map(isVisibleInGap) == true
-        let distance = abs(index - activeIndex)
-        let isActive = isSynced && index == activeIndex
-
-        return VStack(alignment: settings.lyricsAlignment.textAlignment.horizontal, spacing: 0) {
-            KaraokeLine(
-                text: line.text.isEmpty ? "\u{266A}" : line.text,
-                romanized: romanization(for: index),
-                isActive: isActive,
-                timing: isActive ? timing(for: index) : nil,
-                fontSize: settings.lyricsFontSize,
-                alignment: settings.lyricsAlignment
-            )
-            .opacity(lineOpacity(distance: distance))
-            .blur(radius: lineBlur(distance: distance))
-            .scaleEffect(isActive || !isSynced ? 1 : 0.95, anchor: scaleAnchor)
-            .animation(.easeOut(duration: isActive ? 0.33 : 0.5), value: activeIndex)
-            .animation(.easeOut(duration: 0.3), value: isManualScrolling)
+    private func providerLabel(_ provider: String) -> some View {
+        Text("Lyrics from \(provider)")
+            .font(.poppins(12, weight: .medium))
+            .foregroundStyle(.white.opacity(0.5))
+            .frame(maxWidth: .infinity, alignment: settings.lyricsAlignment.textAlignment)
             .padding(.horizontal, 28)
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
-            .onTapGesture { seek(to: line) }
-            .accessibilityAddTraits(.isButton)
+            .padding(.top, 8)
+    }
 
-            if showRing, let gap {
-                IntervalIndicatorView(
-                    start: gap.start,
-                    end: gap.end - 0.65,
-                    now: displayTime + settings.lyricsOffsetSeconds,
-                    color: .white
-                )
-                .padding(.horizontal, 28)
-                .transition(.opacity.combined(with: .scale(scale: 0.6)))
-            }
+    @ViewBuilder
+    private func gapIndicator(after index: Int) -> some View {
+        let gap = instrumentalGaps.last(where: { $0.afterIndex == index })
+        if settings.showIntervalIndicator, let gap, isVisibleInGap(gap) {
+            IntervalIndicatorView(
+                start: gap.start,
+                end: gap.end - 0.65,
+                now: displayTime + settings.lyricsOffsetSeconds,
+                color: .white
+            )
+            .transition(.opacity.combined(with: .scale(scale: 0.6)))
         }
-        .animation(.easeInOut(duration: 0.2), value: showRing)
-    }
-
-    private var scaleAnchor: UnitPoint {
-        switch settings.lyricsAlignment {
-        case .left: .leading
-        case .center: .center
-        case .right: .trailing
-        }
-    }
-
-    /// Reference V2 values: 1 / 0.52 / 0.30 / 0.18 / 0.10 (brighter while
-    /// the user scrolls by hand).
-    private func lineOpacity(distance: Int) -> Double {
-        guard isSynced else { return 0.92 }
-        if distance == 0 { return 1 }
-        if isManualScrolling {
-            return [0.72, 0.56, 0.40][safe: distance - 1] ?? 0.28
-        }
-        return [0.52, 0.30, 0.18][safe: distance - 1] ?? 0.10
-    }
-
-    /// Reference V2 blur: 0 / 2 / 5 / 12, off while scrolling manually.
-    private func lineBlur(distance: Int) -> CGFloat {
-        guard isSynced, !isManualScrolling, distance > 0 else { return 0 }
-        return [2, 5][safe: distance - 1] ?? 12
-    }
-
-    /// Start/end of a line for the fill sweep (end = next timestamp).
-    private func timing(for index: Int) -> (start: TimeInterval, end: TimeInterval)? {
-        guard let start = lines[index].startTime else { return nil }
-        let next = lines[(index + 1)...].compactMap(\.startTime).first ?? (start + 5)
-        return (start, max(start + 0.4, min(next, start + 12)))
     }
 
     // MARK: - Bottom controls
@@ -385,50 +285,12 @@ struct LyricsView<ProgressSlider: View>: View {
         .accessibilityLabel(Text(label))
     }
 
-    // MARK: - Scrolling
-
-    private func scrollToActive(animated: Bool) {
-        guard lines.indices.contains(activeIndex), isSynced else { return }
-        let id = lines[activeIndex].id
-        if animated {
-            withAnimation(.spring(response: 0.7, dampingFraction: 0.86)) {
-                scrollProxy?.scrollTo(id, anchor: UnitPoint(x: 0.5, y: 0.35))
-            }
-        } else {
-            scrollProxy?.scrollTo(id, anchor: UnitPoint(x: 0.5, y: 0.35))
-        }
-    }
-
-    private func beginManualScroll() {
-        resumeTask?.cancel()
-        guard !isManualScrolling else { return }
-        isManualScrolling = true
-    }
-
-    /// Like the reference's MANUAL_SCROLL_TIMEOUT: return to the active line
-    /// a few seconds after the user stops scrolling.
-    private func scheduleResume() {
-        resumeTask?.cancel()
-        resumeTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 3_500_000_000)
-            guard !Task.isCancelled else { return }
-            resumeAutoScroll()
-        }
-    }
-
-    private func resumeAutoScroll() {
-        resumeTask?.cancel()
-        isManualScrolling = false
-        scrollToActive(animated: true)
-    }
-
     private func seek(to line: LyricLine) {
         guard let t = line.startTime else { return }
         let target = max(0, t - settings.lyricsOffsetSeconds)
         player.seek(to: target)
         np.currentTime = target
         updateActiveLine()
-        resumeAutoScroll()
     }
 
     // MARK: - Romanization
@@ -523,8 +385,6 @@ struct LyricsView<ProgressSlider: View>: View {
         lines = []
         instrumentalGaps = []
         activeIndex = 0
-        hasPositionedInitialLyrics = false
-        isManualScrolling = false
         isLoading = true
         LyricsState.shared.providerName = nil
         defer { isLoading = false }
@@ -564,97 +424,6 @@ struct LyricsView<ProgressSlider: View>: View {
             }
         }
         return result
-    }
-}
-
-// MARK: - Karaoke line
-
-/// One lyric line. The active line is drawn twice: a dim base and a bright
-/// glowing copy revealed by a soft gradient mask that sweeps across the line
-/// (top-leading → bottom-trailing, following reading order on wrapped lines).
-private struct KaraokeLine: View {
-    let text: String
-    let romanized: String?
-    let isActive: Bool
-    let timing: (start: TimeInterval, end: TimeInterval)?
-    let fontSize: Double
-    let alignment: LyricsAlignment
-
-    var body: some View {
-        VStack(alignment: alignment.textAlignment.horizontal, spacing: 4) {
-            if isActive, let timing {
-                LyricsClockView { now in
-                    let raw = (now - timing.start) / max(0.01, timing.end - timing.start)
-                    let p = min(max(raw, 0), 1)
-                    lineText
-                        .foregroundStyle(.white.opacity(0.42))
-                        .overlay {
-                            lineText
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.white, Color(white: 0.92)],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .shadow(color: .white.opacity(0.45 * min(1, p * 2)), radius: 12 * min(1, p * 2))
-                                .mask(sweepMask(progress: p))
-                        }
-                }
-            } else {
-                lineText
-                    .foregroundStyle(.white.opacity(isActive ? 1 : 0.95))
-                    .shadow(color: .white.opacity(isActive ? 0.4 : 0), radius: isActive ? 10 : 0)
-            }
-
-            if let romanized, !romanized.isEmpty {
-                Text(romanized)
-                    .font(.system(size: max(12, fontSize * 0.55), weight: .semibold))
-                    .foregroundStyle(.white.opacity(isActive ? 0.76 : 0.6))
-                    .multilineTextAlignment(alignment.multilineTextAlignment)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: alignment.textAlignment)
-    }
-
-    private var lineText: some View {
-        Text(text)
-            .font(.system(size: fontSize, weight: .bold))
-            .tracking(-0.4)
-            .lineSpacing(fontSize * 0.08)
-            .multilineTextAlignment(alignment.multilineTextAlignment)
-            .fixedSize(horizontal: false, vertical: true)
-    }
-
-    private func sweepMask(progress p: Double) -> some View {
-        // Feathered edge; starts slightly before 0 and ends after 1 so the
-        // line is fully lit well before it ends.
-        let edge = 0.18
-        let head = -edge + p * (1 + edge * 2) * 1.15
-        return LinearGradient(
-            stops: [
-                .init(color: .black, location: max(0, min(1, head - edge))),
-                .init(color: .clear, location: max(0.0001, min(1, head)))
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-}
-
-/// Re-renders its content every frame with an extrapolated playback time
-/// (NowPlaying only ticks every ~250 ms), so the fill sweep is smooth.
-private struct LyricsClockView<Content: View>: View {
-    @ViewBuilder let content: (TimeInterval) -> Content
-    private let np = NowPlaying.shared
-    @Environment(SettingsStore.self) private var settings
-
-    var body: some View {
-        // `.animation` schedules at the display's refresh rate (120 Hz on
-        // ProMotion); the clock is extrapolated per frame.
-        TimelineView(.animation(paused: !np.isPlaying)) { _ in
-            content(PlaybackClock.shared.now() + settings.lyricsOffsetSeconds)
-        }
     }
 }
 
