@@ -340,7 +340,7 @@ struct ArtistDetailView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(
-            ThemeStore.shared.dark.surface
+            FrostedSurface(tint: ThemeStore.shared.dark.surface, tintOpacity: 0.7)
                 .opacity(barProgress)
                 .ignoresSafeArea(edges: .top)
                 .allowsHitTesting(false)

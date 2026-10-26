@@ -250,6 +250,7 @@ extension AlbumDetailViewModel {
 
 struct AlbumDetailView: View {
     let browseId: String
+    @State private var heroScroll: CGFloat = 0
     @State private var viewModel: AlbumDetailViewModel
     @State private var pendingRoute: DetailRoute?
     @State private var showMoreSheet = false
@@ -276,7 +277,14 @@ struct AlbumDetailView: View {
         }
         .scrollDisabled(viewModel.isLoading || viewModel.error != nil || viewModel.album == nil)
         .miniPlayerTracksScroll()
+        .onScrollGeometryChange(for: CGFloat.self) { geo in
+            geo.contentOffset.y + geo.contentInsets.top
+        } action: { _, y in
+            heroScroll = y
+        }
         .heroDetailChrome()
+        // Frosted title bar once the hero has scrolled away.
+        .frostedDetailBar(title: viewModel.album?.title ?? "", progress: (heroScroll - 380) / 80)
         .background(m3.surface.ignoresSafeArea())
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)

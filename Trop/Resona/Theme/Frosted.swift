@@ -131,3 +131,67 @@ struct BlurredArtwork: View {
         blurred = await BlurredImageCache.shared.blurred(source, key: cacheKey, radius: radius)
     }
 }
+
+// MARK: - Frosted top chrome
+
+private struct FrostedTopChrome<Header: View>: ViewModifier {
+    @Environment(\.m3) private var m3
+    @ViewBuilder var header: () -> Header
+
+    func body(content: Content) -> some View {
+        content
+            .safeAreaInset(edge: .top, spacing: 0) {
+                header()
+                    .background {
+                        // Content scrolls underneath and shows through blurred.
+                        FrostedSurface(tint: m3.surface, tintOpacity: 0.72)
+                            .ignoresSafeArea(edges: .top)
+                    }
+            }
+    }
+}
+
+extension View {
+    /// Pins `header` at the top with a frosted background; the scrollable
+    /// content runs underneath it.
+    func frostedTopChrome<Header: View>(@ViewBuilder _ header: @escaping () -> Header) -> some View {
+        modifier(FrostedTopChrome(header: header))
+    }
+}
+
+// MARK: - Frosted bar for detail pages
+
+private struct FrostedDetailBar: ViewModifier {
+    @Environment(\.m3) private var m3
+    let title: String
+    /// 0 = hidden (over the hero), 1 = fully visible.
+    let progress: CGFloat
+
+    func body(content: Content) -> some View {
+        content.overlay(alignment: .top) {
+            Text(title)
+                .font(.m3(.titleMedium, weight: .medium))
+                .foregroundStyle(m3.onSurface)
+                .lineLimit(1)
+                .padding(.horizontal, 64)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background {
+                    FrostedSurface(tint: m3.surface, tintOpacity: 0.7)
+                        .ignoresSafeArea(edges: .top)
+                }
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(m3.outlineVariant.opacity(0.5)).frame(height: 0.5)
+                }
+                .opacity(Double(progress))
+                .allowsHitTesting(false)
+        }
+    }
+}
+
+extension View {
+    /// Frosted title bar that fades in once the detail hero scrolled away.
+    func frostedDetailBar(title: String, progress: CGFloat) -> some View {
+        modifier(FrostedDetailBar(title: title, progress: min(max(progress, 0), 1)))
+    }
+}

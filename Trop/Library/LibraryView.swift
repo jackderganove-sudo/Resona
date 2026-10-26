@@ -73,14 +73,6 @@ struct LibraryView: View {
     var body: some View {
         NavigationStack(path: $router.libraryPath) {
             VStack(spacing: 0) {
-                TabHeaderView(
-                    title: "Library",
-                    accountIsLoggedIn: accountState.isLoggedIn,
-                    accountImageUrl: accountState.accountImageUrl,
-                    onHistory: { router.libraryPath.append(DetailRoute.history) },
-                    onAccount: { router.libraryPath.append(DetailRoute.settings) }
-                )
-
                 Group {
                     if isLoading {
                         librarySkeleton
@@ -90,6 +82,15 @@ struct LibraryView: View {
                 }
             }
             .frame(maxHeight: .infinity, alignment: .top)
+            .frostedTopChrome {
+                TabHeaderView(
+                    title: "Library",
+                    accountIsLoggedIn: accountState.isLoggedIn,
+                    accountImageUrl: accountState.accountImageUrl,
+                    onHistory: { router.libraryPath.append(DetailRoute.history) },
+                    onAccount: { router.libraryPath.append(DetailRoute.settings) }
+                )
+            }
             .toolbar(.hidden, for: .navigationBar)
             .containerBackground(m3.surface, for: .navigation)
             .detailRouteDestinations()

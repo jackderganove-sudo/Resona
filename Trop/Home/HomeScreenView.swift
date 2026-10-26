@@ -21,14 +21,6 @@ struct HomeScreenView: View {
     var body: some View {
         NavigationStack(path: $router.homePath) {
             VStack(spacing: 0) {
-                TabHeaderView(
-                    title: "Home",
-                    accountIsLoggedIn: accountState.isLoggedIn,
-                    accountImageUrl: accountState.accountImageUrl,
-                    onHistory: { router.homePath.append(DetailRoute.history) },
-                    onAccount: { router.homePath.append(DetailRoute.settings) }
-                )
-
                 if viewModel.isLoading {
                     Spacer()
                     ShimmerLoadingView()
@@ -40,6 +32,15 @@ struct HomeScreenView: View {
                 }
             }
             .frame(maxHeight: .infinity, alignment: .top)
+            .frostedTopChrome {
+                TabHeaderView(
+                    title: "Home",
+                    accountIsLoggedIn: accountState.isLoggedIn,
+                    accountImageUrl: accountState.accountImageUrl,
+                    onHistory: { router.homePath.append(DetailRoute.history) },
+                    onAccount: { router.homePath.append(DetailRoute.settings) }
+                )
+            }
             .background(homeBackground)
             .toolbar(.hidden, for: .navigationBar)
             .containerBackground(m3.surface, for: .navigation)

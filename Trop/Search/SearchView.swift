@@ -21,12 +21,15 @@ struct SearchView: View {
     var body: some View {
         NavigationStack(path: $router.searchPath) {
             VStack(spacing: 0) {
-                ResonaTopBar()
-                searchTopBar
-
                 content
             }
             .frame(maxHeight: .infinity, alignment: .top)
+            .frostedTopChrome {
+                VStack(spacing: 0) {
+                    ResonaTopBar()
+                    searchTopBar
+                }
+            }
             .toolbar(.hidden, for: .navigationBar)
             .containerBackground(m3.surface, for: .navigation)
             .detailRouteDestinations()

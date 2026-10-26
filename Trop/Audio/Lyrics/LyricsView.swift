@@ -46,7 +46,16 @@ struct LyricsView<ProgressSlider: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-                .padding(.horizontal, 20)
+                .padding(8)
+                .background {
+                    FrostedSurface(
+                        shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous),
+                        tint: .black,
+                        tintOpacity: 0.16,
+                        material: .ultraThinMaterial
+                    )
+                }
+                .padding(.horizontal, 12)
                 .padding(.top, 8)
 
             lyricsBody

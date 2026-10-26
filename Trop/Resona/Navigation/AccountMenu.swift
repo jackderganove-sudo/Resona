@@ -63,6 +63,7 @@ struct ResonaTopBar: View {
 /// The dropdown card plus a tap-to-dismiss scrim. Lives in ContentView.
 struct AccountMenuOverlay: View {
     @Environment(\.m3) private var m3
+    @Environment(\.artworkColors) private var artwork
     private let menu = AccountMenuState.shared
     private let account = AccountSheetState.shared
 
@@ -133,12 +134,12 @@ struct AccountMenuOverlay: View {
         }
         .padding(.top, 4)
         .background {
-            RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous)
-                        .fill(m3.surfaceContainerHigh.opacity(0.78))
-                )
+            let shape = RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous)
+            ZStack {
+                FrostedSurface(shape: shape, tint: m3.surfaceContainerHigh, tintOpacity: 0.7)
+                // Faint wash of the current cover colour.
+                shape.fill(artwork.accent.container.opacity(0.22))
+            }
         }
         .shadow(color: .black.opacity(0.35), radius: 24, y: 10)
     }

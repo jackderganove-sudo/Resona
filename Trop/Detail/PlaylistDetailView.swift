@@ -373,6 +373,7 @@ extension PlaylistDetailViewModel {
 
 struct PlaylistDetailView: View {
     let playlistId: String
+    @State private var heroScroll: CGFloat = 0
     @State private var viewModel: PlaylistDetailViewModel
     @State private var playlistEntity: PlaylistEntity?
     @State private var showAddSongs = false
@@ -409,7 +410,14 @@ struct PlaylistDetailView: View {
         }
         .scrollDisabled(viewModel.isLoading || viewModel.error != nil || viewModel.playlist == nil)
         .miniPlayerTracksScroll()
+        .onScrollGeometryChange(for: CGFloat.self) { geo in
+            geo.contentOffset.y + geo.contentInsets.top
+        } action: { _, y in
+            heroScroll = y
+        }
         .heroDetailChrome()
+        // Frosted title bar once the hero has scrolled away.
+        .frostedDetailBar(title: viewModel.playlist?.title ?? "", progress: (heroScroll - 380) / 80)
         .background(ThemeStore.shared.scheme(for: .dark).surface.ignoresSafeArea())
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)

@@ -102,6 +102,15 @@ enum LibraryArtwork {
     case mosaic([String])
     case icon(String)
     case round(String?)
+
+    /// Image used for the card's blurred background.
+    var backdropURL: String? {
+        switch self {
+        case .image(let url), .round(let url): url
+        case .mosaic(let urls): urls.first
+        case .icon: nil
+        }
+    }
 }
 
 struct LibraryArtworkView: View {
@@ -219,7 +228,18 @@ struct LibraryCard<MenuContent: View>: View {
         .padding(.leading, 14)
         .padding(.trailing, 6)
         .padding(.vertical, 14)
-        .background(m3.surfaceContainerLow, in: RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
+        .background {
+            // Frosted, cover-tinted card (pre-blurred, cached → smooth lists).
+            ZStack {
+                m3.surfaceContainerLow
+                if let url = artwork.backdropURL {
+                    BlurredArtwork(url: url, radius: 12)
+                        .opacity(0.7)
+                    m3.surfaceContainerLow.opacity(0.55)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
+        }
         .contentShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
     }
 }
