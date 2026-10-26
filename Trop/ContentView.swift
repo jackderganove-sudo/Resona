@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(SettingsStore.self) private var settings
+    @Environment(\.m3) private var m3
     @State private var nowPlaying = NowPlaying.shared
     @State private var selectedTab = SettingsStore.shared.defaultTab
     @State private var isExpanded = false
@@ -104,14 +105,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var backgroundLayer: some View {
-        if settings.playerBackgroundStyle == .solid {
-            Color.black.ignoresSafeArea()
-        } else if let accent = nowPlaying.accentColor {
-            accent
-                .opacity(0.06)
-                .ignoresSafeArea()
-                .animation(.easeInOut(duration: 0.8), value: nowPlaying.accentColor)
-        }
+        m3.surface.ignoresSafeArea()
     }
 }
 

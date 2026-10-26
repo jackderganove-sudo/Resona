@@ -8,9 +8,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Queue instead of cancel: a cancelled run would throw away an in-flight
+# ffmpeg-kit build before it reaches the cache.
 concurrency:
   group: resona-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   FFMPEG_KIT_TAG: v9.0.0

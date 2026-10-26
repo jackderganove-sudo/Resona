@@ -394,7 +394,7 @@ final class SettingsStore {
 
     private init() {
         let d = Self.defaults
-        themeMode = Self.loadEnum(Keys.themeMode, default: .system)
+        themeMode = Self.loadEnum(Keys.themeMode, default: .dark)
         accentColor = AccentPreset.all
             .first { $0.name == (d.string(forKey: Keys.accentName) ?? AccentPreset.all[0].name) }?
             .color ?? AccentPreset.all[0].color
@@ -404,7 +404,7 @@ final class SettingsStore {
         let storedTab = Self.load(Keys.defaultTab, default: 0)
         defaultTab = storedTab == 2 ? 3 : storedTab
         lyricsFontSize = Self.load(Keys.lyricsFontSize, default: 17)
-        lyricsAlignment = Self.loadEnum(Keys.lyricsAlignment, default: .center)
+        lyricsAlignment = Self.loadEnum(Keys.lyricsAlignment, default: .left)
         lyricsOffsetSeconds = Self.load(Keys.lyricsOffsetSeconds, default: 0)
         showIntervalIndicator = Self.load(Keys.showIntervalIndicator, default: true)
         romanizeCurrentTrack = Self.load(Keys.romanizeCurrentTrack, default: true)

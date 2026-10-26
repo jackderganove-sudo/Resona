@@ -13,6 +13,8 @@ struct TropApp: App {
     @State private var settings = SettingsStore.shared
 
     init() {
+        M3Font.registerFonts()
+        ResonaAppearance.configure()
         configureNuke()
         ensureDirectories()
         Log.wireSwiftyTube()
@@ -45,8 +47,8 @@ struct TropApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .m3Theme()
                 .preferredColorScheme(settings.preferredColorScheme)
-                .tint(settings.accentColor)
                 .environment(settings)
                 .environment(\.downloadManager, DownloadManager.shared)
         }
