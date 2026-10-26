@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HomeScreenView: View {
     @Environment(SettingsStore.self) private var settings
+    @Environment(\.m3) private var m3
     @ObservedObject private var router = AppRouter.shared
     @State private var viewModel = HomeViewModel()
     private let accountState = AccountSheetState.shared
@@ -38,6 +39,7 @@ struct HomeScreenView: View {
                 }
             }
             .frame(maxHeight: .infinity, alignment: .top)
+            .background(homeBackground)
             .toolbar(.hidden, for: .navigationBar)
             .detailRouteDestinations()
             .onChange(of: pendingRoute) { _, route in
@@ -129,7 +131,7 @@ struct HomeScreenView: View {
         case .quickPicks:
             quickPicksSection(section)
         case .keepListening:
-            mixedSection(section)
+            keepListeningSection(section)
         case .forgottenFavorites:
             songsSection(section)
         case .homePageSection(let sectionData, _):
@@ -157,50 +159,41 @@ struct HomeScreenView: View {
         if combinedQueue.isEmpty {
             EmptyView()
         } else {
-            HorizontalSection(title: section.displayTitle, vSpacing: 8, contentVerticalPadding: 0) {
-                LazyHGrid(rows: Array(repeating: GridItem(.fixed(60)), count: 4), spacing: 12) {
-                    ForEach(speedDialEntries, id: \.videoId) { entry in
-                        let song = entry.toSongItem()
-                        YouTubeListItemView(
-                            item: .song(song),
-                            onTap: { handleSongTap(song, in: combinedQueue) },
-                            onNavigate: { pendingRoute = $0 }
-                        )
-                        .frame(width: 280)
-                        .overlay(alignment: .topTrailing) {
-                            Image(systemName: "pin.fill")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(settings.accentColor)
-                                .padding(6)
-                        }
-                        .contextMenu {
-                            Button(role: .destructive) {
-                                Task {
-                                    try? await DatabaseService.shared.removeFromSpeedDial(videoId: entry.videoId)
-                                    await reloadSpeedDial()
-                                }
-                            } label: {
-                                Label("Unpin", systemImage: "pin.slash")
+            VStack(alignment: .leading, spacing: 4) {
+                NavigationTitleView(title: section.displayTitle)
+                HeroCarousel(items: combinedQueue.map(YTItem.song)) { item in
+                    if case .song(let s) = item {
+                        handleSongTap(s, in: combinedQueue)
+                    } else {
+                        handleItemTap(item)
+                    }
+                }
+                .frame(height: 330)
+            }
+        }
+    }
+
+    private func keepListeningSection(_ section: HomeSection) -> some View {
+        let queue = section.items.compactMap { if case .song(let s) = $0 { return s } else { return nil } }
+        return VStack(alignment: .leading, spacing: 4) {
+            NavigationTitleView(title: section.displayTitle)
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 12) {
+                    ForEach(section.items.indices, id: \.self) { i in
+                        let item = section.items[i]
+                        KeepListeningCard(item: item) {
+                            if case .song(let s) = item {
+                                handleSongTap(s, in: queue)
+                            } else {
+                                handleItemTap(item)
                             }
                         }
                     }
-
-                    ForEach(visibleItems.indices, id: \.self) { i in
-                        let item = visibleItems[i]
-                        if case .song(let s) = item {
-                            YouTubeListItemView(
-                                item: item,
-                                onTap: { handleSongTap(s, in: combinedQueue) },
-                                onNavigate: { pendingRoute = $0 }
-                            )
-                                .frame(width: 280)
-                        } else {
-                            YouTubeListItemView(item: item, onTap: { handleItemTap(item) }, onNavigate: { pendingRoute = $0 })
-                                .frame(width: 280)
-                        }
-                    }
                 }
+                .scrollTargetLayout()
+                .padding(.horizontal, 16)
             }
+            .scrollTargetBehavior(.viewAligned)
         }
     }
 
@@ -267,6 +260,16 @@ struct HomeScreenView: View {
         case .podcast: return "podcast"
         case .episode: return "episode"
         }
+    }
+
+    /// Surface with a faint primary glow at the top, like the reference.
+    private var homeBackground: some View {
+        LinearGradient(
+            colors: [m3.primary.opacity(0.07), m3.surface.opacity(0)],
+            startPoint: .top,
+            endPoint: .init(x: 0.5, y: 0.35)
+        )
+        .ignoresSafeArea()
     }
 
     private func errorView(_ error: Error) -> some View {

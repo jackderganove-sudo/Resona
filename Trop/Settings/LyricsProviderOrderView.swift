@@ -23,6 +23,7 @@ struct LyricsProviderOrderView: View {
             .onMove(perform: move)
         }
         .navigationTitle("Lyrics Providers")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .environment(\.editMode, .constant(.active))
         .safeAreaInset(edge: .bottom) {

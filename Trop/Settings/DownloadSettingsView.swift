@@ -37,6 +37,7 @@ struct DownloadSettingsView: View {
             }
         }
         .navigationTitle("Download Settings")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
         .task { await refreshStats() }

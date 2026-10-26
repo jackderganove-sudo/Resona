@@ -215,6 +215,7 @@ struct DiscordSettingsView: View {
                 }
         }
         .navigationTitle("Discord")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { bind() }
         .task { await refreshUserIfNeeded() }

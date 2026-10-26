@@ -46,6 +46,7 @@ struct LyricsSettingsView: View {
             }
         }
         .navigationTitle("Lyrics")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }

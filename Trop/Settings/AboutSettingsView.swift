@@ -33,6 +33,7 @@ struct AboutSettingsView: View {
             }
         }
         .navigationTitle("About")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }

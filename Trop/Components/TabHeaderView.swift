@@ -17,29 +17,8 @@ struct TabHeaderView: View {
     var onAccount: () -> Void
 
     var body: some View {
-        HStack(alignment: .center) {
-            Text(LocalizedStringKey(title))
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            Spacer()
-            HStack(spacing: 10) {
-                Button(action: onHistory) {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("History")
-
-                AccountButtonView(
-                    isLoggedIn: accountIsLoggedIn,
-                    accountImageUrl: accountImageUrl,
-                    onTap: onAccount
-                )
-                .accessibilityLabel("Account")
-            }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+        // Resona shows its brand bar on every tab (reference app style);
+        // history / settings live in the account dropdown.
+        ResonaTopBar()
     }
 }

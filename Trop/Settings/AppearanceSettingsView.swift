@@ -25,31 +25,22 @@ struct AppearanceSettingsView: View {
             }
 
             Section {
-                LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(AccentPreset.all) { preset in
-                        Button {
-                            applyAppIcon(for: preset)
-                        } label: {
-                            ZStack {
-                                Circle()
-                                    .fill(preset.color)
-                                    .frame(width: 34, height: 34)
-                                if settings.accentName == preset.name {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 13, weight: .bold))
-                                        .foregroundStyle(.white)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(preset.name)
-                    }
+                Toggle(isOn: Binding(
+                    get: { ThemeStore.shared.dynamicColor },
+                    set: { ThemeStore.shared.dynamicColor = $0 }
+                )) {
+                    Label("Colors from artwork", systemImage: "paintpalette")
                 }
-                .padding(.vertical, 4)
+                Toggle(isOn: Binding(
+                    get: { ThemeStore.shared.pureBlack },
+                    set: { ThemeStore.shared.pureBlack = $0 }
+                )) {
+                    Label("Pure black", systemImage: "circle.lefthalf.filled")
+                }
             } header: {
-                Text("Accent Color")
+                Text("Dynamic color")
             } footer: {
-                Text("Applies to buttons, highlights, and selected items.")
+                Text("The whole app takes its colors from the current album cover.")
             }
 
             Section {
@@ -84,6 +75,7 @@ struct AppearanceSettingsView: View {
         .id(settings.accentName)
         .tint(settings.accentColor)
         .navigationTitle("Appearance")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }

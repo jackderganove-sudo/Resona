@@ -20,6 +20,10 @@ struct LibraryView: View {
     @State private var showCreateDialog = false
     @State private var playlistToDelete: PlaylistEntity?
     @State private var playlistSongCounts: [String: Int] = [:]
+    @State private var playlistMosaics: [String: [String]] = [:]
+    @AppStorage("resona.library.viewMode") private var viewMode: LibraryViewMode = .list
+    @AppStorage("resona.library.sort") private var sort: LibrarySort = .custom
+    @Environment(\.m3) private var m3
 
     @ObservedObject private var router = AppRouter.shared
     @ObservedObject private var downloadManager = DownloadManager.shared
@@ -52,6 +56,15 @@ struct LibraryView: View {
         case albums = "Albums"
         case artists = "Artists"
         case podcasts = "Podcasts"
+
+        var icon: String {
+            switch self {
+            case .playlists: "list.bullet"
+            case .albums: "square.stack"
+            case .artists: "music.mic"
+            case .podcasts: "mic"
+            }
+        }
     }
 
     var body: some View {
@@ -76,19 +89,6 @@ struct LibraryView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             .toolbar(.hidden, for: .navigationBar)
             .detailRouteDestinations()
-            .overlay(alignment: .bottomTrailing) {
-                                Button(action: { showCreateDialog = true }, label: {
-                    Image(systemName: "plus")
-                        .font(.title2.weight(.semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(Circle().fill(settings.accentColor))
-                        .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
-                })
-                .accessibilityLabel("Create playlist")
-                .padding(.trailing, 20)
-                .padding(.bottom, 20)
-            }
             .overlay {
                 if showCreateDialog {
                     CreatePlaylistDialog(
@@ -138,15 +138,22 @@ struct LibraryView: View {
     // MARK: - Filter Bar
 
     private var filterBar: some View {
-        FilterChipBar(
-            items: LibraryFilter.allCases,
-            id: \.self,
-            title: \.rawValue,
-            isSelected: { selectedFilter == $0 },
-            onTap: { filter in
-                selectedFilter = selectedFilter == filter ? nil : filter
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                M3Chip(title: String(localized: "Library"), systemImage: "waveform", isSelected: selectedFilter == nil, height: 48) {
+                    withAnimation(M3Motion.defaultSpatial) { selectedFilter = nil }
+                }
+                ForEach(LibraryFilter.allCases, id: \.self) { filter in
+                    M3Chip(title: String(localized: String.LocalizationValue(filter.rawValue)), systemImage: filter.icon, isSelected: selectedFilter == filter, height: 48) {
+                        withAnimation(M3Motion.defaultSpatial) {
+                            selectedFilter = selectedFilter == filter ? nil : filter
+                        }
+                    }
+                }
             }
-        )
+            .padding(.horizontal, 16)
+            .padding(.vertical, 4)
+        }
     }
 
     // MARK: - Feed Content
@@ -156,6 +163,9 @@ struct LibraryView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 filterBar
+                LibraryControlRow(sort: $sort, viewMode: $viewMode, onCreate: { showCreateDialog = true })
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
 
                 switch selectedFilter {
                 case .playlists:
@@ -183,28 +193,42 @@ struct LibraryView: View {
     private var playlistsSection: some View {
         librarySection(title: "Playlists", count: playlists.count) {
             ForEach(autoPlaylists) { info in
-                if let detailRoute = info.detailRoute {
-                    NavigationLink(value: detailRoute) {
-                        autoPlaylistCell(info: info)
+                let link = info.detailRoute ?? info.route.map { DetailRoute.autoPlaylist($0) }
+                if let link {
+                    NavigationLink(value: link) {
+                        entry(
+                            artwork: .icon(info.icon),
+                            title: String(localized: String.LocalizationValue(info.title)),
+                            subtitle: info.subtitle.map { String(localized: String.LocalizationValue($0)) }
+                        )
                     }
-                    .buttonStyle(.plain)
-                } else if let route = info.route {
-                    NavigationLink(value: DetailRoute.autoPlaylist(route)) {
-                        autoPlaylistCell(info: info)
-                    }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.expressive(scale: 0.98))
                 }
             }
 
-            ForEach(playlists, id: \.id) { playlist in
+            ForEach(sortedPlaylists, id: \.id) { playlist in
                 NavigationLink(value: DetailRoute.playlist(playlistId: playlist.id)) {
-                    itemCell(
-                        url: playlist.thumbnailUrl,
+                    entry(
+                        artwork: playlistArtwork(playlist),
                         title: playlist.name,
-                        subtitle: playlistSongCounts[playlist.id].map { "\($0) songs" }
+                        subtitle: songCountText(playlistSongCounts[playlist.id] ?? playlist.remoteSongCount),
+                        badge: playlist.browseId == nil ? "Personal" : "Synced with YouTube",
+                        onPlay: { Task { await play(playlist) } },
+                        menuItems: {
+                            if playlist.isEditable {
+                                Button(role: .destructive) {
+                                    playlistToDelete = playlist
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                            if let url = URL.playlistShareURL(id: playlist.browseId ?? playlist.id), playlist.browseId != nil {
+                                ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
+                            }
+                        }
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.expressive(scale: 0.98))
                 .contextMenu {
                     if playlist.isEditable {
                         Button(role: .destructive) {
@@ -218,18 +242,80 @@ struct LibraryView: View {
         }
     }
 
+    private var sortedPlaylists: [PlaylistEntity] {
+        switch sort {
+        case .custom: return playlists
+        case .name: return playlists.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        case .recent: return playlists.sorted { ($0.bookmarkedAt ?? .distantPast) > ($1.bookmarkedAt ?? .distantPast) }
+        case .size: return playlists.sorted { (playlistSongCounts[$0.id] ?? 0) > (playlistSongCounts[$1.id] ?? 0) }
+        }
+    }
+
+    private func playlistArtwork(_ playlist: PlaylistEntity) -> LibraryArtwork {
+        if let mosaic = playlistMosaics[playlist.id], mosaic.count >= 4, playlist.browseId == nil || playlist.thumbnailUrl == nil {
+            return .mosaic(mosaic)
+        }
+        if let url = playlist.thumbnailUrl { return .image(url) }
+        if let mosaic = playlistMosaics[playlist.id], !mosaic.isEmpty { return .mosaic(mosaic) }
+        return .icon("music.note.list")
+    }
+
+    private func songCountText(_ count: Int?) -> String? {
+        guard let count else { return nil }
+        return String(format: NSLocalizedString("%d tracks", comment: "Library song count"), count)
+    }
+
+    /// Plays a playlist straight from the library card.
+    private func play(_ playlist: PlaylistEntity) async {
+        let songs: [SongEntity] = (try? await DatabaseService.shared.fetchAll(
+            SongEntity.self,
+            sql: "SELECT song.* FROM song JOIN playlist_song_map m ON m.song_id = song.id WHERE m.playlist_id = ? ORDER BY m.position",
+            arguments: [playlist.id]
+        )) ?? []
+        if songs.isEmpty {
+            router.libraryPath.append(DetailRoute.playlist(playlistId: playlist.id))
+            return
+        }
+        PlaybackQueue.play(songs.map { SongItem(entity: $0) }, log: Log.libraryView, context: "Library card play")
+    }
+
+    /// List-mode card or grid-mode tile, depending on the view mode.
+    @ViewBuilder
+    private func entry(
+        artwork: LibraryArtwork,
+        title: String,
+        subtitle: String?,
+        badge: LocalizedStringKey? = nil,
+        onPlay: (() -> Void)? = nil,
+        @ViewBuilder menuItems: () -> some View = { EmptyView() }
+    ) -> some View {
+        if viewMode == .list {
+            LibraryCard(artwork: artwork, title: title, subtitle: subtitle, badge: badge, onPlay: onPlay) {
+                Menu {
+                    menuItems()
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .rotationEffect(.degrees(90))
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(m3.onSurface)
+                        .frame(width: 36, height: 44)
+                        .contentShape(Rectangle())
+                }
+            }
+        } else {
+            LibraryGridTile(artwork: artwork, title: title, subtitle: subtitle)
+        }
+    }
+
     // MARK: - Artists
 
     private var artistsSection: some View {
         librarySection(title: "Artists", count: artists.count) {
             ForEach(artists, id: \.id) { artist in
                 NavigationLink(value: DetailRoute.artist(browseId: artist.id)) {
-                    artistCell(
-                        url: artist.thumbnailUrl,
-                        name: artist.name
-                    )
+                    entry(artwork: .round(artist.thumbnailUrl), title: artist.name, subtitle: String(localized: "Artist"))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.expressive(scale: 0.98))
             }
         }
     }
@@ -240,13 +326,9 @@ struct LibraryView: View {
         librarySection(title: "Albums", count: albums.count) {
             ForEach(albums, id: \.id) { album in
                 NavigationLink(value: DetailRoute.album(browseId: album.id)) {
-                    itemCell(
-                        url: album.thumbnailUrl,
-                        title: album.title,
-                        subtitle: album.songCount > 0 ? "\(album.songCount) songs" : nil
-                    )
+                    entry(artwork: .image(album.thumbnailUrl), title: album.title, subtitle: album.songCount > 0 ? songCountText(album.songCount) : String(localized: "Album"))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.expressive(scale: 0.98))
             }
         }
     }
@@ -257,13 +339,9 @@ struct LibraryView: View {
         librarySection(title: "Podcasts", count: podcasts.count) {
             ForEach(podcasts, id: \.id) { podcast in
                 NavigationLink(value: DetailRoute.podcast(browseId: podcast.id)) {
-                    itemCell(
-                        url: podcast.thumbnailUrl,
-                        title: podcast.name,
-                        subtitle: nil
-                    )
+                    entry(artwork: .image(podcast.thumbnailUrl), title: podcast.name, subtitle: String(localized: "Podcast"))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.expressive(scale: 0.98))
             }
         }
     }
@@ -275,28 +353,36 @@ struct LibraryView: View {
         count: Int,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: DesignTokens.sectionSpacing) {
-            sectionTitle(title, count: count)
-
-            LazyVGrid(columns: gridColumns, spacing: 16) {
-                content()
+        VStack(alignment: .leading, spacing: 12) {
+            if selectedFilter == nil {
+                sectionTitle(title, count: count)
             }
-            .padding(.horizontal, DesignTokens.screenHPadding)
+
+            if viewMode == .list {
+                LazyVStack(spacing: 12) {
+                    content()
+                }
+                .padding(.horizontal, 12)
+            } else {
+                LazyVGrid(columns: gridColumns, spacing: 18) {
+                    content()
+                }
+                .padding(.horizontal, DesignTokens.screenHPadding)
+            }
         }
-        .padding(.bottom, 24)
+        .padding(.bottom, 20)
     }
 
     private func sectionTitle(_ title: String, count: Int? = nil) -> some View {
         HStack(alignment: .firstTextBaseline) {
             Text(LocalizedStringKey(title))
-                .font(.title3)
-                .fontWeight(.bold)
+                .font(.m3(.titleLarge))
+                .foregroundStyle(m3.onSurface)
             Spacer()
             if let count {
                 Text("\(count)")
-                    .font(.callout)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
+                    .font(.m3(.labelLarge))
+                    .foregroundStyle(m3.onSurfaceVariant)
             }
         }
         .padding(.horizontal, DesignTokens.screenHPadding)
@@ -423,6 +509,19 @@ struct LibraryView: View {
                 .map { ($0["playlist_id"] as String, $0["cnt"] as Int) }
             }
             playlistSongCounts = Dictionary(uniqueKeysWithValues: rows)
+
+            let thumbs: [(String, String)] = try await DatabaseService.shared.read { db in
+                try Row.fetchAll(
+                    db,
+                    sql: "SELECT playlist_id, thumbnail_url FROM ("
+                        + "SELECT m.playlist_id, s.thumbnail_url, "
+                        + "ROW_NUMBER() OVER (PARTITION BY m.playlist_id ORDER BY m.position) AS rn "
+                        + "FROM playlist_song_map m JOIN song s ON s.id = m.song_id "
+                        + "WHERE s.thumbnail_url IS NOT NULL) WHERE rn <= 4"
+                )
+                .map { ($0["playlist_id"] as String, $0["thumbnail_url"] as String) }
+            }
+            playlistMosaics = Dictionary(grouping: thumbs, by: \.0).mapValues { $0.map(\.1) }
 
             isLoading = false
         } catch {

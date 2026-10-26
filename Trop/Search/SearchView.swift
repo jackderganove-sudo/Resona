@@ -9,7 +9,10 @@ import SwiftUI
 
 struct SearchView: View {
     @Environment(SettingsStore.self) private var settings
+    @Environment(\.m3) private var m3
     @State private var viewModel = SearchViewModel()
+    @State private var exploreModel = ExploreViewModel()
+    @State private var homeTab: SearchHomeTab = .explore
     @ObservedObject private var router = AppRouter.shared
     @FocusState private var fieldFocused: Bool
 
@@ -18,6 +21,7 @@ struct SearchView: View {
     var body: some View {
         NavigationStack(path: $router.searchPath) {
             VStack(spacing: 0) {
+                ResonaTopBar()
                 searchTopBar
 
                 content
@@ -25,6 +29,9 @@ struct SearchView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             .toolbar(.hidden, for: .navigationBar)
             .detailRouteDestinations()
+            .navigationDestination(for: MoodItem.self) { mood in
+                MoodDetailView(mood: mood)
+            }
             .onChange(of: pendingRoute) { _, route in
                 if let route {
                     router.searchPath.append(route)
@@ -33,10 +40,7 @@ struct SearchView: View {
             }
             .onAppear {
                 viewModel.loadSearchHistory()
-                focusIfSearchTab()
-            }
-            .onChange(of: router.selectedTabIndex) { _, _ in
-                focusIfSearchTab()
+                exploreModel.load()
             }
             .task(id: viewModel.results.count) {
                 let urls = viewModel.results
@@ -50,39 +54,13 @@ struct SearchView: View {
 
     // MARK: - Top bar
 
-    /// Search field + sort menu pinned above the filter chips.
+    /// Large pill search field with the sort menu inside (reference style).
     private var searchTopBar: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-                TextField("Search", text: $viewModel.fieldText)
-                    .focused($fieldFocused)
-                    .submitLabel(.search)
-                    .autocorrectionDisabled()
-                    .onSubmit { submit(nil) }
-                if !viewModel.fieldText.isEmpty {
-                    Button {
-                        viewModel.fieldText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Clear search")
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(
-                Capsule()
-                    .fill(Color(.systemGray5).opacity(0.6))
-            )
-
+        M3SearchBar(text: $viewModel.fieldText, focus: $fieldFocused, onSubmit: { submit(nil) }) {
             sortMenu
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.bottom, 8)
     }
 
     private var sortMenu: some View {
@@ -99,11 +77,10 @@ struct SearchView: View {
                 }
             }
         } label: {
-            Image(systemName: "arrow.up.arrow.down")
-                .font(.body)
-                .foregroundStyle(.primary)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(Color(.systemGray5).opacity(0.6)))
+            Image(systemName: "globe")
+                .font(.system(size: 22, weight: .regular))
+                .foregroundStyle(m3.onSurface)
+                .frame(width: 40, height: 40)
         }
         .accessibilityLabel("Sort results")
     }
@@ -122,11 +99,7 @@ struct SearchView: View {
     private var content: some View {
         switch viewModel.phase {
         case .idle:
-            if viewModel.searchHistory.isEmpty {
-                noRecentSearchesView
-            } else {
-                searchHistoryView
-            }
+            searchHome
         case .loading:
             loadingView
         case .results:
@@ -156,39 +129,109 @@ struct SearchView: View {
         viewModel.submit()
     }
 
+    /// Idle state: "Explore" (moods, charts, new releases) and
+    /// "Suggestions" (recent searches) tabs, like the reference.
+    private var searchHome: some View {
+        VStack(spacing: 0) {
+            M3PrimaryTabs(
+                tabs: [
+                    (tab: SearchHomeTab.explore, title: "Explore", icon: "safari"),
+                    (tab: SearchHomeTab.suggestions, title: "Suggestions", icon: "sparkles")
+                ],
+                selection: $homeTab
+            )
+
+            Group {
+                switch homeTab {
+                case .explore:
+                    exploreContent
+                case .suggestions:
+                    if viewModel.searchHistory.isEmpty {
+                        noRecentSearchesView
+                    } else {
+                        searchHistoryView
+                    }
+                }
+            }
+            .frame(maxHeight: .infinity)
+            .transition(.opacity)
+        }
+        .animation(M3Motion.defaultEffects, value: homeTab)
+    }
+
+    @ViewBuilder
+    private var exploreContent: some View {
+        switch exploreModel.phase {
+        case .idle, .loading:
+            ExploreSkeletonView()
+        case .loaded:
+            ScrollView {
+                ExploreSectionsList(
+                    sections: exploreModel.sections.sorted { lhs, rhs in
+                        // Moods & genres first, as in the reference.
+                        (lhs.kind == .moods ? 0 : 1) < (rhs.kind == .moods ? 0 : 1)
+                    },
+                    pendingRoute: $pendingRoute
+                )
+                .padding(.bottom, 16)
+            }
+            .scrollIndicators(.hidden)
+            .miniPlayerTracksScroll()
+            .refreshable { await exploreModel.refresh() }
+        case .empty, .failed:
+            ContentUnavailableView(
+                "Nothing to explore",
+                systemImage: "safari",
+                description: Text("Try again later.")
+            )
+        }
+    }
+
     private var searchHistoryView: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("Recently searched")
-                        .font(.headline)
-                        .foregroundColor(.primary)
+                        .font(.m3(.titleMedium, weight: .medium))
+                        .foregroundStyle(m3.onSurface)
                     Spacer()
                     Button("Clear") {
                         viewModel.clearSearchHistory()
                     }
-                    .font(.subheadline)
-                    .foregroundColor(settings.accentColor)
+                    .font(.m3(.labelLarge))
+                    .foregroundStyle(m3.primary)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.horizontal, 18)
+                .padding(.top, 14)
+                .padding(.bottom, 6)
 
                 ForEach(viewModel.searchHistory, id: \.query) { entry in
-                    Button {
-                        submit(entry.query)
-                    } label: {
-                        HStack {
-                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
-                                .foregroundColor(settings.accentColor)
-                            Text(entry.query)
-                                .foregroundColor(.primary)
-                            Spacer()
+                    HStack(spacing: 18) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 18))
+                            .foregroundStyle(m3.onSurfaceVariant)
+                        Text(entry.query)
+                            .font(.m3(.bodyLarge))
+                            .foregroundStyle(m3.onSurface)
+                            .lineLimit(1)
+                        Spacer()
+                        Button {
+                            viewModel.fieldText = entry.query
+                            fieldFocused = true
+                        } label: {
+                            Image(systemName: "arrow.up.left")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(m3.onSurfaceVariant)
+                                .frame(width: 40, height: 40)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .contentShape(Rectangle())
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Edit search"))
                     }
-                    .buttonStyle(.plain)
+                    .padding(.leading, 18)
+                    .padding(.trailing, 8)
+                    .frame(minHeight: 52)
+                    .contentShape(Rectangle())
+                    .onTapGesture { submit(entry.query) }
                     .contextMenu {
                         Button(role: .destructive) {
                             viewModel.deleteSearchHistoryEntry(entry)
@@ -196,13 +239,11 @@ struct SearchView: View {
                             Label("Delete", systemImage: "trash")
                         }
                     }
-
-                    Divider()
-                        .padding(.leading, 16)
                 }
             }
         }
         .scrollIndicators(.automatic)
+        .scrollDismissesKeyboard(.immediately)
         .miniPlayerTracksScroll()
     }
 
@@ -239,6 +280,7 @@ struct SearchView: View {
             .padding(.bottom, 16)
         }
         .scrollIndicators(.automatic)
+        .scrollDismissesKeyboard(.immediately)
         .miniPlayerTracksScroll()
     }
 
@@ -252,15 +294,13 @@ struct SearchView: View {
                 viewModel.isShowingLibrary = false
             }
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 Text(LocalizedStringKey(title))
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.primary)
+                    .font(.m3(.titleLarge))
+                    .foregroundStyle(m3.onSurface)
                 Image(systemName: "chevron.right")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(m3.onSurfaceVariant)
                 Spacer()
             }
             .contentShape(Rectangle())
@@ -282,14 +322,15 @@ struct SearchView: View {
                         .frame(width: 56, height: 56)
                         .clipShape(Circle())
                     Text(artist.name)
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.primary)
+                        .font(.m3(.headlineSmall))
+                        .foregroundStyle(m3.onSurface)
                         .lineLimit(1)
                     Spacer()
-                    Text("•••")
-                        .font(.body.weight(.black))
-                        .foregroundStyle(settings.accentColor)
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(m3.onPrimaryContainer)
+                        .frame(width: 40, height: 40)
+                        .background(m3.primaryContainer, in: Circle())
                 }
                 .contentShape(Rectangle())
             }
@@ -304,9 +345,10 @@ struct SearchView: View {
                 }, onNavigate: { pendingRoute = $0 })
             }
         }
+        .padding(.bottom, 8)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemGray6))
+            RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous)
+                .fill(m3.surfaceContainerLow)
         )
     }
 
@@ -323,8 +365,8 @@ struct SearchView: View {
                                     .frame(width: 110, height: 110)
                                     .clipShape(Circle())
                                 Text(artist.name)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.primary)
+                                    .font(.m3(.titleSmall, weight: .medium))
+                                    .foregroundStyle(m3.onSurface)
                                     .lineLimit(1)
                                     .frame(width: 110)
                             }
@@ -422,4 +464,9 @@ struct SearchView: View {
             appendRoute: { router.searchPath.append($0) }
         )
     }
+}
+
+enum SearchHomeTab: Hashable {
+    case explore
+    case suggestions
 }

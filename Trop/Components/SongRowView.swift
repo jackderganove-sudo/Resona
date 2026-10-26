@@ -9,18 +9,19 @@ import SwiftUI
 
 /// Trailing ⋮ button shared by every song row.
 struct MoreButton: View {
-    @Environment(SettingsStore.self) private var settings
+    @Environment(\.m3) private var m3
     let action: () -> Void
 
     var body: some View {
         Button(action: action, label: {
-            Text("⋮")
-                .font(.body.weight(.black))
-                .foregroundStyle(settings.accentColor)
+            Image(systemName: "ellipsis")
+                .rotationEffect(.degrees(90))
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(m3.onSurfaceVariant)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         })
-        .buttonStyle(.plain)
+        .buttonStyle(.expressive(scale: 0.85))
         .accessibilityLabel("More")
     }
 }
@@ -29,9 +30,10 @@ struct MoreButton: View {
 /// Replaces AlbumSongRow, PlaylistSongRow, PodcastEpisodeRow, DownloadedSongRow
 /// and the song branch of YouTubeListItemView.
 struct SongRowView: View {
+    @Environment(\.m3) private var m3
     let song: SongItem
-    var artSize: CGFloat = DesignTokens.thumbSmall
-    var artRadius: CGFloat = DesignTokens.thumbRadius
+    var artSize: CGFloat = M3Metrics.listThumbnail
+    var artRadius: CGFloat = M3Metrics.thumbnailRadius
     var onTap: () -> Void
     var onNavigate: ((DetailRoute) -> Void)?
 
@@ -39,22 +41,35 @@ struct SongRowView: View {
     @State private var showSongMenu = false
 
     var body: some View {
-        HStack(spacing: DesignTokens.rowSpacing) {
-            AsyncImageView(url: song.thumbnailUrl)
-                .frame(width: artSize, height: artSize)
-                .clipShape(RoundedRectangle(cornerRadius: artRadius, style: .continuous))
+        HStack(spacing: 16) {
+            ZStack {
+                AsyncImageView(url: song.thumbnailUrl)
+                if NowPlaying.shared.videoId == song.videoId {
+                    Color.black.opacity(0.35)
+                    PlayingBars(isAnimating: NowPlaying.shared.isPlaying)
+                        .frame(width: artSize * 0.42, height: artSize * 0.42)
+                }
+            }
+            .frame(width: artSize, height: artSize)
+            .clipShape(RoundedRectangle(cornerRadius: max(artRadius, M3Metrics.thumbnailRadius), style: .continuous))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(song.title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                    .font(.m3(.titleMedium, weight: .regular))
+                    .foregroundStyle(NowPlaying.shared.videoId == song.videoId ? m3.primary : m3.onSurface)
                     .lineLimit(1)
 
-                Text(song.subtitleLine(duration: durations.effectiveDuration(known: song.duration)))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    if song.isExplicit {
+                        Image(systemName: "e.square.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(m3.onSurfaceVariant)
+                    }
+                    Text(song.subtitleLine(duration: durations.effectiveDuration(known: song.duration)))
+                        .font(.m3(.bodyMedium))
+                        .foregroundStyle(m3.onSurfaceVariant)
+                        .lineLimit(1)
+                }
             }
 
             Spacer()
@@ -72,8 +87,9 @@ struct SongRowView: View {
             }
         }
         .background(DownloadCellProgressView(song: song))
-        .padding(.horizontal, DesignTokens.screenHPadding)
-        .padding(.vertical, DesignTokens.rowVPadding)
+        .padding(.leading, DesignTokens.screenHPadding)
+        .padding(.trailing, 6)
+        .padding(.vertical, 6)
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
         .task { await durations.resolve(videoId: song.videoId, knownDuration: song.duration) }
@@ -92,7 +108,7 @@ struct DownloadCellProgressView: View {
         let state = downloadManager.state(for: song.videoId)
         return GeometryReader { geo in
             if case .downloading(let fraction) = state {
-                Color.accentColor.opacity(0.25)
+                ThemeStore.shared.dark.primary.opacity(0.18)
                     .frame(
                         width: geo.size.width * CGFloat(min(max(fraction, 0), 1)),
                         height: geo.size.height

@@ -144,6 +144,7 @@ struct LastFMSettingsView: View {
             }
         }
         .navigationTitle("Last.fm")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showWebView) {
             LastFMAuthWebView { success in

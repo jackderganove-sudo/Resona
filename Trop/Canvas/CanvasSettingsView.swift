@@ -94,6 +94,7 @@ struct CanvasSettingsView: View {
             }
         }
         .navigationTitle("Spotify Canvas")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
         .sheet(isPresented: $showWebView) {

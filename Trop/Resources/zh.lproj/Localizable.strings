@@ -3,6 +3,7 @@
 "%@ subscribers" = "%@ 位订阅者";
 "%d minutes" = "%d minutes";
 "%d songs" = "%d songs";
+"%d tracks" = "%d tracks";
 "+3s" = "+3秒";
 ", " = "，";
 "-3s" = "-3秒";
@@ -29,15 +30,19 @@
 "Albums" = "专辑";
 "Albums for you" = "为你推荐的专辑";
 "All Results" = "全部结果";
+"Animated artwork sources and cache" = "Animated artwork sources and cache";
+"App information, licenses and credits" = "App information, licenses and credits";
 "App volume" = "应用音量";
 "Appearance" = "外观";
 "Applies to buttons, highlights, and selected items." = "应用于按钮、高亮和选中项目。";
 "April" = "四月";
+"Artist" = "Artist";
 "Artists" = "艺人";
 "Artwork" = "Artwork";
 "Audio" = "音频";
 "Audio Normalization" = "音频标准化";
 "Audio Quality" = "音质";
+"Audio behavior, quality and crossfade" = "Audio behavior, quality and crossfade";
 "Audio quality" = "音质";
 "August" = "八月";
 "Authorizing…" = "正在授权…";
@@ -68,6 +73,7 @@
 "Close lyrics" = "Close lyrics";
 "Closest matches to this song" = "与此歌曲最相似的内容";
 "Collapse player" = "Collapse player";
+"Colors from artwork" = "Colors from artwork";
 "Community playlists" = "社区歌单";
 "Commute" = "通勤";
 "Competing" = "竞赛中";
@@ -98,6 +104,7 @@
 "Create" = "创建";
 "Create one below to start collecting songs." = "在下方创建一个播放列表，开始收藏歌曲。";
 "Create playlist" = "创建播放列表";
+"Custom order" = "Custom order";
 "Customize Radio" = "自定义电台";
 "DND" = "勿扰";
 "Daily Discover" = "每日发现";
@@ -126,11 +133,14 @@
 "Downloading" = "正在下载";
 "Downloading…" = "正在下载…";
 "Downloads" = "下载";
+"Downloads and offline storage" = "Downloads and offline storage";
 "Drag to reorder providers" = "拖动以重新排列提供方";
 "Duration" = "时长";
+"Dynamic color" = "Dynamic color";
 "EQ" = "均衡器";
 "Edit" = "编辑";
 "Edit playlist" = "编辑播放列表";
+"Edit search" = "Edit search";
 "Electronic" = "电子";
 "Enable Discord RPC" = "启用 Discord RPC";
 "Enable Scrobbling" = "启用音乐记录";
@@ -181,9 +191,11 @@
 "June" = "六月";
 "Keep Listening" = "继续聆听";
 "Label" = "标签";
+"Language, region and explicit content" = "Language, region and explicit content";
 "Last week" = "上周";
 "Last.fm" = "Last.fm";
 "Last.fm Login" = "Last.fm 登录";
+"Last.fm and SponsorBlock" = "Last.fm and SponsorBlock";
 "Left" = "左对齐";
 "Lesser-known related tracks" = "较少人知的相关歌曲";
 "Library" = "资料库";
@@ -221,6 +233,7 @@
 "Lyrics from %@" = "Lyrics from %@";
 "Lyrics not found" = "未找到歌词";
 "Lyrics options" = "Lyrics options";
+"Lyrics providers, alignment and romanization" = "Lyrics providers, alignment and romanization";
 "March" = "三月";
 "Maximum delay before scrobbling (30–360s)." = "音乐记录前的最大延迟（30–360 秒）。";
 "Maximum volume" = "Maximum volume";
@@ -240,6 +253,7 @@
 "Music videos" = "音乐视频";
 "Mute" = "Mute";
 "My Top 100" = "我的热门 100 首";
+"Name" = "Name";
 "New Music Videos" = "最新音乐视频";
 "New Playlist" = "新建播放列表";
 "New albums & singles" = "新专辑与单曲";
@@ -279,6 +293,7 @@
 "Period" = "时间段";
 "Persist Queue" = "保持队列";
 "Persist Queue restores your queue, shuffle, and repeat state when the app relaunches." = "重新打开应用时恢复队列、随机播放和循环状态。";
+"Personal" = "Personal";
 "Pin" = "Pin";
 "Pin to Quick Picks" = "置顶到快捷精选";
 "Play" = "Play";
@@ -286,6 +301,7 @@
 "Play Next" = "下一首播放";
 "Play all" = "全部播放";
 "Play episodes from the top" = "从顶部播放剧集";
+"Playback" = "Playback";
 "Playback & Offline" = "播放与离线";
 "Player" = "播放器";
 "Player Background" = "播放器背景";
@@ -294,6 +310,7 @@
 "Playlist name" = "播放列表名称";
 "Playlists" = "播放列表";
 "Plays the looping video behind the player artwork when Spotify has one for the track." = "如果 Spotify 为歌曲提供视频，则在播放器封面后播放循环视频。";
+"Podcast" = "Podcast";
 "Podcasts" = "播客";
 "Pop" = "流行";
 "Preferences" = "偏好设置";
@@ -304,12 +321,14 @@
 "Profile unavailable" = "个人资料不可用";
 "Provider Order" = "提供方顺序";
 "Providers" = "提供方";
+"Pure black" = "Pure black";
 "Queue" = "播放队列";
 "Queue is empty" = "队列为空";
 "Quick Picks" = "快捷精选";
 "Rating" = "评分";
 "Re-sync" = "重新同步";
 "Recently Played" = "最近播放";
+"Recently added" = "Recently added";
 "Recently searched" = "最近搜索";
 "Refetch" = "重新获取";
 "Region" = "地区";
@@ -340,6 +359,7 @@
 "Scrobble Percent" = "音乐记录百分比";
 "Search" = "搜索";
 "Search Online" = "在线搜索";
+"Search YouTube Music" = "Search YouTube Music";
 "Search failed" = "搜索失败";
 "Search songs" = "搜索歌曲";
 "Seconds" = "秒";
@@ -347,6 +367,7 @@
 "Select All" = "全选";
 "September" = "九月";
 "Settings" = "设置";
+"Shape the sound with presets and bands" = "Shape the sound with presets and bands";
 "Share" = "分享";
 "Share this album with others" = "与他人分享此专辑";
 "Share this playlist with others" = "与他人分享此播放列表";
@@ -356,6 +377,8 @@
 "Shows a progress ring during long instrumental gaps" = "在较长的纯音乐间隔期间显示进度环";
 "Shuffle" = "随机播放";
 "Shuffle artist" = "随机播放艺人歌曲";
+"Sign in" = "Sign in";
+"Sign in and account sync" = "Sign in and account sync";
 "Sign in to see your YouTube Music history." = "登录以查看 YouTube Music 历史记录。";
 "Similar" = "相似";
 "Similar to %@" = "与 %@ 相似";
@@ -369,6 +392,7 @@
 "Sleep" = "睡眠";
 "Sleep timer" = "Sleep timer";
 "Solid" = "纯色";
+"Song count" = "Song count";
 "Song options" = "歌曲选项";
 "Song title — e.g. Adele - Hello" = "歌曲名称 — 例如 Adele - Hello";
 "Songs" = "歌曲";
@@ -387,11 +411,13 @@
 "State Template" = "状态模板";
 "Stats" = "统计";
 "Status" = "状态";
+"Storage" = "Storage";
 "Stream" = "串流";
 "Style" = "样式";
 "Style, size & explicit filter" = "风格、数量与露骨内容筛选";
 "Subscribe" = "订阅";
 "Subscribed" = "已订阅";
+"Suggestions" = "Suggestions";
 "Swipe Artwork to Skip" = "滑动封面切歌";
 "Swipe left or right on the artwork in the full player to play the next or previous song." = "在全屏播放器封面上向左或向右滑动，以播放上一首或下一首歌曲。";
 "Sync" = "同步";
@@ -403,11 +429,14 @@
 "Sync Podcasts" = "同步播客";
 "Sync playlist" = "同步播放列表";
 "Sync this playlist with YouTube Music" = "将此播放列表与 YouTube Music 同步";
+"Synced with YouTube" = "Synced with YouTube";
 "Syncs with your YouTube Music account. This cannot be changed later." = "与 YouTube Music 账户同步。此设置之后无法更改。";
 "System" = "系统默认";
 "Template" = "模板";
+"The whole app takes its colors from the current album cover." = "The whole app takes its colors from the current album cover.";
 "Theme" = "主题";
 "Theme Mode" = "主题模式";
+"Themes, colors and visual style" = "Themes, colors and visual style";
 "This permanently deletes all offline tracks from your device." = "这会永久删除设备上的所有离线歌曲。";
 "This week" = "本周";
 "Title" = "标题";
@@ -452,5 +481,6 @@
 "Your Playlists" = "你的播放列表";
 "Your daily discover" = "你的每日发现";
 "Your recent searches will appear here." = "你最近的搜索会显示在这里。";
+"Your recently played songs" = "Your recently played songs";
 "s" = "秒";
 "subscribers" = "位订阅者";

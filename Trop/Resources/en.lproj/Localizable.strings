@@ -3,6 +3,7 @@
 "%@ subscribers" = "%@ subscribers";
 "%d minutes" = "%d minutes";
 "%d songs" = "%d songs";
+"%d tracks" = "%d tracks";
 "+3s" = "+3s";
 ", " = ", ";
 "-3s" = "-3s";
@@ -29,15 +30,19 @@
 "Albums" = "Albums";
 "Albums for you" = "Albums for you";
 "All Results" = "All Results";
+"Animated artwork sources and cache" = "Animated artwork sources and cache";
+"App information, licenses and credits" = "App information, licenses and credits";
 "App volume" = "App volume";
 "Appearance" = "Appearance";
 "Applies to buttons, highlights, and selected items." = "Applies to buttons, highlights, and selected items.";
 "April" = "April";
+"Artist" = "Artist";
 "Artists" = "Artists";
 "Artwork" = "Artwork";
 "Audio" = "Audio";
 "Audio Normalization" = "Audio Normalization";
 "Audio Quality" = "Audio Quality";
+"Audio behavior, quality and crossfade" = "Audio behavior, quality and crossfade";
 "Audio quality" = "Audio quality";
 "August" = "August";
 "Authorizing…" = "Authorizing…";
@@ -68,6 +73,7 @@
 "Close lyrics" = "Close lyrics";
 "Closest matches to this song" = "Closest matches to this song";
 "Collapse player" = "Collapse player";
+"Colors from artwork" = "Colors from artwork";
 "Community playlists" = "Community playlists";
 "Commute" = "Commute";
 "Competing" = "Competing";
@@ -98,6 +104,7 @@
 "Create" = "Create";
 "Create one below to start collecting songs." = "Create one below to start collecting songs.";
 "Create playlist" = "Create playlist";
+"Custom order" = "Custom order";
 "Customize Radio" = "Customize Radio";
 "DND" = "DND";
 "Daily Discover" = "Daily Discover";
@@ -126,11 +133,14 @@
 "Downloading" = "Downloading";
 "Downloading…" = "Downloading…";
 "Downloads" = "Downloads";
+"Downloads and offline storage" = "Downloads and offline storage";
 "Drag to reorder providers" = "Drag to reorder providers";
 "Duration" = "Duration";
+"Dynamic color" = "Dynamic color";
 "EQ" = "EQ";
 "Edit" = "Edit";
 "Edit playlist" = "Edit playlist";
+"Edit search" = "Edit search";
 "Electronic" = "Electronic";
 "Enable Discord RPC" = "Enable Discord RPC";
 "Enable Scrobbling" = "Enable Scrobbling";
@@ -181,9 +191,11 @@
 "June" = "June";
 "Keep Listening" = "Keep Listening";
 "Label" = "Label";
+"Language, region and explicit content" = "Language, region and explicit content";
 "Last week" = "Last week";
 "Last.fm" = "Last.fm";
 "Last.fm Login" = "Last.fm Login";
+"Last.fm and SponsorBlock" = "Last.fm and SponsorBlock";
 "Left" = "Left";
 "Lesser-known related tracks" = "Lesser-known related tracks";
 "Library" = "Library";
@@ -221,6 +233,7 @@
 "Lyrics from %@" = "Lyrics from %@";
 "Lyrics not found" = "Lyrics not found";
 "Lyrics options" = "Lyrics options";
+"Lyrics providers, alignment and romanization" = "Lyrics providers, alignment and romanization";
 "March" = "March";
 "Maximum delay before scrobbling (30–360s)." = "Maximum delay before scrobbling (30–360s).";
 "Maximum volume" = "Maximum volume";
@@ -240,6 +253,7 @@
 "Music videos" = "Music videos";
 "Mute" = "Mute";
 "My Top 100" = "My Top 100";
+"Name" = "Name";
 "New Music Videos" = "New Music Videos";
 "New Playlist" = "New Playlist";
 "New albums & singles" = "New albums & singles";
@@ -279,6 +293,7 @@
 "Period" = "Period";
 "Persist Queue" = "Persist Queue";
 "Persist Queue restores your queue, shuffle, and repeat state when the app relaunches." = "Persist Queue restores your queue, shuffle, and repeat state when the app relaunches.";
+"Personal" = "Personal";
 "Pin" = "Pin";
 "Pin to Quick Picks" = "Pin to Quick Picks";
 "Play" = "Play";
@@ -286,6 +301,7 @@
 "Play Next" = "Play Next";
 "Play all" = "Play all";
 "Play episodes from the top" = "Play episodes from the top";
+"Playback" = "Playback";
 "Playback & Offline" = "Playback & Offline";
 "Player" = "Player";
 "Player Background" = "Player Background";
@@ -294,6 +310,7 @@
 "Playlist name" = "Playlist name";
 "Playlists" = "Playlists";
 "Plays the looping video behind the player artwork when Spotify has one for the track." = "Plays the looping video behind the player artwork when Spotify has one for the track.";
+"Podcast" = "Podcast";
 "Podcasts" = "Podcasts";
 "Pop" = "Pop";
 "Preferences" = "Preferences";
@@ -304,12 +321,14 @@
 "Profile unavailable" = "Profile unavailable";
 "Provider Order" = "Provider Order";
 "Providers" = "Providers";
+"Pure black" = "Pure black";
 "Queue" = "Queue";
 "Queue is empty" = "Queue is empty";
 "Quick Picks" = "Quick Picks";
 "Rating" = "Rating";
 "Re-sync" = "Re-sync";
 "Recently Played" = "Recently Played";
+"Recently added" = "Recently added";
 "Recently searched" = "Recently searched";
 "Refetch" = "Refetch";
 "Region" = "Region";
@@ -340,6 +359,7 @@
 "Scrobble Percent" = "Scrobble Percent";
 "Search" = "Search";
 "Search Online" = "Search Online";
+"Search YouTube Music" = "Search YouTube Music";
 "Search failed" = "Search failed";
 "Search songs" = "Search songs";
 "Seconds" = "Seconds";
@@ -347,6 +367,7 @@
 "Select All" = "Select All";
 "September" = "September";
 "Settings" = "Settings";
+"Shape the sound with presets and bands" = "Shape the sound with presets and bands";
 "Share" = "Share";
 "Share this album with others" = "Share this album with others";
 "Share this playlist with others" = "Share this playlist with others";
@@ -356,6 +377,8 @@
 "Shows a progress ring during long instrumental gaps" = "Shows a progress ring during long instrumental gaps";
 "Shuffle" = "Shuffle";
 "Shuffle artist" = "Shuffle artist";
+"Sign in" = "Sign in";
+"Sign in and account sync" = "Sign in and account sync";
 "Sign in to see your YouTube Music history." = "Sign in to see your YouTube Music history.";
 "Similar" = "Similar";
 "Similar to %@" = "Similar to %@";
@@ -369,6 +392,7 @@
 "Sleep" = "Sleep";
 "Sleep timer" = "Sleep timer";
 "Solid" = "Solid";
+"Song count" = "Song count";
 "Song options" = "Song options";
 "Song title — e.g. Adele - Hello" = "Song title — e.g. Adele - Hello";
 "Songs" = "Songs";
@@ -387,11 +411,13 @@
 "State Template" = "State Template";
 "Stats" = "Stats";
 "Status" = "Status";
+"Storage" = "Storage";
 "Stream" = "Stream";
 "Style" = "Style";
 "Style, size & explicit filter" = "Style, size & explicit filter";
 "Subscribe" = "Subscribe";
 "Subscribed" = "Subscribed";
+"Suggestions" = "Suggestions";
 "Swipe Artwork to Skip" = "Swipe Artwork to Skip";
 "Swipe left or right on the artwork in the full player to play the next or previous song." = "Swipe left or right on the artwork in the full player to play the next or previous song.";
 "Sync" = "Sync";
@@ -403,11 +429,14 @@
 "Sync Podcasts" = "Sync Podcasts";
 "Sync playlist" = "Sync playlist";
 "Sync this playlist with YouTube Music" = "Sync this playlist with YouTube Music";
+"Synced with YouTube" = "Synced with YouTube";
 "Syncs with your YouTube Music account. This cannot be changed later." = "Syncs with your YouTube Music account. This cannot be changed later.";
 "System" = "System";
 "Template" = "Template";
+"The whole app takes its colors from the current album cover." = "The whole app takes its colors from the current album cover.";
 "Theme" = "Theme";
 "Theme Mode" = "Theme Mode";
+"Themes, colors and visual style" = "Themes, colors and visual style";
 "This permanently deletes all offline tracks from your device." = "This permanently deletes all offline tracks from your device.";
 "This week" = "This week";
 "Title" = "Title";
@@ -452,5 +481,6 @@
 "Your Playlists" = "Your Playlists";
 "Your daily discover" = "Your daily discover";
 "Your recent searches will appear here." = "Your recent searches will appear here.";
+"Your recently played songs" = "Your recently played songs";
 "s" = "s";
 "subscribers" = "subscribers";

@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct YouTubeGridItemView: View {
+    @Environment(\.m3) private var m3
     var item: YTItem
     var onTap: () -> Void
 
     @State private var durations = DurationResolver()
-    private let artworkSize: CGFloat = 160
+    private let artworkSize: CGFloat = 150
 
     private var videoId: String? {
         switch item {
@@ -36,30 +37,35 @@ struct YouTubeGridItemView: View {
         }
     }
 
+    private var artworkShape: AnyShape {
+        if case .artist = item { return AnyShape(Circle()) }
+        return AnyShape(RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous))
+    }
+
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 AsyncImageView(url: item.thumbnailUrl)
                     .aspectRatio(1, contentMode: .fill)
                     .frame(width: artworkSize, height: artworkSize)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(artworkShape)
+                    .padding(.bottom, 6)
 
                 Text(item.title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                    .font(.m3(.titleSmall, weight: .medium))
+                    .foregroundStyle(m3.onSurface)
                     .lineLimit(2)
 
                 if !subtitleText.isEmpty {
                     Text(subtitleText)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(.m3(.bodySmall))
+                        .foregroundStyle(m3.onSurfaceVariant)
                         .lineLimit(1)
                 }
             }
-            .frame(width: artworkSize, height: 220, alignment: .top)
+            .frame(width: artworkSize, height: 218, alignment: .top)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.expressive(scale: 0.96))
         .task {
             guard let vid = videoId else { return }
             let known: Int
@@ -77,7 +83,7 @@ struct YouTubeGridItemView: View {
 }
 
 struct YouTubeListItemView: View {
-    @Environment(SettingsStore.self) private var settings
+    @Environment(\.m3) private var m3
     var item: YTItem
     var onTap: () -> Void
     var onNavigate: ((DetailRoute) -> Void)?
@@ -90,6 +96,7 @@ struct YouTubeListItemView: View {
         }
     }
 
+    /// Artists are round, everything else uses the expressive rounded square.
     var body: some View {
         if let song = songItem {
             SongRowView(
@@ -99,41 +106,44 @@ struct YouTubeListItemView: View {
                 onNavigate: onNavigate
             )
         } else {
-            HStack(spacing: 12) {
+            HStack(spacing: 16) {
                 AsyncImageView(url: item.thumbnailUrl)
-                    .frame(width: 48, height: 48)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .frame(width: M3Metrics.listThumbnail, height: M3Metrics.listThumbnail)
+                    .clipShape(isArtist ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: M3Metrics.thumbnailRadius, style: .continuous)))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.title)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+                        .font(.m3(.titleMedium, weight: .regular))
+                        .foregroundStyle(m3.onSurface)
                         .lineLimit(1)
 
-                    Text(albumSubtitleText)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                    if !albumSubtitleText.isEmpty {
+                        Text(albumSubtitleText)
+                            .font(.m3(.bodyMedium))
+                            .foregroundStyle(m3.onSurfaceVariant)
+                            .lineLimit(1)
+                    }
                 }
 
                 Spacer()
 
                 if let url = item.webUrl {
-                    Button {
+                    MoreButton {
                         UIPasteboard.general.string = url
-                    } label: {
-                        Text("⋮")
-                            .font(.body.weight(.black))
-                            .foregroundStyle(settings.accentColor)
                     }
                 }
             }
             .contentShape(Rectangle())
             .onTapGesture(perform: onTap)
-            .padding(.horizontal, 16)
+            .padding(.leading, 16)
+            .padding(.trailing, 6)
             .padding(.vertical, 6)
         }
+    }
+
+    private var isArtist: Bool {
+        if case .artist = item { return true }
+        return false
     }
 
     private var albumSubtitleText: String {

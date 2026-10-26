@@ -161,32 +161,22 @@ struct ExploreSectionsList: View {
     // MARK: - Moods grid
 
     private func moodsGrid(_ section: ExploreSection) -> some View {
-        HorizontalSection(title: section.title) {
-            // Two-row grid scrolling horizontally: all 50+ moods reachable
-            // without a dominating vertical wall.
-            LazyHGrid(
-                rows: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
-                spacing: 10
-            ) {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(LocalizedStringKey(section.title))
+                .font(.m3(.headlineMedium))
+                .foregroundStyle(ThemeStore.shared.dark.primary)
+                .padding(.horizontal, 18)
+                .padding(.top, 20)
+                .padding(.bottom, 14)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 ForEach(section.moods) { mood in
                     NavigationLink(value: mood) {
-                        Text(LocalizedStringKey(mood.title))
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.primary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.center)
-                            .frame(width: 150)
-                            .frame(minHeight: 64)
-                            .padding(.horizontal, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color(.systemGray5).opacity(0.6))
-                            )
+                        GenreTile(title: mood.title)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.expressive(scale: 0.96))
                 }
             }
+            .padding(.horizontal, 12)
         }
     }
 
@@ -196,7 +186,7 @@ struct ExploreSectionsList: View {
         YTItemRouter.route(
             item,
             playSong: { PlaybackQueue.playSingleWithRadio($0, log: Log.explore) },
-            appendRoute: { router.explorePath.append($0) }
+            appendRoute: { AppRouter.shared.open($0) }
         )
     }
 }
@@ -204,7 +194,7 @@ struct ExploreSectionsList: View {
 // MARK: - Mood detail
 
 /// Full mood/genre category page: songs grid, playlists, videos, albums.
-private struct MoodDetailView: View {
+struct MoodDetailView: View {
     let mood: MoodItem
 
     @State private var sections: [ExploreSection]?
@@ -235,7 +225,7 @@ private struct MoodDetailView: View {
         .navigationBarTitleDisplayMode(.large)
         .onChange(of: pendingRoute) { _, route in
             if let route {
-                AppRouter.shared.explorePath.append(route)
+                AppRouter.shared.open(route)
                 pendingRoute = nil
             }
         }
@@ -250,7 +240,7 @@ private struct MoodDetailView: View {
 /// Loading placeholder mirroring the Explore tab: album cards (title only),
 /// the 2-row moods grid, then a vertical Trending song list — the same
 /// shimmer animation as Home, composed for this layout.
-private struct ExploreSkeletonView: View {
+struct ExploreSkeletonView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 2) {

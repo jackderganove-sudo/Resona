@@ -23,6 +23,7 @@ struct IntegrationsSettingsView: View {
             }
         }
         .navigationTitle("Integrations")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }

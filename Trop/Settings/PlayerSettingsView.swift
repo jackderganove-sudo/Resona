@@ -50,6 +50,7 @@ struct PlayerSettingsView: View {
             }
         }
         .navigationTitle("Player")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }

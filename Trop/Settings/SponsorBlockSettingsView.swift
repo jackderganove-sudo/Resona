@@ -19,6 +19,7 @@ struct SponsorBlockSettingsView: View {
             }
         }
         .navigationTitle("SponsorBlock")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
         .onChange(of: enabled) {

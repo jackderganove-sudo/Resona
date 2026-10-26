@@ -68,6 +68,7 @@ struct ContentSettingsView: View {
             }
         }
         .navigationTitle("Content")
+        .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }

@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var nowPlaying = NowPlaying.shared
     @State private var selectedTab = ResonaTab(index: SettingsStore.shared.defaultTab)
     @State private var scrollState = MiniPlayerScrollState()
+    private let accountMenu = AccountMenuState.shared
 
     /// 0 = collapsed (mini player), 1 = full player.
     @State private var expansion: CGFloat = 0
@@ -68,6 +69,11 @@ struct ContentView: View {
                         }
                     )
                     .zIndex(10)
+                }
+
+                if accountMenu.isPresented {
+                    AccountMenuOverlay()
+                        .zIndex(30)
                 }
             }
             .ignoresSafeArea(.keyboard)

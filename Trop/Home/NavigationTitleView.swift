@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NavigationTitleView: View {
+    @Environment(\.m3) private var m3
     var title: String
     var label: String?
     var thumbnailUrl: String?
@@ -17,36 +18,38 @@ struct NavigationTitleView: View {
         Button(
             action: { onClick?() },
             label: {
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     if let thumbnailUrl {
                         AsyncImageView(url: thumbnailUrl)
-                            .frame(width: 32, height: 32)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .frame(width: 40, height: 40)
+                            .clipShape(Circle())
                     }
 
-                    VStack(alignment: .leading, spacing: 1) {
+                    VStack(alignment: .leading, spacing: 0) {
                         if let label {
                             Text(LocalizedStringKey(label))
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .font(.m3(.bodyMedium))
+                                .foregroundStyle(m3.onSurfaceVariant)
                         }
                         Text(LocalizedStringKey(title))
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
+                            .font(.m3(.headlineSmall))
+                            .foregroundStyle(m3.onSurface)
                             .lineLimit(1)
                     }
 
                     Spacer()
 
                     if onClick != nil {
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(m3.onSurfaceVariant)
+                            .frame(width: 40, height: 40)
+                            .background(m3.surfaceContainerHigh, in: Circle())
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.horizontal, 18)
+                .padding(.top, 20)
+                .padding(.bottom, 10)
             }
         )
         .buttonStyle(.plain)
