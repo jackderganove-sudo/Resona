@@ -358,3 +358,67 @@ struct M3TapHighlight: ViewModifier {
             .sensoryFeedback(.selection, trigger: pressed) { _, isPressed in isPressed }
     }
 }
+
+// MARK: - Switch
+
+/// Material 3 switch. On: track in the accent colour, larger handle with a
+/// check mark. Off: dark track with an outline and a small outlined handle.
+/// The handle grows while pressed. Use via `.toggleStyle(.m3)`.
+struct M3SwitchToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        M3SwitchBody(configuration: configuration)
+    }
+}
+
+private struct M3SwitchBody: View {
+    @Environment(\.m3) private var m3
+    @Environment(\.isEnabled) private var isEnabled
+    let configuration: ToggleStyleConfiguration
+    @GestureState private var pressed = false
+
+    var body: some View {
+        let on = configuration.isOn
+        HStack(spacing: 16) {
+            configuration.label
+                .frame(maxWidth: .infinity, alignment: .leading)
+            ZStack(alignment: on ? .trailing : .leading) {
+                Capsule()
+                    .fill(on ? m3.primary : m3.surfaceContainerHighest)
+                    .overlay(Capsule().strokeBorder(on ? .clear : m3.outline, lineWidth: 2))
+                Circle()
+                    .fill(on ? m3.onPrimary : m3.outline)
+                    .frame(width: pressed ? 28 : (on ? 24 : 16), height: pressed ? 28 : (on ? 24 : 16))
+                    .overlay {
+                        if on {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(m3.primary)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    }
+                    .padding(.horizontal, on ? 4 : 8)
+            }
+            .frame(width: 52, height: 32)
+            .opacity(isEnabled ? 1 : 0.38)
+            .contentShape(Capsule())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .updating($pressed) { _, state, _ in state = true }
+                    .onEnded { _ in
+                        withAnimation(M3Motion.fastSpatial) { configuration.isOn.toggle() }
+                    }
+            )
+            .animation(M3Motion.fastSpatial, value: on)
+            .animation(M3Motion.fastSpatial, value: pressed)
+            .sensoryFeedback(.selection, trigger: on)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityValue(Text(on ? "On" : "Off"))
+        .accessibilityAction { configuration.isOn.toggle() }
+    }
+}
+
+extension ToggleStyle where Self == M3SwitchToggleStyle {
+    static var m3: M3SwitchToggleStyle { M3SwitchToggleStyle() }
+}

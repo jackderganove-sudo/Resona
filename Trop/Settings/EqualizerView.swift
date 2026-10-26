@@ -1,241 +1,204 @@
 //
 //  EqualizerView.swift
-//  Trop
+//  Trop / Resona
 //
-//  Created by 686udjie on 20/08/2026.
+//  10-band equalizer in Material 3: a graph whose points are dragged up and
+//  down (±12 dB) with a dB axis on the left, the band frequency under every
+//  point and a value bubble while dragging; presets as M3 filter chips.
 //
 
 import SwiftUI
 
-/// A Spotify-style equalizer: a line graph across 10 band frequencies whose
-/// points can be dragged up/down (±12 dB), plus a horizontal preset strip.
 struct EqualizerView: View {
     @Environment(\.settingsStore) private var settings
+    @Environment(\.m3) private var m3
     @State private var dragIndex: Int?
 
     var body: some View {
         @Bindable var settings = settings
 
         ScrollView {
-            VStack(spacing: 24) {
-                equalizerCard(settings: settings)
-                    .padding(.horizontal, 20)
+            VStack(spacing: 20) {
+                VStack(spacing: 16) {
+                    Toggle(isOn: $settings.equalizerEnabled) {
+                        Text(LocalizedStringKey(settings.equalizerEnabled ? "Equalizer On" : "Equalizer Off"))
+                            .font(.m3(.titleMedium, weight: .medium))
+                            .foregroundStyle(m3.onSurface)
+                    }
+                    .toggleStyle(.m3)
+
+                    EqualizerGraph(gains: $settings.equalizerGains, activeDrag: $dragIndex)
+                        .frame(height: 280)
+                        .opacity(settings.equalizerEnabled ? 1 : 0.55)
+                }
+                .padding(20)
+                .background(m3.surfaceContainerLow, in: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+                .padding(.horizontal, 16)
 
                 presetStrip(settings: settings)
             }
-            .padding(.top, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 24)
+            .frame(maxWidth: M3Metrics.contentMaxWidth)
+            .frame(maxWidth: .infinity)
         }
+        .m3ScreenBackground()
         .navigationTitle("Equalizer")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    // MARK: - Graph
-
-    private func equalizerCard(settings: SettingsStore) -> some View {
-        @Bindable var settings = settings
-        return VStack(spacing: 12) {
-            HStack {
-                Text(LocalizedStringKey(settings.equalizerEnabled ? "Equalizer On" : "Equalizer Off"))
-                    .font(.subheadline.weight(.semibold))
-                Spacer()
-                Toggle("", isOn: $settings.equalizerEnabled)
-                    .labelsHidden()
-            }
-
-            EqualizerGraph(
-                gains: $settings.equalizerGains,
-                accentColor: settings.accentColor,
-                activeDrag: $dragIndex
-            )
-            .frame(height: 260)
-
-            HStack {
-                Text("\(Int(equalizerMinGain)) dB")
-                Spacer()
-                Text("0 dB")
-                Spacer()
-                Text("+\(Int(equalizerMaxGain)) dB")
-            }
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
-        .onChange(of: settings.equalizerEnabled) { _, enabled in
-            _ = enabled
+        .onChange(of: settings.equalizerEnabled) { _, _ in
             PlayerController.shared.applyPlaybackSettings()
         }
     }
 
-    // MARK: - Presets
-
     private func presetStrip(settings: SettingsStore) -> some View {
-        @Bindable var settings = settings
-        return ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
                 ForEach(EqualizerPresets.all, id: \.id) { preset in
-                    let isSelected = settings.equalizerPresetID == preset.id
-                    Button {
+                    M3Chip(
+                        title: String(localized: String.LocalizationValue(preset.name)),
+                        isSelected: settings.equalizerPresetID == preset.id
+                    ) {
                         settings.equalizerGains = preset.gains
                         settings.equalizerPresetID = preset.id
                         PlayerController.shared.applyPlaybackSettings()
-                    } label: {
-                        Text(LocalizedStringKey(preset.name))
-                            .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule().fill(isSelected ? settings.accentColor : Color(.secondarySystemGroupedBackground))
-                            )
-                            .foregroundStyle(isSelected ? Color.white : Color.primary)
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 16)
         }
     }
 }
 
-/// The interactive band graph. Each point sits at a fixed x (band index) and
-/// a y derived from its dB gain; dragging a point updates that band and flags
-/// the preset as custom.
+/// Interactive band graph: fixed x per band, y from the gain.
 private struct EqualizerGraph: View {
+    @Environment(\.m3) private var m3
     @Binding var gains: [Double]
-    let accentColor: Color
     @Binding var activeDrag: Int?
 
-    private let horizontalInset: CGFloat = 14
-    private let verticalInset: CGFloat = 18
+    /// Room on the left for the dB axis, at the bottom for frequencies.
+    private let axisWidth: CGFloat = 46
+    private let freqHeight: CGFloat = 24
+    private let inset: CGFloat = 14
+    private let axisValues: [Double] = [12, 6, 0, -6, -12]
 
     var body: some View {
         GeometryReader { geo in
-            let size = geo.size
-            let drawWidth = size.width - horizontalInset * 2
-            let drawHeight = size.height - verticalInset * 2
-            let points = gains.enumerated().map { index, gain -> CGPoint in
-                let x = horizontalInset + drawWidth * CGFloat(index) / CGFloat(max(1, gains.count - 1))
-                let normalized = (gain - equalizerMinGain) / (equalizerMaxGain - equalizerMinGain)
-                let y = verticalInset + drawHeight * CGFloat(1 - normalized)
-                return CGPoint(x: x, y: y)
-            }
+            let plot = CGRect(
+                x: axisWidth + inset,
+                y: inset,
+                width: max(1, geo.size.width - axisWidth - inset * 2),
+                height: max(1, geo.size.height - freqHeight - inset * 2)
+            )
+            let points = gains.enumerated().map { point(index: $0.offset, gain: $0.element, in: plot) }
 
-            ZStack {
-                graphGrid(size: size)
+            ZStack(alignment: .topLeading) {
+                // Grid + dB axis (vertical, left).
+                ForEach(axisValues, id: \.self) { db in
+                    let y = yFor(gain: db, in: plot)
+                    Path { p in
+                        p.move(to: CGPoint(x: plot.minX, y: y))
+                        p.addLine(to: CGPoint(x: plot.maxX, y: y))
+                    }
+                    .stroke(m3.outlineVariant.opacity(db == 0 ? 0.9 : 0.45), style: StrokeStyle(lineWidth: 1, dash: db == 0 ? [] : [4, 4]))
+                    Text(db > 0 ? "+\(Int(db)) dB" : "\(Int(db)) dB")
+                        .font(.m3(.labelSmall))
+                        .foregroundStyle(m3.onSurfaceVariant)
+                        .frame(width: axisWidth, alignment: .trailing)
+                        .position(x: axisWidth / 2, y: y)
+                }
 
                 if points.count >= 2 {
+                    fillPath(points, plot: plot)
+                        .fill(LinearGradient(colors: [m3.primary.opacity(0.28), m3.primary.opacity(0)], startPoint: .top, endPoint: .bottom))
                     linePath(points)
-                        .stroke(
-                            LinearGradient(
-                                colors: [accentColor, accentColor.opacity(0.4)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)
-                        )
+                        .stroke(m3.primary, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
                 }
 
-                if points.count >= 2 {
-                    fillPath(points)
-                        .fill(
-                            LinearGradient(
-                                colors: [accentColor.opacity(0.18), accentColor.opacity(0)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                }
-
-                ForEach(Array(points.enumerated()), id: \.offset) { _, point in
+                ForEach(Array(points.enumerated()), id: \.offset) { index, p in
+                    let active = activeDrag == index
                     Circle()
-                        .fill(.white)
-                        .frame(width: 14, height: 14)
-                        .overlay(Circle().stroke(accentColor, lineWidth: 2))
-                        .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
-                        .position(point)
+                        .fill(m3.primary)
+                        .frame(width: active ? 22 : 14, height: active ? 22 : 14)
+                        .overlay(Circle().stroke(m3.onPrimary, lineWidth: 2))
+                        .position(p)
+                        .animation(M3Motion.fastSpatial, value: active)
+
+                    // Frequency under every point.
+                    Text(Self.label(for: equalizerFrequencies[safe: index] ?? 0))
+                        .font(.m3(.labelSmall))
+                        .foregroundStyle(active ? m3.primary : m3.onSurfaceVariant)
+                        .fixedSize()
+                        .position(x: p.x, y: geo.size.height - freqHeight / 2)
+
+                    // Value bubble while dragging.
+                    if active {
+                        let gain = gains[index]
+                        Text(gain > 0 ? "+\(Int(gain)) dB" : "\(Int(gain)) dB")
+                            .font(.m3(.labelLarge, weight: .medium))
+                            .foregroundStyle(m3.onPrimaryContainer)
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .background(m3.primaryContainer, in: Capsule())
+                            .fixedSize()
+                            .position(x: p.x, y: max(14, p.y - 30))
+                            .transition(.scale(scale: 0.6, anchor: .bottom).combined(with: .opacity))
+                    }
                 }
             }
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        let index = bandIndex(for: value.location, size: size)
-                        let gain = gain(for: value.location, size: size)
-                        activeDrag = index
-                        setGain(gain, at: index)
+                        let index = activeDrag ?? bandIndex(for: value.location.x, in: plot)
+                        if activeDrag == nil { withAnimation(M3Motion.fastSpatial) { activeDrag = index } }
+                        setGain(gain(for: value.location.y, in: plot), at: index)
                     }
                     .onEnded { _ in
-                        activeDrag = nil
+                        withAnimation(M3Motion.fastSpatial) { activeDrag = nil }
                     }
             )
+            .sensoryFeedback(.selection, trigger: activeDrag.map { gains[$0] })
         }
     }
 
-    // MARK: - Drawing helpers
+    static func label(for hz: Double) -> String {
+        hz >= 1000 ? (hz.truncatingRemainder(dividingBy: 1000) == 0 ? "\(Int(hz / 1000))k" : String(format: "%.1fk", hz / 1000)) : "\(Int(hz))"
+    }
 
-    private func graphGrid(size: CGSize) -> some View {
-        Canvas { context, _ in
-            let drawWidth = size.width - horizontalInset * 2
-            let drawHeight = size.height - verticalInset * 2
-            var path = Path()
-            path.move(to: CGPoint(x: horizontalInset, y: verticalInset))
-            path.addLine(to: CGPoint(x: horizontalInset + drawWidth, y: verticalInset))
-            path.addLine(to: CGPoint(x: horizontalInset + drawWidth, y: verticalInset + drawHeight))
-            path.addLine(to: CGPoint(x: horizontalInset, y: verticalInset + drawHeight))
-            path.closeSubpath()
-            context.stroke(path, with: .color(.secondary.opacity(0.15)), lineWidth: 1)
-        }
-        .overlay {
-            GeometryReader { geo in
-                let drawWidth = geo.size.width - horizontalInset * 2
-                let drawHeight = geo.size.height - verticalInset * 2
-                let zeroY = verticalInset + drawHeight * (1 - (0 - equalizerMinGain) / (equalizerMaxGain - equalizerMinGain))
-                Path { p in
-                    p.move(to: CGPoint(x: horizontalInset, y: zeroY))
-                    p.addLine(to: CGPoint(x: horizontalInset + drawWidth, y: zeroY))
-                }
-                .stroke(.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
-            }
-        }
+    private func yFor(gain: Double, in plot: CGRect) -> CGFloat {
+        let normalized = (gain - equalizerMinGain) / (equalizerMaxGain - equalizerMinGain)
+        return plot.minY + plot.height * CGFloat(1 - normalized)
+    }
+
+    private func point(index: Int, gain: Double, in plot: CGRect) -> CGPoint {
+        let x = plot.minX + plot.width * CGFloat(index) / CGFloat(max(1, gains.count - 1))
+        return CGPoint(x: x, y: yFor(gain: gain, in: plot))
     }
 
     private func linePath(_ points: [CGPoint]) -> Path {
         var path = Path()
         path.move(to: points[0])
-        for point in points.dropFirst() {
-            path.addLine(to: point)
-        }
+        for p in points.dropFirst() { path.addLine(to: p) }
         return path
     }
 
-    private func fillPath(_ points: [CGPoint]) -> Path {
+    private func fillPath(_ points: [CGPoint], plot: CGRect) -> Path {
         var path = linePath(points)
-        if let last = points.last {
-            path.addLine(to: CGPoint(x: last.x, y: last.y + 10))
-        }
-        if let first = points.first {
-            path.addLine(to: CGPoint(x: first.x, y: first.y + 10))
-        }
+        path.addLine(to: CGPoint(x: points[points.count - 1].x, y: plot.maxY))
+        path.addLine(to: CGPoint(x: points[0].x, y: plot.maxY))
         path.closeSubpath()
         return path
     }
 
-    // MARK: - Hit testing
-
-    private func bandIndex(for location: CGPoint, size: CGSize) -> Int {
-        let drawWidth = size.width - horizontalInset * 2
-        let x = max(0, min(1, (location.x - horizontalInset) / drawWidth))
-        let raw = x * CGFloat(gains.count - 1)
-        let index = min(max(0, Int(raw.rounded())), gains.count - 1)
-        return index
+    private func bandIndex(for x: CGFloat, in plot: CGRect) -> Int {
+        let f = max(0, min(1, (x - plot.minX) / plot.width))
+        return min(max(0, Int((f * CGFloat(gains.count - 1)).rounded())), gains.count - 1)
     }
 
-    private func gain(for location: CGPoint, size: CGSize) -> Double {
-        let drawHeight = size.height - verticalInset * 2
-        let y = max(0, min(1, (location.y - verticalInset) / drawHeight))
-        let gain = equalizerMinGain + (1 - Double(y)) * (equalizerMaxGain - equalizerMinGain)
+    private func gain(for y: CGFloat, in plot: CGRect) -> Double {
+        let f = max(0, min(1, (y - plot.minY) / plot.height))
+        let gain = equalizerMinGain + (1 - Double(f)) * (equalizerMaxGain - equalizerMinGain)
         return min(equalizerMaxGain, max(equalizerMinGain, gain.rounded()))
     }
 
