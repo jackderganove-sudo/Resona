@@ -65,6 +65,7 @@
 "Clear search" = "清除搜索";
 "Client" = "客户端";
 "Close" = "关闭";
+"Close lyrics" = "Close lyrics";
 "Closest matches to this song" = "与此歌曲最相似的内容";
 "Collapse player" = "Collapse player";
 "Community playlists" = "社区歌单";
@@ -217,7 +218,9 @@
 "Lyrics Alignment" = "歌词对齐";
 "Lyrics Font Size" = "歌词字体大小";
 "Lyrics Providers" = "歌词提供方";
+"Lyrics from %@" = "Lyrics from %@";
 "Lyrics not found" = "未找到歌词";
+"Lyrics options" = "Lyrics options";
 "March" = "三月";
 "Maximum delay before scrobbling (30–360s)." = "音乐记录前的最大延迟（30–360 秒）。";
 "Maximum volume" = "Maximum volume";
@@ -252,6 +255,7 @@
 "No artist data" = "无艺人数据";
 "No content found" = "未找到内容";
 "No episodes found" = "未找到剧集";
+"No lyrics found" = "No lyrics found";
 "No playlist data" = "无播放列表数据";
 "No podcast data" = "无播客数据";
 "No similar tracks" = "没有相似歌曲";

@@ -65,6 +65,7 @@
 "Clear search" = "Clear search";
 "Client" = "Client";
 "Close" = "Close";
+"Close lyrics" = "Close lyrics";
 "Closest matches to this song" = "Closest matches to this song";
 "Collapse player" = "Collapse player";
 "Community playlists" = "Community playlists";
@@ -217,7 +218,9 @@
 "Lyrics Alignment" = "Lyrics Alignment";
 "Lyrics Font Size" = "Lyrics Font Size";
 "Lyrics Providers" = "Lyrics Providers";
+"Lyrics from %@" = "Lyrics from %@";
 "Lyrics not found" = "Lyrics not found";
+"Lyrics options" = "Lyrics options";
 "March" = "March";
 "Maximum delay before scrobbling (30–360s)." = "Maximum delay before scrobbling (30–360s).";
 "Maximum volume" = "Maximum volume";
@@ -252,6 +255,7 @@
 "No artist data" = "No artist data";
 "No content found" = "No content found";
 "No episodes found" = "No episodes found";
+"No lyrics found" = "No lyrics found";
 "No playlist data" = "No playlist data";
 "No podcast data" = "No podcast data";
 "No similar tracks" = "No similar tracks";

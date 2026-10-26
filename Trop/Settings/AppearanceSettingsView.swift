@@ -60,7 +60,7 @@ struct AppearanceSettingsView: View {
 
             Section {
                 SettingsPickerRow("Lyrics Alignment", icon: settings.lyricsAlignment.iconName, selection: $settings.lyricsAlignment)
-                Stepper(value: $settings.lyricsFontSize, in: 12...28) {
+                Stepper(value: $settings.lyricsFontSize, in: 16...44) {
                     HStack(spacing: 0) {
                         Label("Lyrics Font Size", systemImage: "textformat.size")
                         Text(": \(Int(settings.lyricsFontSize))")

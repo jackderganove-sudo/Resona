@@ -403,7 +403,7 @@ final class SettingsStore {
         // Migrated when Explore took index 2 (was Search): stored 2 → 3.
         let storedTab = Self.load(Keys.defaultTab, default: 0)
         defaultTab = storedTab == 2 ? 3 : storedTab
-        lyricsFontSize = Self.load(Keys.lyricsFontSize, default: 17)
+        lyricsFontSize = Self.load(Keys.lyricsFontSize, default: 30)
         lyricsAlignment = Self.loadEnum(Keys.lyricsAlignment, default: .left)
         lyricsOffsetSeconds = Self.load(Keys.lyricsOffsetSeconds, default: 0)
         showIntervalIndicator = Self.load(Keys.showIntervalIndicator, default: true)
