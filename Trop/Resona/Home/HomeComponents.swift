@@ -92,7 +92,7 @@ struct HeroCarousel: View {
 
     private func card(_ item: YTItem, fullWidth: CGFloat, height: CGFloat, isHero: Bool) -> some View {
         ZStack(alignment: .bottomLeading) {
-            AsyncImageView(url: ArtworkLoader.highRes(item.thumbnailUrl) ?? item.thumbnailUrl)
+            AsyncImageView(url: ArtworkURLs.highRes(item.thumbnailUrl) ?? item.thumbnailUrl)
                 .frame(width: fullWidth, height: height)
             LinearGradient(colors: [.clear, .black.opacity(0.7)], startPoint: .center, endPoint: .bottom)
             VStack(alignment: .leading, spacing: 2) {

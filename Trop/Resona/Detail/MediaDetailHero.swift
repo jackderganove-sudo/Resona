@@ -82,7 +82,7 @@ struct MediaDetailHero<Subtitle: View, Actions: View>: View {
     @ViewBuilder
     private var artwork: some View {
         if let artworkURL {
-            AsyncImageView(url: ArtworkLoader.highRes(artworkURL) ?? artworkURL)
+            AsyncImageView(url: ArtworkURLs.highRes(artworkURL) ?? artworkURL)
         } else if mosaic.count >= 4 {
             GeometryReader { geo in
                 VStack(spacing: 0) {
