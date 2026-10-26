@@ -233,9 +233,7 @@ private struct PlayerSheetHost: View {
     var body: some View {
         FullPlayerView(onCollapse: onCollapse)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: expansion < 1 ? 32 : 0, style: .continuous))
             .offset(y: (1 - expansion) * height)
-            .ignoresSafeArea()
             .environment(\.playerSheetDrag, PlayerSheetDrag(onChanged: onDrag, onEnded: onDragEnded))
     }
 }

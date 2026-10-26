@@ -12,6 +12,7 @@ import SwiftUI
 /// Content needing `navigationDestination` should wrap itself in a `Group`
 /// carrying that modifier (it must live inside the NavigationStack).
 struct SheetChrome<Content: View>: View {
+    @Environment(\.m3) private var m3
     let content: Content
 
     init(@ViewBuilder content: () -> Content) {
@@ -21,21 +22,27 @@ struct SheetChrome<Content: View>: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: 12) {
                     content
                 }
-                .padding(16)
+                .padding(.horizontal, 16)
+                .padding(.top, 20)
+                .padding(.bottom, 24)
             }
-            .background(Color(.systemGroupedBackground))
+            .scrollContentBackground(.hidden)
+            .background(m3.surface)
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .presentationCornerRadius(M3Shape.extraLarge)
+        .presentationBackground(m3.surface)
     }
 }
 
 /// Rounded grouped-background card stacking menu rows with no spacing.
 struct MenuCard<Content: View>: View {
+    @Environment(\.m3) private var m3
     let content: Content
 
     init(@ViewBuilder content: () -> Content) {
@@ -46,10 +53,13 @@ struct MenuCard<Content: View>: View {
         VStack(spacing: 0) {
             content
         }
+        .padding(.vertical, 4)
         .background(
-            RoundedRectangle(cornerRadius: DesignTokens.sheetRadius, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
+            RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous)
+                .fill(m3.surfaceContainerLow)
         )
+        .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+        .tint(m3.primary)
     }
 }
 
@@ -71,7 +81,7 @@ struct MenuRow: View {
 
 /// The label half of `MenuRow`, for rows embedded in a `NavigationLink`.
 struct MenuRowLabel: View {
-    @Environment(\.settingsStore) private var settings
+    @Environment(\.m3) private var m3
 
     let icon: String
     let title: String
@@ -79,26 +89,37 @@ struct MenuRowLabel: View {
     var destructive: Bool = false
 
     var body: some View {
-        HStack(spacing: DesignTokens.menuRowSpacing) {
+        HStack(spacing: 20) {
             Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundStyle(destructive ? Color.red : settings.accentColor)
-                .frame(width: 26)
+                .font(.system(size: 21, weight: .regular))
+                .foregroundStyle(destructive ? m3.error : m3.onSurfaceVariant)
+                .frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(LocalizedStringKey(title))
-                    .font(.body)
-                    .foregroundStyle(destructive ? Color.red : Color.primary)
+                    .font(.m3(.titleMedium, weight: .regular))
+                    .foregroundStyle(destructive ? m3.error : m3.onSurface)
                 if let subtitle, !subtitle.isEmpty {
                     Text(LocalizedStringKey(subtitle))
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(.m3(.bodyMedium))
+                        .foregroundStyle(m3.onSurfaceVariant)
                         .lineLimit(1)
                 }
             }
             Spacer()
         }
-        .padding(.horizontal, DesignTokens.screenHPadding)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
         .contentShape(Rectangle())
+    }
+}
+
+/// Inset divider used between rows of an M3 grouped card.
+struct M3RowDivider: View {
+    @Environment(\.m3) private var m3
+    var body: some View {
+        Rectangle()
+            .fill(m3.outlineVariant)
+            .frame(height: 1)
+            .padding(.leading, 68)
     }
 }

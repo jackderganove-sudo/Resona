@@ -29,24 +29,38 @@ struct PlayerMenuSheet: View {
     @State private var showArtistPicker = false
     @State private var showRadioOptions = false
     @State private var isResolvingArtist = false
+    @State private var showEqualizer = false
     @ObservedObject private var downloadManager = DownloadManager.shared
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         SheetChrome {
             Group {
-                eqVolumeCard
+                M3MenuHeaderCard(
+                    title: NowPlaying.shared.videoId == song.videoId ? NowPlaying.shared.title : song.title,
+                    subtitle: song.artistNamesDisplay,
+                    eyebrow: "Now Playing",
+                    image: NowPlaying.shared.videoId == song.videoId ? NowPlaying.shared.thumbnailUIImage : nil,
+                    thumbnailURL: song.thumbnailUrl
+                )
+                M3VolumeCard(value: Binding(
+                    get: { settings.playerVolume },
+                    set: { newValue in
+                        settings.playerVolume = newValue.clamped01
+                        PlayerController.shared.applyPlayerVolume()
+                    }
+                ))
                 actionGrid
                 MenuCard {
                     viewArtistRow
                     if let albumId = song.firstAlbumBrowseId {
-                        Divider()
+                        M3RowDivider()
                         MenuRow(icon: "record.circle", title: "View Album", subtitle: song.album) {
                             navigate(.album(browseId: albumId))
                         }
                     }
-                    Divider()
-                    pinRow
-                    Divider()
+                }
+                MenuCard {
                     downloadRow
                 }
                 MenuCard {
@@ -54,7 +68,7 @@ struct PlayerMenuSheet: View {
                         MenuRowLabel(icon: "info.circle", title: "Details", subtitle: "Metadata & stream information")
                     }
                     .buttonStyle(.plain)
-                    Divider()
+                    M3RowDivider()
                     NavigationLink(value: Destination.similar) {
                         MenuRowLabel(
                             icon: "dot.radiowaves.left.and.right",
@@ -63,13 +77,16 @@ struct PlayerMenuSheet: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    Divider()
+                    M3RowDivider()
                     MenuRow(
                         icon: "slider.horizontal.3",
                         title: "Customize Radio",
                         subtitle: "Style, size & explicit filter"
                     ) { showRadioOptions = true }
                 }
+            }
+            .navigationDestination(isPresented: $showEqualizer) {
+                EqualizerView()
             }
             .navigationDestination(for: Destination.self) { dest in
                 switch dest {
@@ -157,22 +174,21 @@ struct PlayerMenuSheet: View {
     // MARK: - Quick Actions
 
     private var actionGrid: some View {
-        HStack(spacing: 0) {
-            actionButton(icon: "dot.radiowaves.left.and.right", label: "Start Radio") {
-                startRadio()
-            }
-            separator
-            actionButton(icon: "music.note.list", label: "Playlist") {
-                showPlaylistPicker = true
-            }
-            separator
-            actionButton(icon: "link", label: "Copy Link") {
+        M3ActionTileGrid(tiles: [
+            M3ActionTile(icon: "dot.radiowaves.left.and.right", title: "Start Radio") { startRadio() },
+            M3ActionTile(icon: "text.badge.plus", title: "Add to playlist") { showPlaylistPicker = true },
+            M3ActionTile(icon: "link", title: "Copy Link") {
                 UIPasteboard.general.string = song.webUrl
                 dismiss()
+            },
+            M3ActionTile(icon: "slider.vertical.3", title: "Equalizer") { showEqualizer = true },
+            M3ActionTile(icon: pin.isPinned ? "pin.slash" : "pin", title: pin.isPinned ? "Unpin" : "Pin") {
+                Task { await pin.toggle(song: song) }
+            },
+            M3ActionTile(icon: "arrow.up.forward.app", title: "Open in YouTube Music") {
+                if let url = URL(string: song.webUrl) { openURL(url) }
             }
-        }
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        ])
     }
 
     private var separator: some View {

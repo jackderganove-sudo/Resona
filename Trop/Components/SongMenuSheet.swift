@@ -42,7 +42,7 @@ struct SongMenuSheet: View {
                     ) {
                         Task { await likeStore.toggle(song: song) }
                     }
-                    Divider()
+                    M3RowDivider()
                     downloadRow
                 }
                 MenuCard {
@@ -51,13 +51,13 @@ struct SongMenuSheet: View {
                         title: "Play Next",
                         subtitle: "Add to the queue, next in line"
                     ) { playNext() }
-                    Divider()
+                    M3RowDivider()
                     MenuRow(
                         icon: "list.bullet",
                         title: "Add to Queue",
                         subtitle: "Add to the end of the queue"
                     ) { addToQueue() }
-                    Divider()
+                    M3RowDivider()
                     MenuRow(
                         icon: pin.isPinned ? "pin.fill" : "pin",
                         title: pin.isPinned ? "Unpin from Quick Picks" : "Pin to Quick Picks"
@@ -68,7 +68,7 @@ struct SongMenuSheet: View {
                         subtitle: song.artistNamesDisplay
                     ) { handleViewArtist() }
                     if let albumId = song.firstAlbumBrowseId {
-                        Divider()
+                        M3RowDivider()
                         MenuRow(
                             icon: "record.circle",
                             title: "View Album",
@@ -85,7 +85,7 @@ struct SongMenuSheet: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    Divider()
+                    M3RowDivider()
                     NavigationLink(value: Destination.similar) {
                         MenuRowLabel(
                             icon: "dot.radiowaves.left.and.right",
@@ -94,7 +94,7 @@ struct SongMenuSheet: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    Divider()
+                    M3RowDivider()
                     MenuRow(
                         icon: "slider.horizontal.3",
                         title: "Customize Radio",
@@ -136,56 +136,21 @@ struct SongMenuSheet: View {
     // MARK: - Header
 
     private var headerCard: some View {
-        HStack(spacing: 12) {
-            AsyncImageView(url: song.thumbnailUrl)
-                .frame(width: 48, height: 48)
-                .clipShape(RoundedRectangle(cornerRadius: 4))
-
-            VStack(alignment: .leading, spacing: 2) {
-                MarqueeText(
-                    text: song.title,
-                    font: .headline,
-                    frameHeight: 24,
-                    textColor: .primary
-                )
-                Text(song.artistNamesDisplay)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-
-            Spacer()
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
+        M3MenuHeaderCard(
+            title: song.title,
+            subtitle: song.artistNamesDisplay,
+            thumbnailURL: song.thumbnailUrl
         )
     }
 
     // MARK: - Action Grid
 
     private var actionGrid: some View {
-        HStack(spacing: 0) {
-            actionButton(icon: "dot.radiowaves.left.and.right", label: "Start Radio") {
-                startRadio()
-            }
-            separator
-            actionButton(icon: "music.note.list", label: "Playlist") {
-                showPlaylistPicker = true
-            }
-            separator
-            actionButton(icon: "square.and.arrow.up", label: "Share") {
-                share()
-            }
-        }
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private var separator: some View {
-        Color(.separator)
-            .frame(width: 0.5, height: 28)
+        M3ActionTileGrid(tiles: [
+            M3ActionTile(icon: "dot.radiowaves.left.and.right", title: "Start Radio") { startRadio() },
+            M3ActionTile(icon: "text.badge.plus", title: "Add to playlist") { showPlaylistPicker = true },
+            M3ActionTile(icon: "square.and.arrow.up", title: "Share") { share() }
+        ])
     }
 
     private var downloadRow: some View {
