@@ -289,10 +289,11 @@ struct LibraryView: View {
         onPlay: (() -> Void)? = nil,
         @ViewBuilder menuItems: () -> some View = { EmptyView() }
     ) -> some View {
+        let items = menuItems()
         if viewMode == .list {
             LibraryCard(artwork: artwork, title: title, subtitle: subtitle, badge: badge, onPlay: onPlay) {
                 Menu {
-                    menuItems()
+                    items
                 } label: {
                     Image(systemName: "ellipsis")
                         .rotationEffect(.degrees(90))
