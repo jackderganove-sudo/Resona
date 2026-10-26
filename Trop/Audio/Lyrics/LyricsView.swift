@@ -50,9 +50,8 @@ struct LyricsView<ProgressSlider: View>: View {
                 .background {
                     FrostedSurface(
                         shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous),
-                        tint: .black,
-                        tintOpacity: 0.16,
-                        material: .ultraThinMaterial
+                        tint: Color.black,
+                        role: .card
                     )
                 }
                 .padding(.horizontal, 12)

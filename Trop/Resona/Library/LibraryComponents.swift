@@ -234,17 +234,9 @@ struct LibraryCard<MenuContent: View>: View {
         .padding(.trailing, 6)
         .frame(height: LibraryCardMetrics.height)
         .background {
-            // Frosted, cover-tinted card (pre-blurred, cached → smooth lists).
-            ZStack {
-                m3.surfaceContainerLow
-                if let url = artwork.backdropURL {
-                    BlurredArtwork(url: url, radius: 12)
-                        .opacity(0.7)
-                    m3.surfaceContainerLow.opacity(0.55)
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
+            FrostedArtworkCardBackground(artworkURL: artwork.backdropURL, tint: m3.surfaceContainerLow)
         }
+        .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
     }
 }

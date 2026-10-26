@@ -136,7 +136,7 @@ struct AccountMenuOverlay: View {
         .background {
             let shape = RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous)
             ZStack {
-                FrostedSurface(shape: shape, tint: m3.surfaceContainerHigh, tintOpacity: 0.7)
+                FrostedSurface(shape: shape, tint: m3.surfaceContainerHigh, role: .floating)
                 // Faint wash of the current cover colour.
                 shape.fill(artwork.accent.container.opacity(0.22))
             }

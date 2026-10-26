@@ -36,7 +36,7 @@ struct SheetChrome<Content: View>: View {
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(M3Shape.extraLarge)
         .presentationBackground {
-            FrostedSurface(tint: m3.surface, tintOpacity: 0.82, material: .regularMaterial)
+            FrostedSurface(tint: m3.surface, role: .sheet)
         }
     }
 }

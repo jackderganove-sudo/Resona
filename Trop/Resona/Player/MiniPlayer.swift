@@ -52,6 +52,7 @@ struct MiniPlayer: View {
         .frame(height: M3Metrics.miniPlayerHeight)
         .background { MiniPlayerBackground(colors: artworkColors) }
         .clipShape(shape)
+        .overlay(shape.stroke(.white.opacity(M3Frost.edgeOpacity), lineWidth: M3Frost.edgeWidth))
         .contentShape(shape)
         .shadow(color: .black.opacity(0.22), radius: 8, y: 3)
         .onChange(of: np.videoId) { _, _ in
@@ -290,15 +291,13 @@ struct MiniPlayerBackground: View {
         let c = colors.gradient
         let first = (c.first ?? RGB(hex: 0x1D5D7A)).color
         let second = (c.count > 1 ? c[1] : c.first ?? RGB(hex: 0x0B3A55)).color
-        ZStack {
-            FrostedSurface(tint: .black, tintOpacity: 0.18, material: .thinMaterial)
-            LinearGradient(
-                colors: [first.opacity(0.55), second.opacity(0.45)],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-            Color.black.opacity(0.12)
-        }
+        // See-through: blurred content behind, a light cover-coloured wash
+        // and a hairline edge (M3Frost tokens).
+        FrostedSurface(
+            tint: LinearGradient(colors: [first, second], startPoint: .leading, endPoint: .trailing),
+            role: .floating,
+            edge: false
+        )
         .animation(M3Motion.colorChange, value: colors)
     }
 }

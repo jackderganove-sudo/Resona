@@ -64,7 +64,7 @@ struct QueueSheet: View {
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(M3Shape.extraLarge)
         .presentationBackground {
-            FrostedSurface(tint: m3.surfaceContainerLow, tintOpacity: 0.8, material: .regularMaterial)
+            FrostedSurface(tint: m3.surfaceContainerLow, role: .sheet)
         }
         .sheet(item: $menuSong) { item in
             SongMenuSheet(song: item.song, onNavigate: { route in

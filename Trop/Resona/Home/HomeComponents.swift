@@ -165,16 +165,9 @@ struct KeepListeningCard: View {
             .padding(12)
             .frame(width: horizontalSizeClass == .regular ? 400 : 330)
             .background {
-                // Blurred, tinted copy of the card's own cover (pre-blurred
-                // once and cached — cheap while scrolling).
-                ZStack {
-                    m3.surfaceContainerHigh
-                    BlurredArtwork(url: item.thumbnailUrl, radius: 12)
-                        .opacity(0.85)
-                    m3.surfaceContainerHigh.opacity(0.5)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
+                FrostedArtworkCardBackground(artworkURL: item.thumbnailUrl, tint: m3.surfaceContainerHigh)
             }
+            .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
         }
         .buttonStyle(.expressive(scale: 0.97))

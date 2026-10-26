@@ -137,7 +137,7 @@ struct SleepTimerDialog: View {
                 FrostedSurface(
                     shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous),
                     tint: m3.surfaceContainerHigh,
-                    tintOpacity: 0.8
+                    role: .floating
                 )
             }
             .padding(.horizontal, 24)

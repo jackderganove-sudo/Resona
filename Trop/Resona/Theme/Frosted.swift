@@ -21,20 +21,71 @@ import CoreImage.CIFilterBuiltins
 import SwiftUI
 import UIKit
 
+// MARK: - Tokens
+
+/// One set of rules for every blur in the app (Android-17 style frosted
+/// glass): thin material, light tint, hairline edge, a bit more saturation.
+enum M3Frost {
+    enum Role {
+        /// Content cards (Keep listening, library) — most see-through.
+        case card
+        /// Floating chrome over content (mini player, dropdown, dialogs).
+        case floating
+        /// Bars the user reads text on (navigation bar, top bars).
+        case chrome
+        /// Sheets with long content (menus, queue).
+        case sheet
+    }
+
+    static let material: Material = .ultraThinMaterial
+
+    /// Tint over the blur: 20–35 % so the content behind stays visible.
+    static func tintOpacity(_ role: Role) -> Double {
+        switch role {
+        case .card: 0.22
+        case .floating: 0.26
+        case .chrome: 0.32
+        case .sheet: 0.35
+        }
+    }
+
+    /// 1 px light edge on floating shapes.
+    static let edgeOpacity = 0.14
+    static let edgeWidth: CGFloat = 1
+    /// Saturation boost of what shows through.
+    static let saturation = 1.3
+    /// Pre-blurred artwork (Core Image) radius, in 96 px space.
+    static let artworkBlurRadius = 12.0
+    /// How strongly a card's own blurred cover shows.
+    static let artworkOpacity = 0.85
+
+    static func showsEdge(_ role: Role) -> Bool {
+        switch role {
+        case .card, .floating: true
+        case .chrome, .sheet: false
+        }
+    }
+}
+
 // MARK: - Live frosted surface
 
-struct FrostedSurface<S: Shape>: View {
+struct FrostedSurface<S: Shape, T: ShapeStyle>: View {
     var shape: S
-    /// Tint laid over the blur (surface colour or artwork colour).
-    var tint: Color
-    var tintOpacity: Double = 0.55
-    /// Thicker material = stronger blur of what's behind.
-    var material: Material = .thinMaterial
+    /// Tint laid over the blur (surface colour, artwork colour/gradient).
+    var tint: T
+    var role: M3Frost.Role = .floating
+    /// Override the role's hairline edge (e.g. when the caller strokes its
+    /// own, differently shaped outline).
+    var edge: Bool?
 
     var body: some View {
         ZStack {
-            shape.fill(material)
-            shape.fill(tint.opacity(tintOpacity))
+            shape.fill(M3Frost.material)
+                .saturation(M3Frost.saturation)
+            shape.fill(tint).opacity(M3Frost.tintOpacity(role))
+            if edge ?? M3Frost.showsEdge(role) {
+                shape.stroke(.white.opacity(M3Frost.edgeOpacity), lineWidth: M3Frost.edgeWidth)
+            }
         }
         .environment(\.colorScheme, .dark)
         .compositingGroup()
@@ -42,8 +93,33 @@ struct FrostedSurface<S: Shape>: View {
 }
 
 extension FrostedSurface where S == Rectangle {
-    init(tint: Color, tintOpacity: Double = 0.55, material: Material = .thinMaterial) {
-        self.init(shape: Rectangle(), tint: tint, tintOpacity: tintOpacity, material: material)
+    init(tint: T, role: M3Frost.Role = .floating, edge: Bool? = nil) {
+        self.init(shape: Rectangle(), tint: tint, role: role, edge: edge)
+    }
+}
+
+/// Card background: live blur + the card's own blurred cover (colourful)
+/// + light tint + hairline edge, all clipped to the card shape.
+struct FrostedArtworkCardBackground: View {
+    var artworkURL: String?
+    var tint: Color
+    var radius: CGFloat = M3Shape.extraLargeIncreased
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        ZStack {
+            shape.fill(M3Frost.material).saturation(M3Frost.saturation)
+            if let artworkURL {
+                BlurredArtwork(url: artworkURL, radius: M3Frost.artworkBlurRadius)
+                    .opacity(M3Frost.artworkOpacity)
+            }
+            tint.opacity(M3Frost.tintOpacity(.card))
+            // Keeps white text legible on very bright covers.
+            LinearGradient(colors: [.black.opacity(0.0), .black.opacity(0.18)], startPoint: .top, endPoint: .bottom)
+        }
+        .clipShape(shape)
+        .overlay(shape.stroke(.white.opacity(M3Frost.edgeOpacity), lineWidth: M3Frost.edgeWidth))
+        .environment(\.colorScheme, .dark)
     }
 }
 
@@ -80,7 +156,7 @@ final class BlurredImageCache: @unchecked Sendable {
             blur.radius = Float(radius)
             let color = CIFilter.colorControls()
             color.inputImage = blur.outputImage
-            color.saturation = 1.25
+            color.saturation = Float(M3Frost.saturation)
             guard let output = color.outputImage?.cropped(to: small.extent),
                   let rendered = context.createCGImage(output, from: small.extent) else { return nil }
             return UIImage(cgImage: rendered)
@@ -150,7 +226,7 @@ private struct FrostedTopChrome<Header: View>: ViewModifier {
                 header()
                     .background {
                         // Content scrolls underneath and shows through blurred.
-                        FrostedSurface(tint: m3.surface, tintOpacity: 0.72)
+                        FrostedSurface(tint: m3.surface, role: .chrome)
                             .ignoresSafeArea(edges: .top)
                     }
             }
@@ -183,7 +259,7 @@ private struct FrostedDetailBar: ViewModifier {
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
                 .background {
-                    FrostedSurface(tint: m3.surface, tintOpacity: 0.7)
+                    FrostedSurface(tint: m3.surface, role: .chrome)
                         .ignoresSafeArea(edges: .top)
                 }
                 .overlay(alignment: .bottom) {
