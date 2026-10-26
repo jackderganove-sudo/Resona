@@ -109,8 +109,10 @@ struct MusixmatchProvider: LyricsProvider {
             let lines = arr.compactMap { item -> LyricLine? in
                 guard let text = item["text"] as? String,
                       !text.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
-                let time = (item["time"] as? [String: Any])?["total"] as? Double ?? 0
-                return LyricLine(text: text, startTime: time > 0 ? time : nil)
+                // `total` is seconds; a line at exactly 0:00 is still synced.
+                let timeInfo = item["time"] as? [String: Any]
+                let time = (timeInfo?["total"] as? Double) ?? (timeInfo?["total"] as? NSNumber)?.doubleValue
+                return LyricLine(text: text, startTime: time.map { max(0, $0) })
             }
             if !lines.isEmpty { return lines }
         }

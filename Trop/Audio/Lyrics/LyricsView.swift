@@ -30,6 +30,8 @@ struct LyricsView<ProgressSlider: View>: View {
     @State private var instrumentalGaps: [InstrumentalGap] = []
     @State private var romanizedLines: [String?] = []
     @State private var isLoading = false
+    @State private var frameDriver: DisplayLinkDriver?
+    @State private var lastGapRefresh: CFTimeInterval = 0
 
     // Scrolling
     @State private var isManualScrolling = false
@@ -65,7 +67,8 @@ struct LyricsView<ProgressSlider: View>: View {
         .simultaneousGesture(swipeBackGesture)
         .sheet(isPresented: $showLyricsMenu) { LyricsMenuSheet() }
         .task(id: np.videoId) { await loadLyrics() }
-        .onChange(of: np.currentTime) { _, _ in updateActiveLine() }
+        .onAppear { startFrameDriver() }
+        .onDisappear { stopFrameDriver() }
         .onChange(of: settings.lyricsOffsetSeconds) { _, _ in updateActiveLine() }
         .onChange(of: settings.romanizeCurrentTrack) { _, _ in
             Task { await rebuildRomanization() }
@@ -73,7 +76,6 @@ struct LyricsView<ProgressSlider: View>: View {
         .onChange(of: LyricsState.shared.refreshToken) { _, _ in
             Task { await loadLyrics() }
         }
-        .task { await runDisplayTimer() }
     }
 
     // MARK: - Header
@@ -490,13 +492,27 @@ struct LyricsView<ProgressSlider: View>: View {
 
     // MARK: - Data
 
-    private func runDisplayTimer() async {
-        while !Task.isCancelled {
-            let interval: UInt64 = (np.isPlaying && isSynced) ? 120_000_000 : 500_000_000
-            let t = np.currentTime
-            if t != displayTime { displayTime = t }
-            try? await Task.sleep(nanoseconds: interval)
+    /// Drives line changes from the high-resolution playback clock on
+    /// every display frame (instead of the 250 ms NowPlaying timer).
+    private func startFrameDriver() {
+        PlaybackClock.shared.retain()
+        let driver = DisplayLinkDriver(preferredFPS: 60) { timestamp in
+            updateActiveLine()
+            // The interval ring only needs a coarse clock.
+            if timestamp - lastGapRefresh > 0.1 {
+                lastGapRefresh = timestamp
+                let t = PlaybackClock.shared.now()
+                if abs(t - displayTime) > 0.05 { displayTime = t }
+            }
         }
+        driver.start()
+        frameDriver = driver
+    }
+
+    private func stopFrameDriver() {
+        frameDriver?.stop()
+        frameDriver = nil
+        PlaybackClock.shared.release()
     }
 
     private func loadLyrics() async {
@@ -529,13 +545,25 @@ struct LyricsView<ProgressSlider: View>: View {
 
     private func updateActiveLine() {
         guard !lines.isEmpty else { return }
-        let t = np.currentTime + settings.lyricsOffsetSeconds
-        var idx = 0
-        for (i, line) in lines.enumerated() {
-            guard let start = line.startTime else { continue }
-            if start <= t { idx = i } else { break }
-        }
+        let idx = Self.activeIndex(in: lines, at: PlaybackClock.shared.now() + settings.lyricsOffsetSeconds)
         if idx != activeIndex { activeIndex = idx }
+    }
+
+    /// Last line whose start time has passed (binary search; lines are sorted).
+    static func activeIndex(in lines: [LyricLine], at t: TimeInterval) -> Int {
+        var lo = 0, hi = lines.count - 1, result = 0
+        while lo <= hi {
+            let mid = (lo + hi) / 2
+            if let start = lines[mid].startTime, start <= t {
+                result = mid
+                lo = mid + 1
+            } else if lines[mid].startTime == nil {
+                lo = mid + 1
+            } else {
+                hi = mid - 1
+            }
+        }
+        return result
     }
 }
 
@@ -620,15 +648,13 @@ private struct LyricsClockView<Content: View>: View {
     @ViewBuilder let content: (TimeInterval) -> Content
     private let np = NowPlaying.shared
     @Environment(SettingsStore.self) private var settings
-    @State private var anchor: (time: TimeInterval, date: Date) = (0, .now)
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: !np.isPlaying)) { context in
-            let elapsed = np.isPlaying ? context.date.timeIntervalSince(anchor.date) : 0
-            content(anchor.time + min(elapsed, 1) + settings.lyricsOffsetSeconds)
+        // `.animation` schedules at the display's refresh rate (120 Hz on
+        // ProMotion); the clock is extrapolated per frame.
+        TimelineView(.animation(paused: !np.isPlaying)) { _ in
+            content(PlaybackClock.shared.now() + settings.lyricsOffsetSeconds)
         }
-        .onAppear { anchor = (np.currentTime, .now) }
-        .onChange(of: np.currentTime) { _, t in anchor = (t, .now) }
     }
 }
 

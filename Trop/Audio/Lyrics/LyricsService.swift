@@ -7,10 +7,20 @@
 
 import Foundation
 
+/// One timed word (or syllable) of a word-synced line.
+struct LyricWord: Equatable, Sendable {
+    let text: String
+    let start: TimeInterval
+    var end: TimeInterval
+}
+
 struct LyricLine: Identifiable, Equatable, Sendable {
     let id = UUID()
     let text: String
     let startTime: TimeInterval?
+    /// Real word timings when the provider supplies them (enhanced LRC);
+    /// nil for line-synced lyrics.
+    var words: [LyricWord]? = nil
 
     static let placeholder = LyricLine(text: "♪", startTime: nil)
 }

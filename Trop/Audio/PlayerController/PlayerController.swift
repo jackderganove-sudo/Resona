@@ -239,6 +239,7 @@ extension PlayerController {
     func seek(to time: TimeInterval) {
         pendingSeek = (time, Date().addingTimeInterval(1.5))
         NowPlaying.shared.currentTime = time
+        PlaybackClock.shared.didSeek(to: time)
         withMpv { mpv in
             var val = time
             let result = mpv_set_property(mpv, "time-pos", MPV_FORMAT_DOUBLE, &val)

@@ -98,11 +98,12 @@ struct NeteaseProvider: LyricsProvider {
             if !lines.isEmpty { return lines }
         }
 
-        // Plain lyrics fallback
-        if let tlyric = json["tlyric"] as? [String: Any],
-           let lyric = tlyric["lyric"] as? String,
+        // Unsynced original (`lrc` without timestamps). Note: `tlyric` is a
+        // *translation* and must not be returned as the song's lyrics.
+        if let lrc = json["lrc"] as? [String: Any],
+           let lyric = lrc["lyric"] as? String,
            !lyric.isEmpty {
-            let lines = LyricsParsing.parseLrc(lyric)
+            let lines = LyricsText.plainLines(lyric)
             if !lines.isEmpty { return lines }
         }
 
