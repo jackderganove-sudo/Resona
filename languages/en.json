@@ -511,5 +511,8 @@
   "Rename": "Rename",
   "Couldn't load episodes": "Couldn't load episodes",
   "On": "On",
-  "Sing it loud": "Sing it loud"
+  "Sing it loud": "Sing it loud",
+  "Order locked": "Order locked",
+  "Lock order": "Lock order",
+  "Shuffle upcoming": "Shuffle upcoming"
 }

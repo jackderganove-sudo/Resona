@@ -3,9 +3,9 @@
 //  Resona
 //
 //  Queue bottom sheet (reference screenshot 04): current song header, info
-//  bar with song count and total duration, shuffle / repeat / autoplay
-//  segmented buttons, and the reorderable queue with the playing row
-//  highlighted in primaryContainer.
+//  bar with song count, total duration and labelled actions,
+//  autoplay switch, and the reorderable queue with the playing row
+//  highlighted in secondaryContainer.
 //
 
 import SwiftUI
@@ -36,21 +36,25 @@ struct QueueSheet: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
 
-            modeButtons
-                .padding(.horizontal, 16)
-                .padding(.top, 14)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Continue playback")
-                    .font(.m3(.titleLarge))
-                    .foregroundStyle(m3.onSurface)
-                Text("Automatically play similar music")
-                    .font(.m3(.bodyMedium))
-                    .foregroundStyle(m3.onSurfaceVariant)
+            Toggle(isOn: Binding(get: { settings.autoplaySimilar }, set: { settings.autoplaySimilar = $0 })) {
+                HStack(spacing: 14) {
+                    M3IconCircle { Image(systemName: "infinity") }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Autoplay Similar")
+                            .font(.m3(.titleMedium, weight: .regular))
+                            .foregroundStyle(m3.onSurface)
+                        Text("Automatically play similar music")
+                            .font(.m3(.bodyMedium))
+                            .foregroundStyle(m3.onSurfaceVariant)
+                    }
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .toggleStyle(.m3)
             .padding(.horizontal, 16)
-            .padding(.top, 16)
+            .padding(.vertical, 10)
+            .background(m3.surfaceContainerHigh, in: RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous))
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
             .padding(.bottom, 10)
 
             Rectangle()
@@ -117,56 +121,50 @@ struct QueueSheet: View {
     // MARK: Info bar
 
     private var infoBar: some View {
-        HStack(spacing: 20) {
-            Button {
-                isLocked.toggle()
-            } label: {
-                Image(systemName: isLocked ? "lock.fill" : "lock.open")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(m3.onSurfaceVariant)
-                    .contentTransition(.symbolEffect(.replace))
-            }
-            .accessibilityLabel(Text(isLocked ? "Unlock queue" : "Lock queue"))
-
-            Menu {
-                Button {
-                    np.shuffleQueue()
-                } label: {
-                    Label("Shuffle", systemImage: "shuffle")
-                }
-                Button {
-                    UIPasteboard.general.string = np.queueSongs.map(\.webUrl).joined(separator: "\n")
-                } label: {
-                    Label("Copy Link", systemImage: "link")
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .rotationEffect(.degrees(90))
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(m3.onSurfaceVariant)
-                    .frame(width: 24, height: 24)
-            }
-
-            Button(role: .destructive) {
-                clearUpcoming()
-            } label: {
-                Image(systemName: "trash")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(m3.error)
-            }
-            .disabled(isLocked)
-            .accessibilityLabel(Text("Clear queue"))
-
-            Spacer()
-
+        VStack(alignment: .leading, spacing: 10) {
             Text(summary)
                 .font(.m3(.bodyLarge))
                 .foregroundStyle(m3.onSurfaceVariant)
                 .lineLimit(1)
+                .padding(.horizontal, 4)
+            HStack(spacing: 8) {
+                // Lock = order frozen: no reordering, removing or clearing.
+                M3Chip(
+                    title: isLocked ? String(localized: "Order locked") : String(localized: "Lock order"),
+                    systemImage: isLocked ? "lock.fill" : "lock.open",
+                    isSelected: isLocked
+                ) {
+                    withAnimation(M3Motion.fastSpatial) { isLocked.toggle() }
+                }
+                M3Chip(title: String(localized: "Clear queue"), systemImage: "trash", isSelected: false) {
+                    clearUpcoming()
+                }
+                .disabled(isLocked)
+                .opacity(isLocked ? 0.38 : 1)
+                Menu {
+                    Button {
+                        np.shuffleQueue()
+                    } label: {
+                        Label("Shuffle upcoming", systemImage: "shuffle")
+                    }
+                    .disabled(isLocked)
+                    Button {
+                        UIPasteboard.general.string = np.queueSongs.map(\.webUrl).joined(separator: "\n")
+                    } label: {
+                        Label("Copy Link", systemImage: "link")
+                    }
+                } label: {
+                    Label("More", systemImage: "ellipsis")
+                        .labelStyle(.iconOnly)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(m3.onSecondaryContainer)
+                        .frame(width: 40, height: 32)
+                        .background(m3.secondaryContainer, in: Capsule())
+                }
+                .accessibilityLabel(Text("More"))
+                Spacer(minLength: 0)
+            }
         }
-        .padding(.horizontal, 20)
-        .frame(height: 48)
-        .background(m3.surfaceContainerHigh, in: Capsule())
     }
 
     private var summary: String {
@@ -176,46 +174,6 @@ struct QueueSheet: View {
         let duration = h > 0 ? "\(h)h \(m)m \(s)s" : "\(m)m \(s)s"
         let songs = String(format: NSLocalizedString("%d songs", comment: "Queue song count"), count)
         return "\(songs) • \(duration)"
-    }
-
-    // MARK: Mode buttons
-
-    private var modeButtons: some View {
-        HStack(spacing: 4) {
-            modeButton(icon: "shuffle", isOn: np.isShuffleOn, position: .first, label: "Shuffle") {
-                np.isShuffleOn.toggle()
-                if np.isShuffleOn { np.shuffleQueue() } else { np.disableShuffle() }
-            }
-            modeButton(icon: np.isRepeatOn ? "repeat.1" : "repeat", isOn: np.isRepeatOn, position: .middle, label: "Repeat") {
-                np.isRepeatOn.toggle()
-            }
-            modeButton(icon: "infinity", isOn: settings.autoplaySimilar, position: .last, label: "Autoplay") {
-                settings.autoplaySimilar.toggle()
-            }
-        }
-        .frame(height: 48)
-    }
-
-    private func modeButton(icon: String, isOn: Bool, position: M3GroupPosition, label: LocalizedStringKey, action: @escaping () -> Void) -> some View {
-        let outer: CGFloat = 24, inner: CGFloat = 6
-        let radii: RectangleCornerRadii = switch position {
-        case .first: .init(topLeading: outer, bottomLeading: outer, bottomTrailing: inner, topTrailing: inner)
-        case .last: .init(topLeading: inner, bottomLeading: inner, bottomTrailing: outer, topTrailing: outer)
-        default: .init(topLeading: inner, bottomLeading: inner, bottomTrailing: inner, topTrailing: inner)
-        }
-        let shape = UnevenRoundedRectangle(cornerRadii: isOn ? .init(topLeading: outer, bottomLeading: outer, bottomTrailing: outer, topTrailing: outer) : radii, style: .continuous)
-        return Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(isOn ? m3.onSurface : m3.onSurfaceVariant)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(isOn ? m3.surfaceContainerHighest.mixWhite(0.12) : m3.surfaceContainerHigh, in: shape)
-                .contentShape(shape)
-        }
-        .buttonStyle(.expressive)
-        .animation(M3Motion.defaultSpatial, value: isOn)
-        .accessibilityLabel(Text(label))
-        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
     // MARK: List
@@ -235,10 +193,9 @@ struct QueueSheet: View {
                     ForEach(Array(np.queueSongs.enumerated()), id: \.element.videoId) { index, song in
                         row(song: song, index: index)
                     }
-                    .onMove { source, destination in
-                        guard !isLocked else { return }
+                    .onMove(perform: isLocked ? nil : { source, destination in
                         np.moveQueueSongs(from: source, to: destination)
-                    }
+                    })
                 }
             }
             .listStyle(.plain)
@@ -268,13 +225,13 @@ struct QueueSheet: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(song.title)
                     .font(.m3(.titleMedium, weight: .regular))
-                    .foregroundStyle(isCurrent ? m3.primary : m3.onSurface)
+                    .foregroundStyle(isCurrent ? m3.onSecondaryContainer : m3.onSurface)
                     .lineLimit(1)
                 HStack(spacing: 4) {
                     DownloadStatusIndicator(videoId: song.videoId, size: 13)
-                    Text(song.subtitleLine(duration: song.duration))
+                    Text(song.subtitleLine(duration: displayDuration(song, isCurrent: isCurrent)))
                         .font(.m3(.bodyMedium))
-                        .foregroundStyle(isCurrent ? m3.primary.opacity(0.85) : m3.onSurfaceVariant)
+                        .foregroundStyle(isCurrent ? m3.onSecondaryContainer.opacity(0.8) : m3.onSurfaceVariant)
                         .lineLimit(1)
                 }
             }
@@ -286,18 +243,28 @@ struct QueueSheet: View {
                 Image(systemName: "ellipsis")
                     .rotationEffect(.degrees(90))
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(isCurrent ? m3.primary : m3.onSurfaceVariant)
+                    .foregroundStyle(isCurrent ? m3.onSecondaryContainer : m3.onSurfaceVariant)
                     .frame(width: 40, height: 40)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+
+            // Visible drag handle (long-press and drag anywhere on the row).
+            if !isLocked {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(isCurrent ? m3.onSecondaryContainer : m3.onSurfaceVariant)
+                    .frame(width: 28, height: 40)
+                    .transition(.opacity)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background {
             if isCurrent {
                 RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous)
-                    .fill(m3.primaryContainer)
+                    .fill(m3.secondaryContainer)
             }
         }
         .contentShape(Rectangle())
@@ -316,6 +283,14 @@ struct QueueSheet: View {
             }
         }
         .animation(M3Motion.defaultEffects, value: isCurrent)
+    }
+
+    /// Some sources (home shelves, radio) deliver songs without a length;
+    /// the playing song falls back to the player's duration.
+    private func displayDuration(_ song: SongItem, isCurrent: Bool) -> Int {
+        if song.duration > 0 { return song.duration }
+        if isCurrent, np.duration > 0 { return Int(np.duration.rounded()) }
+        return 0
     }
 
     // MARK: Actions (same behaviour as Trop's QueueView)
