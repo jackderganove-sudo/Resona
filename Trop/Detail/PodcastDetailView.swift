@@ -665,9 +665,7 @@ struct PodcastMoreSheet: View {
     }
 
     private func downloadAll() {
-        for episode in podcast.episodes {
-            Task { await DownloadManager.shared.download(song: episode.toSongItem()) }
-        }
+        DownloadManager.shared.enqueue(podcast.episodes.map { $0.toSongItem() })
     }
 
     private func share() {

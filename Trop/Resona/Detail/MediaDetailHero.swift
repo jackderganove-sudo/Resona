@@ -123,6 +123,8 @@ struct MediaDetailActions: View {
     var secondaryIcon: String?
     var secondaryLabel: LocalizedStringKey = "More"
     var onSecondary: (() -> Void)?
+    /// Songs for the header download button (playlists, albums).
+    var downloadSongs: [SongItem]?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -143,6 +145,9 @@ struct MediaDetailActions: View {
                     .background(.white, in: Capsule())
                 }
                 .buttonStyle(MorphPressStyle())
+            }
+            if let downloadSongs, !downloadSongs.isEmpty {
+                CollectionDownloadButton(songs: downloadSongs)
             }
             if let secondaryIcon, let onSecondary {
                 circle(secondaryIcon, label: secondaryLabel, action: onSecondary)

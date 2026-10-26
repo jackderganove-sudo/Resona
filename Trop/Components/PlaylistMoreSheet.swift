@@ -46,15 +46,6 @@ struct PlaylistMoreSheet: View {
                 }
                 Divider()
                 MenuRow(
-                    icon: "square.and.arrow.down",
-                    title: "Download",
-                    subtitle: "Download all songs for offline playback"
-                ) {
-                    downloadAll()
-                    dismiss()
-                }
-                Divider()
-                MenuRow(
                     icon: "square.and.arrow.up",
                     title: "Share",
                     subtitle: "Share this playlist with others"
@@ -104,9 +95,7 @@ struct PlaylistMoreSheet: View {
     }
 
     private func downloadAll() {
-        for song in playlist.songs {
-            Task { await DownloadManager.shared.download(song: song) }
-        }
+        DownloadManager.shared.enqueue(playlist.songs)
     }
 
     private func share() {
@@ -116,9 +105,7 @@ struct PlaylistMoreSheet: View {
     }
 
     private func deleteAllDownloads() {
-        let dm = DownloadManager.shared
-        for song in playlist.songs {
-            Task { await dm.delete(videoId: song.videoId) }
-        }
+        let ids = playlist.songs.map(\.videoId)
+        Task { await DownloadManager.shared.delete(videoIds: ids) }
     }
 }

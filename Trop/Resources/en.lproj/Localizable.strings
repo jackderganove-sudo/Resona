@@ -60,6 +60,7 @@
 "Button 2" = "Button 2";
 "Buttons" = "Buttons";
 "Cancel" = "Cancel";
+"Cancel download" = "Cancel download";
 "Canvas" = "Canvas";
 "Center" = "Center";
 "Choose how the app follows your device appearance." = "Choose how the app follows your device appearance.";
@@ -129,6 +130,7 @@
 "Download Settings" = "Download Settings";
 "Download all songs for offline playback" = "Download all songs for offline playback";
 "Download episodes for offline playback" = "Download episodes for offline playback";
+"Download failed" = "Download failed";
 "Downloaded" = "Downloaded";
 "Downloading" = "Downloading";
 "Downloading…" = "Downloading…";
@@ -337,6 +339,7 @@
 "Remove All Downloads" = "Remove All Downloads";
 "Remove Download" = "Remove Download";
 "Remove all downloads" = "Remove all downloads";
+"Remove downloads?" = "Remove downloads?";
 "Remove from Playlist" = "Remove from Playlist";
 "Repeat" = "Repeat";
 "Reset" = "Reset";
@@ -433,6 +436,7 @@
 "Syncs with your YouTube Music account. This cannot be changed later." = "Syncs with your YouTube Music account. This cannot be changed later.";
 "System" = "System";
 "Template" = "Template";
+"The songs stay in the playlist and stream again when online." = "The songs stay in the playlist and stream again when online.";
 "The whole app takes its colors from the current album cover." = "The whole app takes its colors from the current album cover.";
 "Theme" = "Theme";
 "Theme Mode" = "Theme Mode";
@@ -472,6 +476,7 @@
 "Vocal" = "Vocal";
 "Volume" = "Volume";
 "Waiting for login…" = "Waiting for login…";
+"Waiting to download" = "Waiting to download";
 "Watching" = "Watching";
 "When off, searches and playback are not recorded locally." = "When off, searches and playback are not recorded locally.";
 "Wi-Fi Only" = "Wi-Fi Only";

@@ -223,7 +223,7 @@ struct PlayerMenuSheet: View {
                 MenuRow(icon: "checkmark.circle.fill", title: "Remove Download", destructive: true) {
                     Task { await downloadManager.delete(videoId: song.videoId) }
                 }
-            case .downloading:
+            case .downloading, .queued:
                 MenuRow(icon: "arrow.down.circle", title: "Downloading…") {}
                     .disabled(true)
             case .notStarted, .failed:

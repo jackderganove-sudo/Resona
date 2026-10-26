@@ -60,6 +60,7 @@ struct SongRowView: View {
                     .lineLimit(1)
 
                 HStack(spacing: 4) {
+                    DownloadStatusIndicator(videoId: song.videoId, size: 13)
                     if song.isExplicit {
                         Image(systemName: "e.square.fill")
                             .font(.system(size: 12))
@@ -86,7 +87,6 @@ struct SongRowView: View {
                 )
             }
         }
-        .background(DownloadCellProgressView(song: song))
         .padding(.leading, DesignTokens.screenHPadding)
         .padding(.trailing, 6)
         .padding(.vertical, 6)

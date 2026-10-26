@@ -60,6 +60,7 @@
 "Button 2" = "Schaltfläche 2";
 "Buttons" = "Schaltflächen";
 "Cancel" = "Abbrechen";
+"Cancel download" = "Download abbrechen";
 "Canvas" = "Canvas";
 "Center" = "Mitte";
 "Choose how the app follows your device appearance." = "Lege fest, wie die App dem Erscheinungsbild deines Geräts folgt.";
@@ -129,8 +130,9 @@
 "Download Settings" = "Download-Einstellungen";
 "Download all songs for offline playback" = "Alle Songs für die Offline-Wiedergabe laden";
 "Download episodes for offline playback" = "Folgen für die Offline-Wiedergabe laden";
+"Download failed" = "Download fehlgeschlagen";
 "Downloaded" = "Heruntergeladen";
-"Downloading" = "Wird geladen";
+"Downloading" = "Wird heruntergeladen";
 "Downloading…" = "Wird heruntergeladen …";
 "Downloads" = "Downloads";
 "Downloads and offline storage" = "Downloads und Offline-Speicher";
@@ -337,6 +339,7 @@
 "Remove All Downloads" = "Alle Downloads entfernen";
 "Remove Download" = "Download entfernen";
 "Remove all downloads" = "Alle Downloads entfernen";
+"Remove downloads?" = "Downloads entfernen?";
 "Remove from Playlist" = "Aus Playlist entfernen";
 "Repeat" = "Wiederholen";
 "Reset" = "Zurücksetzen";
@@ -433,6 +436,7 @@
 "Syncs with your YouTube Music account. This cannot be changed later." = "Wird mit deinem YouTube-Music-Konto synchronisiert. Das lässt sich später nicht ändern.";
 "System" = "System";
 "Template" = "Vorlage";
+"The songs stay in the playlist and stream again when online." = "Die Songs bleiben in der Playlist und werden online wieder gestreamt.";
 "The whole app takes its colors from the current album cover." = "Die ganze App übernimmt ihre Farben vom aktuellen Album-Cover.";
 "Theme" = "Design";
 "Theme Mode" = "Erscheinungsbild";
@@ -472,6 +476,7 @@
 "Vocal" = "Gesang";
 "Volume" = "Lautstärke";
 "Waiting for login…" = "Warte auf Anmeldung …";
+"Waiting to download" = "Wartet auf Download";
 "Watching" = "Schaut";
 "When off, searches and playback are not recorded locally." = "Wenn aus, werden Suchen und Wiedergaben nicht lokal gespeichert.";
 "Wi-Fi Only" = "Nur WLAN";

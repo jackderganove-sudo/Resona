@@ -60,6 +60,7 @@
 "Button 2" = "按钮 2";
 "Buttons" = "按钮";
 "Cancel" = "取消";
+"Cancel download" = "Cancel download";
 "Canvas" = "画布";
 "Center" = "居中";
 "Choose how the app follows your device appearance." = "选择应用如何跟随设备外观。";
@@ -129,6 +130,7 @@
 "Download Settings" = "下载设置";
 "Download all songs for offline playback" = "下载所有歌曲以供离线播放";
 "Download episodes for offline playback" = "下载剧集以供离线播放";
+"Download failed" = "Download failed";
 "Downloaded" = "已下载";
 "Downloading" = "正在下载";
 "Downloading…" = "正在下载…";
@@ -337,6 +339,7 @@
 "Remove All Downloads" = "移除所有下载";
 "Remove Download" = "移除下载";
 "Remove all downloads" = "移除所有下载";
+"Remove downloads?" = "Remove downloads?";
 "Remove from Playlist" = "从播放列表移除";
 "Repeat" = "Repeat";
 "Reset" = "Reset";
@@ -433,6 +436,7 @@
 "Syncs with your YouTube Music account. This cannot be changed later." = "与 YouTube Music 账户同步。此设置之后无法更改。";
 "System" = "系统默认";
 "Template" = "模板";
+"The songs stay in the playlist and stream again when online." = "The songs stay in the playlist and stream again when online.";
 "The whole app takes its colors from the current album cover." = "The whole app takes its colors from the current album cover.";
 "Theme" = "主题";
 "Theme Mode" = "主题模式";
@@ -472,6 +476,7 @@
 "Vocal" = "人声";
 "Volume" = "Volume";
 "Waiting for login…" = "等待登录…";
+"Waiting to download" = "Waiting to download";
 "Watching" = "观看中";
 "When off, searches and playback are not recorded locally." = "关闭后，搜索和播放记录不会保存在本地。";
 "Wi-Fi Only" = "仅 Wi‑Fi";

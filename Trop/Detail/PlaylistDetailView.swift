@@ -487,7 +487,8 @@ struct PlaylistDetailView: View {
                 onShuffle: { shufflePlay(playlist) },
                 onPlay: { playAll(playlist) },
                 secondaryIcon: "ellipsis",
-                onSecondary: { showMoreSheet = true }
+                onSecondary: { showMoreSheet = true },
+                downloadSongs: playlist.songs
             )
         }
         .sheet(isPresented: $showMoreSheet) {

@@ -269,10 +269,13 @@ struct QueueSheet: View {
                     .font(.m3(.titleMedium, weight: .regular))
                     .foregroundStyle(isCurrent ? m3.primary : m3.onSurface)
                     .lineLimit(1)
-                Text(song.subtitleLine(duration: song.duration))
-                    .font(.m3(.bodyMedium))
-                    .foregroundStyle(isCurrent ? m3.primary.opacity(0.85) : m3.onSurfaceVariant)
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    DownloadStatusIndicator(videoId: song.videoId, size: 13)
+                    Text(song.subtitleLine(duration: song.duration))
+                        .font(.m3(.bodyMedium))
+                        .foregroundStyle(isCurrent ? m3.primary.opacity(0.85) : m3.onSurfaceVariant)
+                        .lineLimit(1)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 

@@ -26,6 +26,8 @@ final class DownloadManager: ObservableObject {
 
     enum DownloadState: Equatable {
         case notStarted
+        /// Waiting in the download queue (Resona: playlist downloads).
+        case queued
         case downloading(Double)
         case completed
         case failed(String)
@@ -42,6 +44,12 @@ final class DownloadManager: ObservableObject {
     private var activeFFmpegSessions: [String: FFmpegSession] = [:]
 
     private var tracksById: [String: DownloadedTrackEntity] = [:]
+
+    // Resona: bounded download queue so a playlist download doesn't start
+    // dozens of stream resolutions and ffmpeg sessions at once.
+    private var pendingQueue: [SongItem] = []
+    private var activeWorkers = 0
+    private let maxConcurrentDownloads = 2
 
     private var downloadsDir: URL {
         let base = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -260,6 +268,10 @@ extension DownloadManager {
             Log.downloadManager.debug("Download already in progress for \(videoId)")
             return
         }
+        // Claim the slot before the first suspension point so a second call
+        // for the same song can't slip past the check above.
+        cancelledDownloadIds.remove(videoId)
+        downloads[videoId] = .downloading(0.01)
 
         if let existing = await localURL(for: videoId),
            let size = try? existing.resourceValues(forKeys: [.fileSizeKey]).fileSize,
@@ -280,7 +292,11 @@ extension DownloadManager {
             if bgTask != .invalid { UIApplication.shared.endBackgroundTask(bgTask) }
         }
 
-        cancelledDownloadIds.remove(videoId)
+        if cancelledDownloadIds.contains(videoId) {
+            cancelledDownloadIds.remove(videoId)
+            downloads[videoId] = .notStarted
+            return
+        }
         lastReportedProgress.removeValue(forKey: videoId)
         let artist = song.artists.map(\.name).joined(separator: ", ")
         let downloadStart = CFAbsoluteTimeGetCurrent()
@@ -307,6 +323,7 @@ extension DownloadManager {
                 videoId: videoId,
                 forDownload: true
             )
+            if cancelledDownloadIds.contains(videoId) { throw CancellationError() }
             let resolveElapsed = CFAbsoluteTimeGetCurrent() - resolveStart
             let streamURL = result.streamUrl
             let isAACStream = result.mimeType.lowercased().contains("mp4a")
@@ -624,12 +641,74 @@ extension DownloadManager {
 
             if let videoId, let session {
                 Task { @MainActor in
-                    self.activeFFmpegSessions[videoId] = session
+                    if self.cancelledDownloadIds.contains(videoId) {
+                        session.cancel()
+                    } else {
+                        self.activeFFmpegSessions[videoId] = session
+                    }
                 }
             }
         }
     }
 
+}
+
+// MARK: - Queue (Resona)
+
+extension DownloadManager {
+    /// Queues songs for download (skips ones already downloaded, queued or
+    /// in progress); at most `maxConcurrentDownloads` run at once.
+    func enqueue(_ songs: [SongItem]) {
+        for song in songs {
+            switch state(for: song.videoId) {
+            case .completed, .queued, .downloading: continue
+            case .notStarted, .failed: break
+            }
+            downloads[song.videoId] = .queued
+            pendingQueue.append(song)
+        }
+        pumpQueue()
+    }
+
+    /// Cancels queued and running downloads for these songs.
+    func cancel(videoIds: [String]) {
+        let ids = Set(videoIds)
+        pendingQueue.removeAll { ids.contains($0.videoId) }
+        for id in ids {
+            switch downloads[id] {
+            case .queued:
+                downloads[id] = .notStarted
+            case .downloading:
+                cancelledDownloadIds.insert(id)
+                if let session = activeFFmpegSessions.removeValue(forKey: id) {
+                    session.cancel()
+                }
+            default:
+                break
+            }
+        }
+    }
+
+    /// Deletes the downloaded files of these songs.
+    func delete(videoIds: [String]) async {
+        cancel(videoIds: videoIds)
+        for id in videoIds where isDownloaded(videoId: id) {
+            await delete(videoId: id)
+        }
+    }
+
+    private func pumpQueue() {
+        while activeWorkers < maxConcurrentDownloads, !pendingQueue.isEmpty {
+            let song = pendingQueue.removeFirst()
+            guard case .queued = downloads[song.videoId] else { continue }
+            activeWorkers += 1
+            Task { @MainActor in
+                await self.download(song: song)
+                self.activeWorkers -= 1
+                self.pumpQueue()
+            }
+        }
+    }
 }
 
 // MARK: - Delete & queries
@@ -659,6 +738,7 @@ extension DownloadManager {
     }
 
     func deleteAll() async {
+        pendingQueue.removeAll()
         cancelAllActiveDownloads()
 
         // Remove files directly so orphaned downloads are cleaned too.

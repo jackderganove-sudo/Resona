@@ -162,6 +162,7 @@ struct LibraryCard<MenuContent: View>: View {
     let title: String
     var subtitle: String?
     var badge: LocalizedStringKey?
+    var isDownloaded = false
     var onPlay: (() -> Void)?
     @ViewBuilder var menu: () -> MenuContent
 
@@ -175,6 +176,12 @@ struct LibraryCard<MenuContent: View>: View {
                     .foregroundStyle(m3.onSurface)
                     .lineLimit(1)
                 HStack(spacing: 8) {
+                    if isDownloaded {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(m3.primary)
+                            .accessibilityLabel(Text("Downloaded"))
+                    }
                     if let subtitle {
                         Text(subtitle)
                             .font(.m3(.titleMedium, weight: .regular))

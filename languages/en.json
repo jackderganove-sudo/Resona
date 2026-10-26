@@ -482,5 +482,10 @@
   "Colors from artwork": "Colors from artwork",
   "Pure black": "Pure black",
   "Dynamic color": "Dynamic color",
-  "The whole app takes its colors from the current album cover.": "The whole app takes its colors from the current album cover."
+  "The whole app takes its colors from the current album cover.": "The whole app takes its colors from the current album cover.",
+  "Waiting to download": "Waiting to download",
+  "Download failed": "Download failed",
+  "Remove downloads?": "Remove downloads?",
+  "The songs stay in the playlist and stream again when online.": "The songs stay in the playlist and stream again when online.",
+  "Cancel download": "Cancel download"
 }

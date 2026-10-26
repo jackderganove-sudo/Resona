@@ -333,7 +333,8 @@ struct AlbumDetailView: View {
                 onShuffle: { shufflePlay(album) },
                 onPlay: { playAll(album) },
                 secondaryIcon: "ellipsis",
-                onSecondary: { showMoreSheet = true }
+                onSecondary: { showMoreSheet = true },
+                downloadSongs: album.songs
             )
         }
         .sheet(isPresented: $showMoreSheet) {
@@ -421,15 +422,6 @@ struct AlbumMoreSheet: View {
                 }
                 Divider()
                 MenuRow(
-                    icon: "square.and.arrow.down",
-                    title: "Download",
-                    subtitle: "Download all songs for offline playback"
-                ) {
-                    downloadAll()
-                    dismiss()
-                }
-                Divider()
-                MenuRow(
                     icon: "square.and.arrow.up",
                     title: "Share",
                     subtitle: "Share this album with others"
@@ -448,9 +440,7 @@ struct AlbumMoreSheet: View {
     }
 
     private func downloadAll() {
-        for song in album.songs {
-            Task { await DownloadManager.shared.download(song: song) }
-        }
+        DownloadManager.shared.enqueue(album.songs)
     }
 
     private func share() {

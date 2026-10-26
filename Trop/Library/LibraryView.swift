@@ -21,6 +21,7 @@ struct LibraryView: View {
     @State private var playlistToDelete: PlaylistEntity?
     @State private var playlistSongCounts: [String: Int] = [:]
     @State private var playlistMosaics: [String: [String]] = [:]
+    @State private var playlistDownloadedCounts: [String: Int] = [:]
     @AppStorage("resona.library.viewMode") private var viewMode: LibraryViewMode = .list
     @AppStorage("resona.library.sort") private var sort: LibrarySort = .custom
     @Environment(\.m3) private var m3
@@ -99,6 +100,9 @@ struct LibraryView: View {
                 }
             }
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showCreateDialog)
+            .onChange(of: downloadManager.persistedDownloadCount) { _, _ in
+                Task { await loadDownloadedCounts() }
+            }
             .task {
                 await loadContent()
                 await accountState.restoreSession()
@@ -213,6 +217,7 @@ struct LibraryView: View {
                         title: playlist.name,
                         subtitle: songCountText(playlistSongCounts[playlist.id] ?? playlist.remoteSongCount),
                         badge: playlist.browseId == nil ? "Personal" : "Synced with YouTube",
+                        isDownloaded: isFullyDownloaded(playlist),
                         onPlay: { Task { await play(playlist) } },
                         menuItems: {
                             if playlist.isEditable {
@@ -260,6 +265,25 @@ struct LibraryView: View {
         return .icon("music.note.list")
     }
 
+    private func isFullyDownloaded(_ playlist: PlaylistEntity) -> Bool {
+        let total = playlistSongCounts[playlist.id] ?? 0
+        return total > 0 && (playlistDownloadedCounts[playlist.id] ?? 0) >= total
+    }
+
+    /// Downloaded songs per playlist (live badge in the library).
+    private func loadDownloadedCounts() async {
+        let rows: [(String, Int)] = (try? await DatabaseService.shared.read { db in
+            try Row.fetchAll(
+                db,
+                sql: "SELECT m.playlist_id, COUNT(DISTINCT m.song_id) AS cnt "
+                    + "FROM playlist_song_map m JOIN downloaded_track d ON d.id = m.song_id "
+                    + "GROUP BY m.playlist_id"
+            )
+            .map { ($0["playlist_id"] as String, $0["cnt"] as Int) }
+        }) ?? []
+        playlistDownloadedCounts = Dictionary(uniqueKeysWithValues: rows)
+    }
+
     private func songCountText(_ count: Int?) -> String? {
         guard let count else { return nil }
         return String(format: NSLocalizedString("%d tracks", comment: "Library song count"), count)
@@ -286,12 +310,13 @@ struct LibraryView: View {
         title: String,
         subtitle: String?,
         badge: LocalizedStringKey? = nil,
+        isDownloaded: Bool = false,
         onPlay: (() -> Void)? = nil,
         @ViewBuilder menuItems: () -> some View = { EmptyView() }
     ) -> some View {
         let items = menuItems()
         if viewMode == .list {
-            LibraryCard(artwork: artwork, title: title, subtitle: subtitle, badge: badge, onPlay: onPlay) {
+            LibraryCard(artwork: artwork, title: title, subtitle: subtitle, badge: badge, isDownloaded: isDownloaded, onPlay: onPlay) {
                 Menu {
                     items
                 } label: {
@@ -523,6 +548,7 @@ struct LibraryView: View {
                 .map { ($0["playlist_id"] as String, $0["thumbnail_url"] as String) }
             }
             playlistMosaics = Dictionary(grouping: thumbs, by: \.0).mapValues { $0.map(\.1) }
+            await loadDownloadedCounts()
 
             isLoading = false
         } catch {
