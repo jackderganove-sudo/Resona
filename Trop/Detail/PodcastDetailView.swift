@@ -499,7 +499,7 @@ struct PodcastDetailView: View {
             }
 
             if !podcast.episodes.isEmpty {
-                Text("\(podcast.episodes.count) episode\(podcast.episodes.count != 1 ? "s" : "")")
+                Text(L10n.episodes(podcast.episodes.count))
                     .font(.subheadline)
                     .foregroundStyle(.tertiary)
             }

@@ -45,7 +45,7 @@ struct HistoryScreenView: View {
         VStack(spacing: 0) {
             Picker("Source", selection: $viewModel.source) {
                 ForEach(HistorySource.allCases, id: \.self) { source in
-                    Text(source.rawValue).tag(source)
+                    Text(LocalizedStringKey(source.rawValue)).tag(source)
                 }
             }
             .pickerStyle(.segmented)

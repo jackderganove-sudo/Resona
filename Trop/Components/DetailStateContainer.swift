@@ -45,7 +45,7 @@ struct DetailStateContainer<Data, Content: View>: View {
                     .transition(.opacity)
             } else if let error = error {
                 ContentUnavailableView(
-                    LocalizedStringKey("Couldn't load \(noun)"),
+                    LocalizedStringKey("Couldn't load " + noun),
                     systemImage: "exclamationmark.circle",
                     description: Text(error.localizedDescription)
                 )
@@ -56,9 +56,9 @@ struct DetailStateContainer<Data, Content: View>: View {
                     .transition(.opacity)
             } else {
                 ContentUnavailableView(
-                    LocalizedStringKey("No \(noun) data"),
+                    LocalizedStringKey("No " + noun + " data"),
                     systemImage: emptyIcon,
-                    description: Text(LocalizedStringKey("Could not parse \(noun) details"))
+                    description: Text(LocalizedStringKey("Could not parse " + noun + " details"))
                 )
                 .containerRelativeFrame(.vertical)
             }

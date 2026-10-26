@@ -41,7 +41,7 @@ struct LibraryView: View {
     }
     private var autoPlaylists: [AutoPlaylistInfo] {
         [
-            AutoPlaylistInfo(id: "liked", title: "Liked Songs", icon: "heart.fill", subtitle: "\(likedSongCount) songs", route: .likedSongs),
+            AutoPlaylistInfo(id: "liked", title: "Liked Songs", icon: "heart.fill", subtitle: L10n.songs(likedSongCount), route: .likedSongs),
             AutoPlaylistInfo(id: "downloads", title: "Downloads", icon: "arrow.down.circle.fill",
                              subtitle: downloadsSubtitle, route: nil, detailRoute: .downloads),
             AutoPlaylistInfo(id: "top100", title: "My Top 100", icon: "trophy.fill", subtitle: "Top 100", route: .topSongs(limit: 100))
@@ -51,7 +51,7 @@ struct LibraryView: View {
     private var downloadsSubtitle: String {
         downloadManager.persistedDownloadCount == 0
             ? "Offline"
-            : "\(downloadManager.persistedDownloadCount) songs"
+            : L10n.songs(downloadManager.persistedDownloadCount)
     }
 
     enum LibraryFilter: String, CaseIterable {

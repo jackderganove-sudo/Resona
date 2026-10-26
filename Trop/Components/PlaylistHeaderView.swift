@@ -132,7 +132,7 @@ struct PlaylistHeaderView: View {
 
     private var metadataLine: String {
         var parts: [String] = []
-        parts.append("\(songCount) \(songCount == 1 ? "song" : "songs")")
+        parts.append(L10n.songs(songCount))
         if duration > 0 {
             parts.append(duration.formattedDuration)
         }

@@ -52,7 +52,7 @@ struct DownloadSettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(storageLabel)
                         .font(.title2.weight(.bold))
-                    Text("\(trackCount) offline \(trackCount == 1 ? "track" : "tracks")")
+                    Text(L10n.offlineTracks(trackCount))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
