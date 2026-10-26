@@ -20,12 +20,27 @@ inspired by the Android app ArchiveTune (GPLv3) and re-implemented in SwiftUI.
 
 ## Install
 
-Requires iOS 18 or later. Grab the unsigned `Resona.ipa`:
+Requires iOS / iPadOS 18 or later. Grab the unsigned `Resona.ipa`:
 
 - latest build: **Actions** tab → newest *Build IPA* run → artifact `Resona-<n>`
-- releases: push a tag `vX.Y.Z` and the workflow publishes a GitHub release
+  (GitHub delivers artifacts as a `.zip`; unzip it to get `Resona.ipa`)
+- releases: push a tag, e.g. `git tag v0.1.0 && git push origin v0.1.0`; the
+  workflow builds it with that version and attaches `Resona.ipa` to a release
 
 Sideload it with ESign, Feather, AltStore or SideStore (they re-sign it).
+Sign in to YouTube Music under *Settings → Account*.
+
+## Project layout
+
+- `Trop/Resona/` — Resona's UI layer: Material 3 theme engine (tonal palettes
+  from the artwork), navigation bar/rail, mini & full player, lyrics, screen
+  components
+- `Trop/…` — Trop's app code (networking, playback, database, sync); screen
+  views were restyled in place, logic is unchanged
+- `reference/` — design reference screenshots
+- `languages/` — UI strings (`en.json` source, `de.json` German);
+  `scripts/add_strings.py` adds keys, `scripts/generate_localizations.py`
+  writes the `.strings` files
 
 ## Building
 
