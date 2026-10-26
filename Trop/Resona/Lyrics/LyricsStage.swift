@@ -35,6 +35,10 @@ struct LyricsStage<Accessory: View>: View {
     /// Every change animates with the staggered spring, so the list never
     /// jumps — not on line changes, not when row positions shift.
     @State private var scrollTarget: CGFloat = 0
+    /// Direction of the last scroll-target change (true = content moves up)
+    /// and whether rows should stagger at all (only for small moves).
+    @State private var movingUp = true
+    @State private var staggered = true
     @State private var stageHeight: CGFloat = 0
     @State private var hasPositioned = false
     @State private var manualOffset: CGFloat = 0
@@ -53,11 +57,11 @@ struct LyricsStage<Accessory: View>: View {
                         .padding(.horizontal, 28)
                         .padding(.vertical, fontSize * 0.36)
                         .frame(maxWidth: .infinity, alignment: Alignment(horizontal: horizontalAlignment, vertical: .center))
-                        .modifier(StageRow(index: -1, activeIndex: activeIndex, scrollTarget: scrollTarget, manualOffset: manualOffset, lineTops: $lineTops))
+                        .modifier(StageRow(index: -1, activeIndex: activeIndex, scrollTarget: scrollTarget, manualOffset: manualOffset, movingUp: movingUp, staggered: staggered, lineTops: $lineTops))
                 }
                 ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
                     row(index: index, line: line)
-                        .modifier(StageRow(index: index, activeIndex: activeIndex, scrollTarget: scrollTarget, manualOffset: manualOffset, lineTops: $lineTops))
+                        .modifier(StageRow(index: index, activeIndex: activeIndex, scrollTarget: scrollTarget, manualOffset: manualOffset, movingUp: movingUp, staggered: staggered, lineTops: $lineTops))
                 }
                 Color.clear.frame(height: geo.size.height)
             }
@@ -94,12 +98,20 @@ struct LyricsStage<Accessory: View>: View {
     }
 
     /// Recomputes the scroll target; the very first placement is instant.
-    private func updateScrollTarget() {
+    private func updateScrollTarget(allowStagger: Bool = true) {
+        // While the user scrolls by hand the list stays where they put it;
+        // the auto-scroll resumes (and catches up) when they let go.
+        guard !isManual else { return }
         let key = lineTops[activeIndex] != nil ? activeIndex : (introGap != nil ? -1 : 0)
         guard let top = lineTops[key], stageHeight > 0 else { return }
         let target = top - stageHeight * anchorFraction
-        guard abs(target - scrollTarget) > 0.5 else { return }
+        let delta = target - scrollTarget
+        guard abs(delta) > 0.5 else { return }
         if hasPositioned {
+            // Stagger only small, line-to-line moves, trailing rows lagging
+            // in the direction of motion so rows spread instead of crossing.
+            movingUp = delta > 0
+            staggered = allowStagger && abs(delta) < fontSize * 4
             scrollTarget = target          // animated per row (StageRow)
         } else {
             var t = Transaction()
@@ -127,6 +139,16 @@ struct LyricsStage<Accessory: View>: View {
 
     private static var space: String { "lyricsStage" }
 
+    /// Romanization/translation that only repeats the line (Latin script) is
+    /// not shown — it appeared as a small duplicate under the line.
+    static func sameText(_ a: String, _ b: String) -> Bool {
+        func norm(_ s: String) -> String {
+            s.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
+                .filter { $0.isLetter || $0.isNumber }
+        }
+        return norm(a) == norm(b)
+    }
+
     private var horizontalAlignment: HorizontalAlignment {
         switch alignment {
         case .left: .leading
@@ -151,7 +173,7 @@ struct LyricsStage<Accessory: View>: View {
                         .foregroundStyle(.white)
                 }
             }
-            if let roman = romanized(index), !roman.isEmpty {
+            if let roman = romanized(index), !roman.isEmpty, !Self.sameText(roman, line.text) {
                 Text(roman)
                     .font(.system(size: max(12, fontSize * 0.55), weight: .semibold))
                     .foregroundStyle(.white.opacity(isActive ? 0.8 : 0.6))
@@ -179,7 +201,7 @@ struct LyricsStage<Accessory: View>: View {
 
     /// Reference: just-finished and upcoming lines ≈ 35 %, fading further out.
     private func opacity(distance: Int) -> Double {
-        if isManual { return 0.6 }
+        if isManual { return 0.5 }
         switch distance {
         case 1: return 0.36
         case 2: return 0.3
@@ -238,7 +260,7 @@ struct LyricsStage<Accessory: View>: View {
     private func scheduleResume() {
         resumeTask?.cancel()
         resumeTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 3_500_000_000)
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
             guard !Task.isCancelled else { return }
             resume()
         }
@@ -247,11 +269,13 @@ struct LyricsStage<Accessory: View>: View {
     private func resume() {
         resumeTask?.cancel()
         guard isManual || manualOffset != 0 else { return }
+        // Back to the active line as one block (no stagger) together with
+        // releasing the manual offset.
         withAnimation(M3Motion.lyricsScroll) {
             manualOffset = 0
             isManual = false
         }
-        updateScrollTarget()
+        updateScrollTarget(allowStagger: false)
     }
 
     private var edgeFade: some View {
@@ -279,6 +303,8 @@ private struct StageRow: ViewModifier {
     let activeIndex: Int
     let scrollTarget: CGFloat
     let manualOffset: CGFloat
+    let movingUp: Bool
+    let staggered: Bool
     @Binding var lineTops: [Int: CGFloat]
 
     func body(content: Content) -> some View {
@@ -293,10 +319,15 @@ private struct StageRow: ViewModifier {
             .offset(y: manualOffset)
     }
 
+    /// Rows on the trailing side of the motion start a little later, so the
+    /// gaps between rows only ever open up — rows never pass through each
+    /// other (that overlap looked like doubled lyrics).
     private var delay: Double {
+        guard staggered else { return 0 }
         let rel = index - activeIndex
-        guard rel >= -1 else { return 0 }
-        return min(Double(rel + 1), 8) * 0.035
+        let trailing = movingUp ? rel + 1 : -(rel - 1)
+        guard trailing > 0 else { return 0 }
+        return min(Double(trailing), 6) * 0.035
     }
 }
 
