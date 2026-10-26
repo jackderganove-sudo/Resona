@@ -30,13 +30,14 @@ struct SheetChrome<Content: View>: View {
                 .padding(.bottom, 24)
             }
             .scrollContentBackground(.hidden)
-            .background(m3.surface)
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(M3Shape.extraLarge)
-        .presentationBackground(m3.surface)
+        .presentationBackground {
+            FrostedSurface(tint: m3.surface, tintOpacity: 0.82, material: .regularMaterial)
+        }
     }
 }
 

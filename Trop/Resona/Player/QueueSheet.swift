@@ -60,11 +60,12 @@ struct QueueSheet: View {
 
             queueList
         }
-        .background(m3.surfaceContainerLow.ignoresSafeArea())
         .presentationDetents([.large, .medium])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(M3Shape.extraLarge)
-        .presentationBackground(m3.surfaceContainerLow)
+        .presentationBackground {
+            FrostedSurface(tint: m3.surfaceContainerLow, tintOpacity: 0.8, material: .regularMaterial)
+        }
         .sheet(item: $menuSong) { item in
             SongMenuSheet(song: item.song, onNavigate: { route in
                 pendingRoute = route

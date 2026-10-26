@@ -37,14 +37,12 @@ struct PlayerBackground: View {
             )
 
             if let image {
+                // Pre-blurred once (Core Image, cached) instead of a live
+                // 90 pt blur that was re-rendered every animation frame.
                 GeometryReader { geo in
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
+                    BlurredArtwork(image: image, radius: 10)
                         .frame(width: geo.size.width, height: geo.size.height)
-                        .blur(radius: 90, opaque: true)
-                        .saturation(1.25)
-                        .opacity(0.42)
+                        .opacity(0.5)
                         .clipped()
                 }
                 .transition(.opacity)

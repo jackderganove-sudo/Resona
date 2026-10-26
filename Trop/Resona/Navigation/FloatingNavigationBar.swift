@@ -46,7 +46,8 @@ struct FloatingNavigationBar: View {
         .frame(maxWidth: M3Metrics.navigationBarMaxWidth)
         .frame(height: M3Metrics.navigationBarHeight)
         .frame(maxWidth: .infinity)
-        .background(m3.surfaceContainer, in: shape)
+        // Frosted: content scrolling behind the bar shows through blurred.
+        .background { FrostedSurface(shape: shape, tint: m3.surfaceContainer, tintOpacity: 0.74) }
         .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
         .animation(M3Motion.defaultSpatial, value: miniPlayerProximity)
     }

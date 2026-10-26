@@ -281,7 +281,8 @@ private struct MiniTransportControls: View {
 
 // MARK: - Background
 
-/// Artwork gradient behind the mini player (reference "GRADIENT" style).
+/// Frosted mini player: whatever scrolls behind is strongly blurred and
+/// tinted with the cover's colours (matte, no glass refraction).
 struct MiniPlayerBackground: View {
     let colors: ArtworkColors
 
@@ -289,19 +290,14 @@ struct MiniPlayerBackground: View {
         let c = colors.gradient
         let first = (c.first ?? RGB(hex: 0x1D5D7A)).color
         let second = (c.count > 1 ? c[1] : c.first ?? RGB(hex: 0x0B3A55)).color
-        let third = (c.count > 2 ? c[2] : c.last ?? RGB(hex: 0x14506B)).color
         ZStack {
-            Color.black
+            FrostedSurface(tint: .black, tintOpacity: 0.18, material: .thinMaterial)
             LinearGradient(
-                stops: [
-                    .init(color: first.opacity(0.95), location: 0),
-                    .init(color: second.opacity(0.82), location: 0.52),
-                    .init(color: third.opacity(0.72), location: 1)
-                ],
+                colors: [first.opacity(0.55), second.opacity(0.45)],
                 startPoint: .leading,
                 endPoint: .trailing
             )
-            Color.black.opacity(0.32)
+            Color.black.opacity(0.12)
         }
         .animation(M3Motion.colorChange, value: colors)
     }

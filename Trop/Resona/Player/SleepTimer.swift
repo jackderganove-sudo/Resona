@@ -133,7 +133,13 @@ struct SleepTimerDialog: View {
             }
             .padding(24)
             .frame(maxWidth: 400)
-            .background(m3.surfaceContainerHigh, in: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+            .background {
+                FrostedSurface(
+                    shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous),
+                    tint: m3.surfaceContainerHigh,
+                    tintOpacity: 0.8
+                )
+            }
             .padding(.horizontal, 24)
             .transition(.scale(scale: 0.9).combined(with: .opacity))
         }
