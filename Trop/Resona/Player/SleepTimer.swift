@@ -170,3 +170,77 @@ struct SleepTimerDialog: View {
         withAnimation(M3Motion.defaultSpatial) { isPresented = false }
     }
 }
+
+// MARK: - Player button
+
+/// Sleep timer button for the player's bottom row. Inactive: moon. Active:
+/// the remaining time counting down live (or "End of track"), widened with
+/// a spring and filled with the player accent. Tapping while active turns
+/// the timer off immediately.
+struct SleepTimerButton: View {
+    @Environment(\.artworkColors) private var artwork
+    private let timer = SleepTimer.shared
+    let onOpen: () -> Void
+    let onCancelled: () -> Void
+
+    var body: some View {
+        Button {
+            if timer.isActive {
+                timer.cancel()
+                onCancelled()
+            } else {
+                onOpen()
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: timer.isActive ? "moon.fill" : "moon")
+                    .font(.system(size: timer.isActive ? 15 : 19, weight: .medium))
+                    .contentTransition(.symbolEffect(.replace))
+                if timer.isActive {
+                    TimelineView(.periodic(from: .now, by: 1)) { _ in
+                        Text(label)
+                            .font(.system(size: 15, weight: .semibold, design: .rounded).monospacedDigit())
+                            .contentTransition(.numericText(countsDown: true))
+                            .lineLimit(1)
+                            .fixedSize()
+                    }
+                    .transition(.scale(scale: 0.6, anchor: .leading).combined(with: .opacity))
+                }
+            }
+            .foregroundStyle(timer.isActive ? artwork.accent.on : .white.opacity(0.92))
+            .padding(.horizontal, timer.isActive ? 16 : 0)
+            .frame(minWidth: 48)
+            .frame(height: 48)
+            .background(timer.isActive ? artwork.accent.container : .white.opacity(0.12), in: Capsule())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.expressive)
+        .animation(M3Motion.defaultSpatial, value: timer.isActive)
+        .sensoryFeedback(.impact(weight: .medium), trigger: timer.isActive) { was, now in was && !now }
+        .accessibilityLabel(Text(timer.isActive ? "Turn off sleep timer" : "Sleep timer"))
+    }
+
+    private var label: String {
+        if timer.stopAtSongEnd { return String(localized: "End of track") }
+        let remaining = Int((timer.remaining ?? 0).rounded(.up))
+        let h = remaining / 3600, m = (remaining % 3600) / 60, s = remaining % 60
+        return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
+    }
+}
+
+/// Small transient notice ("Sleep timer off").
+struct PlayerToast: View {
+    let text: LocalizedStringKey
+
+    var body: some View {
+        Text(text)
+            .font(.poppins(14, weight: .medium))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .frame(height: 40)
+            .background {
+                FrostedSurface(shape: Capsule(), tint: Color.black, role: .floating)
+            }
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+}

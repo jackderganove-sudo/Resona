@@ -147,6 +147,7 @@
 "Enable Discord RPC" = "Discord RPC aktivieren";
 "Enable Scrobbling" = "Scrobbling aktivieren";
 "End of song" = "Songende";
+"End of track" = "Titelende";
 "Energize" = "Energie";
 "Energy" = "Energie";
 "Episodes" = "Folgen";
@@ -395,6 +396,7 @@
 "Skips non-music parts of music videos, like talking intros, skits and long outros." = "Überspringt Nicht-Musik-Teile in Musikvideos, z. B. gesprochene Intros, Sketche und lange Outros.";
 "Sleep" = "Schlafen";
 "Sleep timer" = "Sleep-Timer";
+"Sleep timer off" = "Sleep-Timer aus";
 "Solid" = "Einfarbig";
 "Song count" = "Anzahl Titel";
 "Song options" = "Song-Optionen";
@@ -458,6 +460,7 @@
 "Trending" = "Im Trend";
 "Trending songs for you" = "Angesagte Songs für dich";
 "Try again later." = "Versuche es später noch einmal.";
+"Turn off sleep timer" = "Sleep-Timer ausschalten";
 "URL" = "URL";
 "Unlike" = "Gefällt mir entfernen";
 "Unlock queue" = "Warteschlange entsperren";

@@ -488,5 +488,8 @@
   "Remove downloads?": "Remove downloads?",
   "The songs stay in the playlist and stream again when online.": "The songs stay in the playlist and stream again when online.",
   "Cancel download": "Cancel download",
-  "Loading": "Loading"
+  "Loading": "Loading",
+  "End of track": "End of track",
+  "Sleep timer off": "Sleep timer off",
+  "Turn off sleep timer": "Turn off sleep timer"
 }

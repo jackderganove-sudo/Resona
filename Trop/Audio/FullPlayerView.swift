@@ -32,6 +32,8 @@ struct FullPlayerView: View {
     @State private var pendingRoute: DetailRoute?
     @State private var artworkEntryOffset: CGFloat = 0
     @State private var isCollapseDragging = false
+    @State private var toast: LocalizedStringKey?
+    @State private var toastTask: Task<Void, Never>?
 
     private var currentSong: SongItem? {
         np.queueSongs.indices.contains(np.queueIndex) ? np.queueSongs[np.queueIndex] : nil
@@ -66,6 +68,16 @@ struct FullPlayerView: View {
                 if showSleepTimer {
                     SleepTimerDialog(isPresented: $showSleepTimer)
                         .zIndex(5)
+                }
+
+                if let toast {
+                    VStack {
+                        Spacer()
+                        PlayerToast(text: toast)
+                            .padding(.bottom, 84)
+                    }
+                    .allowsHitTesting(false)
+                    .zIndex(6)
                 }
             }
             .animation(M3Motion.defaultSpatial, value: showLyrics)
@@ -426,10 +438,10 @@ struct FullPlayerView: View {
             PlayerBottomPill(systemName: "list.bullet", title: "Queue") {
                 showQueue = true
             }
-            PlayerBottomPill(systemName: sleepTimer.isActive ? "moon.fill" : "moon", highlighted: sleepTimer.isActive) {
-                withAnimation(M3Motion.defaultSpatial) { showSleepTimer = true }
-            }
-            .accessibilityLabel(Text("Sleep timer"))
+            SleepTimerButton(
+                onOpen: { withAnimation(M3Motion.defaultSpatial) { showSleepTimer = true } },
+                onCancelled: { showToast("Sleep timer off") }
+            )
             PlayerBottomPill(systemName: "quote.bubble", title: "Lyrics", highlighted: showLyrics) {
                 withAnimation(M3Motion.defaultSpatial) { showLyrics.toggle() }
             }
@@ -484,6 +496,16 @@ struct FullPlayerView: View {
         guard let id = np.videoId else { return }
         let upcoming = np.upcomingSongs(prefixLimit: 3).map(\.videoId)
         Task { await LyricsService.shared.preload(videoId: id, upcoming: upcoming) }
+    }
+
+    private func showToast(_ text: LocalizedStringKey) {
+        toastTask?.cancel()
+        withAnimation(M3Motion.defaultSpatial) { toast = text }
+        toastTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_800_000_000)
+            guard !Task.isCancelled else { return }
+            withAnimation(M3Motion.defaultSpatial) { toast = nil }
+        }
     }
 
     private func openArtist() {

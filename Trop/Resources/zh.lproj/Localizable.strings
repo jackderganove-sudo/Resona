@@ -147,6 +147,7 @@
 "Enable Discord RPC" = "启用 Discord RPC";
 "Enable Scrobbling" = "启用音乐记录";
 "End of song" = "End of song";
+"End of track" = "End of track";
 "Energize" = "活力";
 "Energy" = "活力";
 "Episodes" = "剧集";
@@ -395,6 +396,7 @@
 "Skips non-music parts of music videos, like talking intros, skits and long outros." = "跳过音乐视频中的非音乐部分，例如聊天式开场、短剧和较长的片尾。";
 "Sleep" = "睡眠";
 "Sleep timer" = "Sleep timer";
+"Sleep timer off" = "Sleep timer off";
 "Solid" = "纯色";
 "Song count" = "Song count";
 "Song options" = "歌曲选项";
@@ -458,6 +460,7 @@
 "Trending" = "热门趋势";
 "Trending songs for you" = "为你推荐的热门歌曲";
 "Try again later." = "请稍后重试。";
+"Turn off sleep timer" = "Turn off sleep timer";
 "URL" = "网址";
 "Unlike" = "取消喜欢";
 "Unlock queue" = "Unlock queue";
