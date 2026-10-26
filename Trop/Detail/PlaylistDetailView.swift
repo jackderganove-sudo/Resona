@@ -409,7 +409,9 @@ struct PlaylistDetailView: View {
         }
         .scrollDisabled(viewModel.isLoading || viewModel.error != nil || viewModel.playlist == nil)
         .miniPlayerTracksScroll()
-        .navigationTitle(viewModel.playlist?.title ?? "")
+        .heroDetailChrome()
+        .background(ThemeStore.shared.scheme(for: .dark).surface.ignoresSafeArea())
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if isEditable {
@@ -463,77 +465,31 @@ struct PlaylistDetailView: View {
 
     @ViewBuilder
     private func header(for playlist: PlaylistDetailInfo) -> some View {
-        VStack(spacing: 12) {
-            // Playlist artwork
-            if let thumbnailUrl = playlist.thumbnailUrl {
-                HeroArtworkView(url: thumbnailUrl)
-            } else {
-                let songArtwork = playlist.songs.compactMap(\.thumbnailUrl)
-                if songArtwork.count >= 4 {
-                    ArtworkMosaicView(urls: songArtwork)
-                } else if let firstArtwork = songArtwork.first {
-                    HeroArtworkView(url: firstArtwork)
-                } else {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 200, height: 200)
-                        .overlay(
-                            Image(systemName: "music.note.list")
-                                .font(.system(size: 60))
-                                .foregroundColor(.white.opacity(0.8))
-                        )
-                        .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
-                }
-            }
-
-            // Playlist title
-            Text(playlist.title)
-                .font(.title2)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-
-            // Metadata: song count | duration
-            let metaParts = metaStrings(for: playlist)
-            if !metaParts.isEmpty {
-                Text(metaParts.joined(separator: " | "))
-                    .font(.subheadline)
-                    .foregroundStyle(.tertiary)
-            }
-
-            // Author row: avatar + name, clickable → artist detail
+        MediaDetailHero(
+            title: playlist.title,
+            artworkURL: playlist.thumbnailUrl,
+            mosaic: playlist.songs.compactMap(\.thumbnailUrl),
+            description: playlist.descriptionText,
+            metadata: metaStrings(for: playlist).joined(separator: " • ")
+        ) {
             if let authorName = playlist.authorName {
-                Group {
-                    if let authorId = playlist.authorBrowseId {
-                        NavigationLink(value: DetailRoute.artist(browseId: authorId)) {
-                            authorRow(name: authorName, avatarUrl: playlist.authorAvatarUrl)
-                        }
-                        .buttonStyle(.plain)
-                    } else {
+                if let authorId = playlist.authorBrowseId {
+                    NavigationLink(value: DetailRoute.artist(browseId: authorId)) {
                         authorRow(name: authorName, avatarUrl: playlist.authorAvatarUrl)
                     }
+                    .buttonStyle(.plain)
+                } else {
+                    authorRow(name: authorName, avatarUrl: playlist.authorAvatarUrl)
                 }
             }
-
-            // Description (only if fetched, no fallback)
-            if let desc = playlist.descriptionText, !desc.isEmpty {
-                Text(desc)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(3)
-                    .padding(.horizontal, 32)
-                    .padding(.top, 4)
-            }
-
-            // Action buttons: shuffle, play
-            PlaybackControlsView(
-                showsMore: true,
-                onPlay: { playAll(playlist) },
+        } actions: {
+            MediaDetailActions(
                 onShuffle: { shufflePlay(playlist) },
-                onMore: { showMoreSheet = true }
+                onPlay: { playAll(playlist) },
+                secondaryIcon: "ellipsis",
+                onSecondary: { showMoreSheet = true }
             )
         }
-        .padding(.vertical, 16)
         .sheet(isPresented: $showMoreSheet) {
             PlaylistMoreSheet(
                 playlist: playlist,
@@ -551,13 +507,12 @@ struct PlaylistDetailView: View {
                     .clipShape(Circle())
             } else {
                 Image(systemName: "person.circle.fill")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 20))
+                    .foregroundStyle(.white.opacity(0.82))
             }
             Text(name)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
+                .font(.m3(.titleMedium, weight: .regular))
+                .foregroundStyle(.white.opacity(0.82))
         }
     }
 

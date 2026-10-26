@@ -18,43 +18,14 @@ struct PlaybackControlsView: View {
     var onShuffle: () -> Void = {}
     var onMore: () -> Void = {}
 
+    /// Resona: same action row as the detail hero (shuffle · Play · more).
     var body: some View {
-        HStack(spacing: 20) {
-            if showsShuffle {
-                Button(action: onShuffle) {
-                    Image(systemName: "shuffle")
-                        .font(.title3)
-                        .foregroundStyle(.primary)
-                        .frame(width: 48, height: 48)
-                        .background(Circle().fill(Color(.secondarySystemGroupedBackground)))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Shuffle")
-            }
-
-            Button(action: onPlay) {
-                Image(systemName: "play.fill")
-                    .font(.title2)
-                    .foregroundStyle(.white)
-                    .frame(width: 64, height: 64)
-                    .background(Circle().fill(accent))
-                    .shadow(color: accent.opacity(0.4), radius: 10, y: 4)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Play all")
-
-            if showsMore {
-                Button(action: onMore) {
-                    Text("⋮")
-                        .font(.title3)
-                        .foregroundStyle(.primary)
-                        .frame(width: 48, height: 48)
-                        .background(Circle().fill(Color(.secondarySystemGroupedBackground)))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("More options")
-            }
-        }
+        MediaDetailActions(
+            onShuffle: showsShuffle ? onShuffle : nil,
+            onPlay: onPlay,
+            secondaryIcon: showsMore ? "ellipsis" : nil,
+            onSecondary: showsMore ? onMore : nil
+        )
         .padding(.top, 4)
     }
 }

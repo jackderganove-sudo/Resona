@@ -310,6 +310,7 @@ struct ArtistDetailView: View {
                 }
             )
             .ignoresSafeArea(edges: .top)
+            .background(ThemeStore.shared.dark.surface.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
             .task {
                 guard viewModel.isLoading else { return }
@@ -478,7 +479,7 @@ struct ArtistDetailView: View {
 
     private func headerBanner(for artist: ArtistDetailInfo, size: CGSize) -> some View {
         ZStack(alignment: .bottomLeading) {
-            Color(.systemGray5)
+            ThemeStore.shared.dark.surfaceContainerHigh
 
             AsyncImageView(
                 url: ArtworkURLs.sized(artist.thumbnailUrl, width: 1200, height: 1200),
@@ -488,14 +489,20 @@ struct ArtistDetailView: View {
             .clipped()
 
             LinearGradient(
-                colors: [.clear, .black.opacity(0.18), .black.opacity(0.78)],
-                startPoint: .center,
+                stops: [
+                    .init(color: .black.opacity(0.42), location: 0),
+                    .init(color: .clear, location: 0.2),
+                    .init(color: .clear, location: 0.45),
+                    .init(color: ThemeStore.shared.dark.surface.opacity(0.78), location: 0.75),
+                    .init(color: ThemeStore.shared.dark.surface, location: 1)
+                ],
+                startPoint: .top,
                 endPoint: .bottom
             )
 
             VStack(alignment: .leading, spacing: 14) {
                 Text(artist.name)
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .font(.m3(.displaySmall, weight: .bold))
                     .foregroundStyle(.white)
                     .lineLimit(2)
                     .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
@@ -503,7 +510,7 @@ struct ArtistDetailView: View {
                 HStack(spacing: 12) {
                     Button(action: { toggleSubscribe(artist) }, label: {
                         Text(artist.isSubscribed ? "Subscribed" : "Subscribe")
-                            .font(.subheadline.weight(.bold))
+                            .font(.m3(.titleSmall, weight: .semibold))
                             .foregroundStyle(artist.isSubscribed ? Color.white : Color.black)
                             .padding(.horizontal, 20)
                             .frame(height: 44)
@@ -516,25 +523,25 @@ struct ArtistDetailView: View {
                                     .stroke(.white, lineWidth: artist.isSubscribed ? 1.5 : 0)
                             )
                     })
-                    .buttonStyle(.plain)
+                    .buttonStyle(.expressive)
 
                     Spacer(minLength: 0)
 
                     if let subText = artist.subscriberCountText, !subText.isEmpty {
                         Text(subscriberLabel(for: subText))
-                            .font(.subheadline)
+                            .font(.m3(.bodyMedium))
                             .foregroundStyle(.white.opacity(0.88))
                             .lineLimit(1)
                     }
 
                     Button(action: { shufflePlay(artist) }, label: {
                         Image(systemName: "shuffle")
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(.white)
-                            .frame(width: 52, height: 52)
-                            .background(Circle().fill(Color.accentColor))
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(ThemeStore.shared.dark.onPrimary)
+                            .frame(width: 56, height: 56)
+                            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(ThemeStore.shared.dark.primary))
                     })
-                    .buttonStyle(.plain)
+                    .buttonStyle(.expressive(scale: 0.88))
                     .accessibilityLabel("Shuffle artist")
                 }
             }
@@ -554,13 +561,12 @@ struct ArtistDetailView: View {
     private func aboutSection(description: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(LocalizedStringKey("About"))
-                .font(.title3)
-                .fontWeight(.bold)
+                .font(.m3(.headlineSmall))
                 .padding(.horizontal, 16)
 
             Text(description)
-                .font(.body)
-                .foregroundColor(.primary)
+                .font(.m3(.bodyLarge))
+                .foregroundStyle(ThemeStore.shared.dark.onSurfaceVariant)
                 .lineLimit(5)
                 .padding(.horizontal, 16)
         }
@@ -571,8 +577,7 @@ struct ArtistDetailView: View {
     private func songsSection(songs: [SongItem]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(LocalizedStringKey("Songs"))
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.m3(.headlineSmall))
                 .padding(.horizontal, 16)
                 .padding(.top, 20)
 
@@ -580,19 +585,18 @@ struct ArtistDetailView: View {
                                 Button(action: { playSong(song) }, label: {
                     HStack(spacing: 12) {
                         AsyncImageView(url: song.thumbnailUrl)
-                            .frame(width: 40, height: 40)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .frame(width: 56, height: 56)
+                            .clipShape(RoundedRectangle(cornerRadius: M3Metrics.thumbnailRadius, style: .continuous))
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(song.title)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.primary)
+                                .font(.m3(.titleMedium, weight: .regular))
+                                .foregroundStyle(ThemeStore.shared.dark.onSurface)
                                 .lineLimit(1)
 
                             Text(song.artists.map(\.name).joined(separator: ", "))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(.m3(.bodyMedium))
+                                .foregroundStyle(ThemeStore.shared.dark.onSurfaceVariant)
                                 .lineLimit(1)
                         }
 

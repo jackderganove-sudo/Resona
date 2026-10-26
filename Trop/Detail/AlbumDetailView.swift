@@ -255,6 +255,7 @@ struct AlbumDetailView: View {
     @State private var showMoreSheet = false
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.m3) private var m3
 
     init(browseId: String) {
         self.browseId = browseId
@@ -275,7 +276,9 @@ struct AlbumDetailView: View {
         }
         .scrollDisabled(viewModel.isLoading || viewModel.error != nil || viewModel.album == nil)
         .miniPlayerTracksScroll()
-        .navigationTitle(viewModel.album?.title ?? "")
+        .heroDetailChrome()
+        .background(m3.surface.ignoresSafeArea())
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .task {
             guard viewModel.isLoading else { return }
@@ -305,60 +308,34 @@ struct AlbumDetailView: View {
 
     @ViewBuilder
     private func header(for album: AlbumDetailInfo) -> some View {
-        VStack(spacing: 12) {
-            // Album artwork
-            HeroArtworkView(url: album.thumbnailUrl)
-
-            // Album title
-            Text(album.title)
-                .font(.title2)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-
-            // Clickable artist names
+        MediaDetailHero(
+            title: album.title,
+            artworkURL: album.thumbnailUrl,
+            metadata: metaStrings(for: album).joined(separator: " • ")
+        ) {
             if !album.artists.isEmpty {
                 HStack(spacing: 4) {
                     ForEach(Array(album.artists.enumerated()), id: \.offset) { i, artist in
-                        if i > 0 {
-                            Text(", ")
-                                .foregroundColor(.secondary)
-                        }
+                        if i > 0 { Text(", ") }
                         if let artistId = artist.id {
                             NavigationLink(value: DetailRoute.artist(browseId: artistId)) {
                                 Text(artist.name)
-                                    .font(.body)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.secondary)
                             }
                             .buttonStyle(.plain)
                         } else {
                             Text(artist.name)
-                                .font(.body)
-                                .fontWeight(.medium)
-                                .foregroundColor(.secondary)
                         }
                     }
                 }
             }
-
-            // Metadata: year • song count • duration
-            let metaParts = metaStrings(for: album)
-            if !metaParts.isEmpty {
-                Text(metaParts.joined(separator: " • "))
-                    .font(.subheadline)
-                    .foregroundStyle(.tertiary)
-            }
-
-            // Action buttons: shuffle, play, more (matches playlist header)
-            PlaybackControlsView(
-                showsMore: true,
-                onPlay: { playAll(album) },
+        } actions: {
+            MediaDetailActions(
                 onShuffle: { shufflePlay(album) },
-                onMore: { showMoreSheet = true }
+                onPlay: { playAll(album) },
+                secondaryIcon: "ellipsis",
+                onSecondary: { showMoreSheet = true }
             )
         }
-        .padding(.vertical, 16)
         .sheet(isPresented: $showMoreSheet) {
             if let album = viewModel.album {
                 AlbumMoreSheet(
@@ -380,10 +357,7 @@ struct AlbumDetailView: View {
                     onNavigate: { pendingRoute = $0 }
                 )
 
-                if index < album.songs.count - 1 {
-                    Divider()
-                        .padding(.leading, 68)
-                }
+
             }
         }
     }
