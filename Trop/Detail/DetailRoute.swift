@@ -37,10 +37,12 @@ enum DetailRoute: Hashable, Identifiable {
 /// Shared view resolving a `DetailRoute` to its target destination view.
 struct DetailRouteDestinationView: View {
     let route: DetailRoute
+    @Environment(\.m3) private var m3
 
     var body: some View {
         destination
             .m3BackButton()
+            .containerBackground(m3.surface, for: .navigation)
     }
 
     @ViewBuilder

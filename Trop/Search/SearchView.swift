@@ -28,6 +28,7 @@ struct SearchView: View {
             }
             .frame(maxHeight: .infinity, alignment: .top)
             .toolbar(.hidden, for: .navigationBar)
+            .containerBackground(m3.surface, for: .navigation)
             .detailRouteDestinations()
             .navigationDestination(for: MoodItem.self) { mood in
                 MoodDetailView(mood: mood)

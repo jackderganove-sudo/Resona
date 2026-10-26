@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeScreenView: View {
     @Environment(SettingsStore.self) private var settings
     @Environment(\.m3) private var m3
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @ObservedObject private var router = AppRouter.shared
     @State private var viewModel = HomeViewModel()
     private let accountState = AccountSheetState.shared
@@ -41,6 +42,7 @@ struct HomeScreenView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             .background(homeBackground)
             .toolbar(.hidden, for: .navigationBar)
+            .containerBackground(m3.surface, for: .navigation)
             .detailRouteDestinations()
             .onChange(of: pendingRoute) { _, route in
                 if let route {
@@ -197,21 +199,40 @@ struct HomeScreenView: View {
         }
     }
 
+    @ViewBuilder
     private func songsSection(_ section: HomeSection) -> some View {
         let queue = section.items.compactMap { if case .song(let s) = $0 { return s } else { return nil } }
-        return HorizontalSection(title: section.displayTitle, vSpacing: 8, contentVerticalPadding: 0) {
-            LazyHGrid(rows: Array(repeating: GridItem(.fixed(60)), count: 4), spacing: 12) {
-                ForEach(section.items.indices, id: \.self) { i in
-                    let item = section.items[i]
-                    if case .song(let s) = item {
-                        YouTubeListItemView(item: item, onTap: { handleSongTap(s, in: queue) }, onNavigate: { pendingRoute = $0 })
-                            .frame(width: 280)
-                    } else {
-                        YouTubeListItemView(item: item, onTap: { handleItemTap(item) }, onNavigate: { pendingRoute = $0 })
-                            .frame(width: 280)
+        if horizontalSizeClass == .regular {
+            // Wide screens: fill the width with a 2–3 column grid instead of
+            // one narrow horizontally scrolling column.
+            VStack(alignment: .leading, spacing: 4) {
+                NavigationTitleView(title: section.displayTitle)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 12, alignment: .leading)], spacing: 0) {
+                    ForEach(section.items.indices, id: \.self) { i in
+                        songCell(section.items[i], queue: queue)
+                    }
+                }
+                .padding(.horizontal, 4)
+            }
+        } else {
+            let rows = max(1, min(4, section.items.count))
+            HorizontalSection(title: section.displayTitle, vSpacing: 4, contentVerticalPadding: 0) {
+                LazyHGrid(rows: Array(repeating: GridItem(.fixed(68), spacing: 0), count: rows), spacing: 12) {
+                    ForEach(section.items.indices, id: \.self) { i in
+                        songCell(section.items[i], queue: queue)
+                            .frame(width: 300)
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func songCell(_ item: YTItem, queue: [SongItem]) -> some View {
+        if case .song(let s) = item {
+            YouTubeListItemView(item: item, onTap: { handleSongTap(s, in: queue) }, onNavigate: { pendingRoute = $0 })
+        } else {
+            YouTubeListItemView(item: item, onTap: { handleItemTap(item) }, onNavigate: { pendingRoute = $0 })
         }
     }
 
@@ -228,7 +249,7 @@ struct HomeScreenView: View {
                     }
                 }
             }
-        }.padding(.top, 8)
+        }
     }
 
     // MARK: - Quick Picks (pinned)

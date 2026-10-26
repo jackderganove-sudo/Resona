@@ -34,8 +34,10 @@ struct LibraryView: View {
     private let accountState = AccountSheetState.shared
 
     private var gridColumns: [GridItem] {
-        let count = horizontalSizeClass == .regular ? 3 : 2
-        return Array(repeating: GridItem(.flexible(), spacing: 16), count: count)
+        if horizontalSizeClass == .regular {
+            return [GridItem(.adaptive(minimum: 170), spacing: 18)]
+        }
+        return Array(repeating: GridItem(.flexible(), spacing: 16), count: 2)
     }
     private var autoPlaylists: [AutoPlaylistInfo] {
         [
@@ -89,6 +91,7 @@ struct LibraryView: View {
             }
             .frame(maxHeight: .infinity, alignment: .top)
             .toolbar(.hidden, for: .navigationBar)
+            .containerBackground(m3.surface, for: .navigation)
             .detailRouteDestinations()
             .overlay {
                 if showCreateDialog {
@@ -385,10 +388,19 @@ struct LibraryView: View {
             }
 
             if viewMode == .list {
-                LazyVStack(spacing: 12) {
-                    content()
+                if horizontalSizeClass == .regular {
+                    // Wide screens: cards side by side instead of one
+                    // stretched column.
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 400), spacing: 12)], spacing: 12) {
+                        content()
+                    }
+                    .padding(.horizontal, 16)
+                } else {
+                    LazyVStack(spacing: 12) {
+                        content()
+                    }
+                    .padding(.horizontal, 12)
                 }
-                .padding(.horizontal, 12)
             } else {
                 LazyVGrid(columns: gridColumns, spacing: 18) {
                     content()

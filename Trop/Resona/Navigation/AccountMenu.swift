@@ -23,12 +23,16 @@ final class AccountMenuState {
 /// "♫ Resona                     (•••)" bar used at the top of the tabs.
 struct ResonaTopBar: View {
     @Environment(\.m3) private var m3
+    @Environment(\.usesNavigationRail) private var usesRail
     private let menu = AccountMenuState.shared
 
     var body: some View {
         HStack(spacing: 10) {
-            ResonaGlyph()
-                .frame(width: 34, height: 34)
+            // With the rail the brand mark already sits in the rail.
+            if !usesRail {
+                ResonaGlyph()
+                    .frame(width: 34, height: 34)
+            }
             Text(verbatim: "Resona")
                 .font(.m3(.headlineSmall))
                 .foregroundStyle(m3.onSurface)

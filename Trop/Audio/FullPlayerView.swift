@@ -154,16 +154,21 @@ struct FullPlayerView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// Side-by-side layout (iPad, landscape): cover and controls form one
+    /// block that is centred vertically, so there is no dead space above
+    /// and below; the cover takes most of the height.
     private func wideLayout(size: CGSize) -> some View {
-        let side = min(size.height - 64, size.width * 0.44)
-        return HStack(spacing: 40) {
+        let column = min(480, max(340, size.width * 0.36))
+        let side = max(240, min(size.height * 0.8, size.width - column - 48 - 64))
+        return HStack(alignment: .center, spacing: 48) {
             artwork
                 .frame(width: side, height: side)
             VStack(spacing: 0) {
                 header
-                Spacer(minLength: 12)
-                titleRow
-                progressSlider(compact: false).padding(.top, 16)
+                    .padding(.bottom, 18)
+                titleRow(multiline: true)
+                progressSlider(compact: false)
+                    .padding(.top, 18)
                 PlaybackButtonGroup(
                     isPlaying: np.isPlaying,
                     hasPrevious: np.hasPrevious,
@@ -174,15 +179,16 @@ struct FullPlayerView: View {
                 )
                 .frame(height: 84)
                 .padding(.top, 16)
-                toggleRow.padding(.top, 14)
-                Spacer(minLength: 12)
-                StreamInfoLine(videoId: np.videoId).padding(.bottom, 10)
+                toggleRow
+                    .padding(.top, 14)
+                StreamInfoLine(videoId: np.videoId)
+                    .padding(.top, 20)
                 bottomRow
+                    .padding(.top, 10)
             }
-            .frame(maxWidth: 460)
+            .frame(width: column)
         }
         .padding(.horizontal, 32)
-        .padding(.vertical, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -231,13 +237,14 @@ struct FullPlayerView: View {
     private var header: some View {
         VStack(spacing: 2) {
             Text("Now Playing")
-                .font(.poppins(16, weight: .medium))
+                .font(.poppins(15, weight: .medium))
                 .foregroundStyle(.white.opacity(0.85))
             if !np.albumTitle.isEmpty {
                 Text(np.albumTitle)
-                    .font(.poppins(15))
-                    .foregroundStyle(.white.opacity(0.65))
+                    .font(.poppins(13))
+                    .foregroundStyle(.white.opacity(0.5))
                     .lineLimit(1)
+                    .truncationMode(.tail)
             }
         }
         .padding(.horizontal, 48)
@@ -301,10 +308,21 @@ struct FullPlayerView: View {
 
     // MARK: Title + actions
 
-    private var titleRow: some View {
+    private var titleRow: some View { titleRow(multiline: false) }
+
+    private func titleRow(multiline: Bool) -> some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                MarqueeText(text: np.title, font: .poppins(22, weight: .semibold, relativeTo: .title2), frameHeight: 32, textColor: .white)
+                if multiline {
+                    Text(np.title)
+                        .font(.poppins(22, weight: .semibold, relativeTo: .title2))
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    MarqueeText(text: np.title, font: .poppins(22, weight: .semibold, relativeTo: .title2), frameHeight: 32, textColor: .white)
+                }
                 Button {
                     openArtist()
                 } label: {

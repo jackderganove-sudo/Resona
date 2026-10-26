@@ -129,6 +129,7 @@ struct HeroCarousel: View {
 /// Wide tonal card: artwork, title, subtitle and a round primary play button.
 struct KeepListeningCard: View {
     @Environment(\.m3) private var m3
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     let item: YTItem
     let onTap: () -> Void
 
@@ -140,10 +141,13 @@ struct KeepListeningCard: View {
                     .clipShape(item.isArtistItem ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: M3Shape.largeIncreased, style: .continuous)))
 
                 VStack(alignment: .leading, spacing: 4) {
+                    // Two lines so long playlist names aren't cut early.
                     Text(item.title)
-                        .font(.m3(.titleLarge, weight: .regular))
+                        .font(.m3(.titleMedium, weight: .medium))
                         .foregroundStyle(m3.onSurface)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(subtitle)
                         .font(.m3(.titleMedium, weight: .regular))
                         .foregroundStyle(m3.onSurfaceVariant)
@@ -159,7 +163,7 @@ struct KeepListeningCard: View {
                     .padding(.trailing, 4)
             }
             .padding(12)
-            .frame(width: 330)
+            .frame(width: horizontalSizeClass == .regular ? 400 : 330)
             .background(m3.surfaceContainerHigh, in: RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
         }

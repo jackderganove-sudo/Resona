@@ -465,6 +465,8 @@ struct PlaylistDetailView: View {
                 }
             } else {
                 songList(for: playlist)
+                    .frame(maxWidth: M3Metrics.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
             }
         }
     }

@@ -41,8 +41,8 @@ struct DetailStateContainer<Data, Content: View>: View {
     var body: some View {
         Group {
             if isLoading {
-                LoadingStateView("Loading \(noun)...")
-                    .containerRelativeFrame(.vertical)
+                DetailSkeletonView()
+                    .transition(.opacity)
             } else if let error = error {
                 ContentUnavailableView(
                     LocalizedStringKey("Couldn't load \(noun)"),
@@ -50,8 +50,10 @@ struct DetailStateContainer<Data, Content: View>: View {
                     description: Text(error.localizedDescription)
                 )
                 .containerRelativeFrame(.vertical)
+                .frame(maxWidth: .infinity)
             } else if let data = data {
                 content(data)
+                    .transition(.opacity)
             } else {
                 ContentUnavailableView(
                     LocalizedStringKey("No \(noun) data"),

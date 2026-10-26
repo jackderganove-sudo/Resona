@@ -123,6 +123,8 @@ enum M3Shape {
 
 enum M3Metrics {
     static let screenPadding: CGFloat = 16
+    /// Maximum width of lists and forms on wide screens (iPad landscape).
+    static let contentMaxWidth: CGFloat = 900
     static let sectionSpacing: CGFloat = 24
 
     static let navigationBarHeight: CGFloat = 78

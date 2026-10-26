@@ -302,6 +302,8 @@ struct AlbumDetailView: View {
                 }
             } else {
                 songList(for: album)
+                    .frame(maxWidth: M3Metrics.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
             }
         }
     }

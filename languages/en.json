@@ -487,5 +487,6 @@
   "Download failed": "Download failed",
   "Remove downloads?": "Remove downloads?",
   "The songs stay in the playlist and stream again when online.": "The songs stay in the playlist and stream again when online.",
-  "Cancel download": "Cancel download"
+  "Cancel download": "Cancel download",
+  "Loading": "Loading"
 }

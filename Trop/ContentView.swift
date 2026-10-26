@@ -109,6 +109,7 @@ struct ContentView: View {
         ZStack {
             ForEach(ResonaTab.ordered) { tab in
                 tabView(tab)
+                    .environment(\.usesNavigationRail, usesRail)
                     .safeAreaInset(edge: .bottom, spacing: 0) {
                         Color.clear.frame(height: bottomContentInset)
                     }
@@ -128,10 +129,17 @@ struct ContentView: View {
         }
     }
 
+    /// Bottom padding of the floating chrome inside the safe area.
+    private var chromeBottomPadding: CGFloat { usesRail ? 12 : 4 }
+
+    /// Exactly the height the floating chrome occupies above the safe area,
+    /// plus breathing room, so no scrollable content ends up under it.
     private var bottomContentInset: CGFloat {
-        var inset: CGFloat = 8
-        if !usesRail { inset += M3Metrics.navigationBarHeight + M3Metrics.navigationBarBottomPadding }
-        if miniPlayerVisible { inset += M3Metrics.miniPlayerHeight + 8 }
+        var inset = chromeBottomPadding + 16
+        if !usesRail { inset += M3Metrics.navigationBarHeight }
+        if miniPlayerVisible {
+            inset += M3Metrics.miniPlayerHeight + (usesRail ? 0 : 8)
+        }
         return inset
     }
 
@@ -169,7 +177,7 @@ struct ContentView: View {
                 .offset(y: expansion * (M3Metrics.navigationBarHeight + bottomInset + 20))
             }
         }
-        .padding(.bottom, usesRail ? 12 : max(M3Metrics.navigationBarBottomPadding, bottomInset - 8))
+        .padding(.bottom, chromeBottomPadding)
         .animation(M3Motion.navigationBar, value: miniPlayerVisible)
     }
 
@@ -224,6 +232,18 @@ struct ContentView: View {
                     router.popActiveRoute()
                 }
             }
+    }
+}
+
+private struct UsesNavigationRailKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// True when the side navigation rail (with the brand mark) is shown.
+    var usesNavigationRail: Bool {
+        get { self[UsesNavigationRailKey.self] }
+        set { self[UsesNavigationRailKey.self] = newValue }
     }
 }
 

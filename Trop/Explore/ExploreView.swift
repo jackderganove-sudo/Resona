@@ -168,7 +168,7 @@ struct ExploreSectionsList: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 20)
                 .padding(.bottom, 14)
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 12)], spacing: 12) {
                 ForEach(section.moods) { mood in
                     NavigationLink(value: mood) {
                         GenreTile(title: mood.title)

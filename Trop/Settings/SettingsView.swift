@@ -45,6 +45,8 @@ struct SettingsView: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             .padding(.bottom, 24)
+            .frame(maxWidth: 720)
+            .frame(maxWidth: .infinity)
         }
         .scrollIndicators(.hidden)
         .background(m3.surface.ignoresSafeArea())
