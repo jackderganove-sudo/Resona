@@ -32,6 +32,24 @@ extension ButtonStyle where Self == ExpressivePressStyle {
     static func expressive(scale: CGFloat) -> ExpressivePressStyle { ExpressivePressStyle(scale: scale) }
 }
 
+/// List rows: instant tonal highlight + tiny squish + light haptic on touch
+/// down (the action runs on release; nothing waits for it).
+struct M3RowPressStyle: ButtonStyle {
+    @Environment(\.m3) private var m3
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background {
+                RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous)
+                    .fill(m3.onSurface.opacity(configuration.isPressed ? 0.08 : 0))
+                    .padding(.horizontal, 6)
+            }
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .animation(configuration.isPressed ? nil : M3Motion.fastSpatial, value: configuration.isPressed)
+            .sensoryFeedback(.selection, trigger: configuration.isPressed) { _, pressed in pressed }
+    }
+}
+
 /// A rounded rectangle whose radius shrinks while pressed (M3 shape morph).
 struct MorphingShapeButtonStyle: ButtonStyle {
     var radius: CGFloat
@@ -316,4 +334,27 @@ extension View {
     /// Round Material back button instead of the system chevron. The
     /// edge-swipe back gesture is provided by ContentView.
     func m3BackButton() -> some View { modifier(M3BackButtonModifier()) }
+}
+
+/// Pressed feedback for rows that must stay tap gestures (inside Lists
+/// with swipe actions / drag-to-reorder, or containing other buttons):
+/// highlights on touch-down without delaying scrolling.
+struct M3TapHighlight: ViewModifier {
+    @Environment(\.m3) private var m3
+    @GestureState private var pressed = false
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous)
+                    .fill(m3.onSurface.opacity(pressed ? 0.08 : 0))
+            }
+            .scaleEffect(pressed ? 0.985 : 1)
+            .animation(pressed ? nil : M3Motion.fastSpatial, value: pressed)
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.5, maximumDistance: 8)
+                    .updating($pressed) { value, state, _ in state = value }
+            )
+            .sensoryFeedback(.selection, trigger: pressed) { _, isPressed in isPressed }
+    }
 }

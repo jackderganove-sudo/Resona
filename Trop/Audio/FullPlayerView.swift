@@ -211,7 +211,7 @@ struct FullPlayerView: View {
             .clipShape(RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous))
             .padding(.horizontal, 16)
             .padding(.top, 12)
-            .animation(.easeOut(duration: 0.2), value: np.isVideoReady)
+            .animation(M3Motion.quickFade, value: np.isVideoReady)
 
             Spacer(minLength: 16)
             titleRow.padding(.horizontal, 24)

@@ -65,7 +65,7 @@ struct AsyncImageView: View {
         do {
             let image = try await ImagePipeline.shared.image(for: request)
             guard !Task.isCancelled else { return }
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(M3Motion.quickFade) {
                 loadedImage = image
             }
         } catch {

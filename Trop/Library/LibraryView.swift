@@ -102,7 +102,7 @@ struct LibraryView: View {
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showCreateDialog)
+            .animation(M3Motion.defaultSpatial, value: showCreateDialog)
             .onChange(of: downloadManager.persistedDownloadCount) { _, _ in
                 Task { await loadDownloadedCounts() }
             }

@@ -227,10 +227,8 @@ struct ContentView: View {
                 let router = AppRouter.shared
                 let depth = router.activePathDepth
                 guard depth > 0 else { return }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    guard !isExpanded, router.activePathDepth == depth else { return }
-                    router.popActiveRoute()
-                }
+                guard !isExpanded, router.activePathDepth == depth else { return }
+                router.popActiveRoute()
             }
     }
 }

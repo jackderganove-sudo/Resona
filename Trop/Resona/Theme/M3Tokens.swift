@@ -164,22 +164,28 @@ enum M3Motion {
         .interpolatingSpring(mass: 1, stiffness: stiffness, damping: 2 * ratio * stiffness.squareRoot(), initialVelocity: 0)
     }
 
+    // Response of a spring ≈ 2π / √stiffness. Interaction motion stays in
+    // the 0.22–0.35 s range so every tap feels immediate.
+
     /// Expressive spatial springs (overshoot a little).
+    /// fast ≈ 0.22 s · default ≈ 0.31 s · slow ≈ 0.35 s
     static let fastSpatial = spring(damping: 0.6, stiffness: 800)
-    static let defaultSpatial = spring(damping: 0.8, stiffness: 380)
-    static let slowSpatial = spring(damping: 0.8, stiffness: 200)
+    static let defaultSpatial = spring(damping: 0.8, stiffness: 400)
+    static let slowSpatial = spring(damping: 0.82, stiffness: 320)
 
     /// Effects springs (no overshoot) for colour/opacity.
     static let fastEffects = spring(damping: 1, stiffness: 3800)
     static let defaultEffects = spring(damping: 1, stiffness: 1600)
     static let slowEffects = spring(damping: 1, stiffness: 800)
 
-    /// Navigation bar show/hide (DampingRatioNoBouncy, StiffnessLow).
-    static let navigationBar = spring(damping: 1, stiffness: 200)
-    /// Player sheet expand/collapse (NoBouncy, MediumLow).
-    static let bottomSheet = spring(damping: 1, stiffness: 400)
+    /// Navigation bar / mini player show-hide (no bounce, ≈ 0.33 s).
+    static let navigationBar = spring(damping: 1, stiffness: 360)
+    /// Player sheet expand/collapse (no bounce, ≈ 0.3 s).
+    static let bottomSheet = spring(damping: 0.92, stiffness: 440)
     /// Lyrics glide to the next line (reference video: ~0.55 s, soft settle).
     static let lyricsScroll = spring(damping: 0.86, stiffness: 150)
     /// Theme colour cross-fade when the artwork changes.
-    static let colorChange = Animation.easeInOut(duration: 0.6)
+    static let colorChange = Animation.easeInOut(duration: 0.4)
+    /// Short fades (images appearing, small state changes).
+    static let quickFade = Animation.easeOut(duration: 0.18)
 }

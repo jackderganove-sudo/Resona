@@ -133,11 +133,12 @@ struct YouTubeListItemView: View {
                     }
                 }
             }
-            .contentShape(Rectangle())
-            .onTapGesture(perform: onTap)
             .padding(.leading, 16)
             .padding(.trailing, 6)
             .padding(.vertical, 6)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onTap)
+            .modifier(M3TapHighlight())
         }
     }
 

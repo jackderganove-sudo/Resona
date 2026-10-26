@@ -30,7 +30,7 @@ struct CanvasVideoView: View {
                 }
             if let clipURL {
                 CanvasLooperView(url: clipURL, isPlaying: isPlaying, onFirstFrame: {
-                    withAnimation(.easeInOut(duration: 0.6)) { revealed = true }
+                    withAnimation(M3Motion.colorChange) { revealed = true }
                 })
                 .opacity(revealed ? 1 : 0)
                 .task(id: clipURL) {

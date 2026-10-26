@@ -123,6 +123,19 @@ final class PlayerController {
         return result
     }
 
+    /// Fire-and-forget variant for UI-triggered writes (play/pause, seek,
+    /// volume): the main thread never waits on mpv's serial queue, which
+    /// can be busy loading a stream (Resona: tap latency).
+    nonisolated func withMpvAsync(_ body: @escaping @Sendable (OpaquePointer) -> Void, completion: (@MainActor @Sendable () -> Void)? = nil) {
+        mpvAccessQueue.async { [weak self] in
+            guard let handle = self?._mpv else { return }
+            body(handle)
+            if let completion {
+                Task { @MainActor in completion() }
+            }
+        }
+    }
+
     // MARK: - Layer helper
 
     func clearVideoLayer() {
@@ -240,7 +253,7 @@ extension PlayerController {
         pendingSeek = (time, Date().addingTimeInterval(1.5))
         NowPlaying.shared.currentTime = time
         PlaybackClock.shared.didSeek(to: time)
-        withMpv { mpv in
+        withMpvAsync { mpv in
             var val = time
             let result = mpv_set_property(mpv, "time-pos", MPV_FORMAT_DOUBLE, &val)
             if result < 0 { Log.player.error("seek failed: mpv error \(result)") }
@@ -254,14 +267,16 @@ extension PlayerController {
             updateNowPlayingProgress()
             return
         }
-        withMpv { mpv in
-            var flag: Int32 = paused ? 1 : 0
-            mpv_set_property(mpv, "pause", MPV_FORMAT_FLAG, &flag)
-        }
+        // Optimistic: the UI flips immediately, mpv follows asynchronously.
         playState.send(paused ? .paused : .playing)
         NowPlaying.shared.isPlaying = !paused
         if !paused { assertAudioSession() }
-        updateNowPlayingProgress()
+        withMpvAsync({ mpv in
+            var flag: Int32 = paused ? 1 : 0
+            mpv_set_property(mpv, "pause", MPV_FORMAT_FLAG, &flag)
+        }, completion: { [weak self] in
+            self?.updateNowPlayingProgress()
+        })
     }
 
     func togglePlayPause() {
@@ -270,7 +285,7 @@ extension PlayerController {
 
     func applyPlayerVolume() {
         let vol = SettingsStore.shared.playerVolume
-        withMpv { mpv in
+        withMpvAsync { mpv in
             var val = Double(vol * 100)
             mpv_set_property(mpv, "volume", MPV_FORMAT_DOUBLE, &val)
         }

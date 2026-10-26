@@ -452,13 +452,24 @@ final class NowPlaying {
     }
 
     /// Publishes a loaded image as the current artwork (cropped square).
+    ///
+    /// Resona: cropping (border scan), colour extraction and decoding run
+    /// off the main thread so a track change never stalls taps/animations.
     private func publishArtwork(_ image: UIImage) {
-        let cropped = image.centerCroppedSquare()
-        thumbnailUIImage = cropped
-        thumbnailImage = Image(uiImage: cropped)
-        thumbnailVersion &+= 1
-        updateDominantColors(from: cropped)
-        PlayerController.shared.updateNowPlayingArtwork()
+        let videoId = lastLoadedVideoId
+        Task.detached(priority: .userInitiated) { [image] in
+            let cropped = image.centerCroppedSquare()
+            let decoded = cropped.preparingForDisplay() ?? cropped
+            let colors = decoded.extractDominantColors()
+            await MainActor.run {
+                guard self.lastLoadedVideoId == videoId else { return }
+                self.thumbnailUIImage = decoded
+                self.thumbnailImage = Image(uiImage: decoded)
+                self.thumbnailVersion &+= 1
+                self.dominantColors = colors
+                PlayerController.shared.updateNowPlayingArtwork()
+            }
+        }
     }
 
     private func loadThumbnailFromCDN(videoId: String, thumbnailUrl: String? = nil) {

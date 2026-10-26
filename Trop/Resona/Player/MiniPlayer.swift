@@ -143,9 +143,9 @@ struct MiniPlayer: View {
 
     private func commit(next: Bool, pageWidth: CGFloat) {
         isCommitting = true
-        withAnimation(M3Motion.defaultSpatial) { dragOffset = next ? -pageWidth : pageWidth }
+        withAnimation(M3Motion.fastSpatial) { dragOffset = next ? -pageWidth : pageWidth }
         Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 220_000_000)
+            try? await Task.sleep(nanoseconds: 130_000_000)
             if next { np.playNext() } else { np.playPrevious() }
             withAnimation(nil) { dragOffset = 0 }
             isCommitting = false
@@ -330,12 +330,18 @@ struct SongArtworkView: View {
 
     private func load() async {
         guard let url = URL(string: NowPlaying.artworkURL(for: videoId)) else { return }
+        let source: UIImage?
         if let cached = ArtworkLoader.cachedImage(for: url) {
-            image = cached.centerCroppedSquare()
-            return
+            source = cached
+        } else {
+            source = try? await ArtworkLoader.image(for: url)
         }
-        if let loaded = try? await ArtworkLoader.image(for: url) {
-            image = loaded.centerCroppedSquare()
-        }
+        guard let source else { return }
+        // Crop + decode off the main thread (keeps list scrolling smooth).
+        let prepared = await Task.detached(priority: .userInitiated) {
+            let cropped = source.centerCroppedSquare()
+            return cropped.preparingForDisplay() ?? cropped
+        }.value
+        image = prepared
     }
 }

@@ -41,6 +41,30 @@ struct SongRowView: View {
     @State private var showSongMenu = false
 
     var body: some View {
+        HStack(spacing: 0) {
+            Button(action: onTap) {
+                rowContent
+            }
+            .buttonStyle(M3RowPressStyle())
+
+            MoreButton {
+                showSongMenu = true
+            }
+            .sheet(isPresented: $showSongMenu) {
+                SongMenuSheet(
+                    song: song,
+                    onNavigate: { onNavigate?($0) }
+                )
+            }
+            .padding(.trailing, 6)
+        }
+        .task { await durations.resolve(videoId: song.videoId, knownDuration: song.duration) }
+        .onReceive(NotificationCenter.default.publisher(for: .durationDidUpdate)) { notification in
+            durations.handleUpdate(notification, videoId: song.videoId)
+        }
+    }
+
+    private var rowContent: some View {
         HStack(spacing: 16) {
             ZStack {
                 AsyncImageView(url: song.thumbnailUrl)
@@ -73,29 +97,12 @@ struct SongRowView: View {
                 }
             }
 
-            Spacer()
-
-            HStack(spacing: 2) {
-                MoreButton {
-                    showSongMenu = true
-                }
-            }
-            .sheet(isPresented: $showSongMenu) {
-                SongMenuSheet(
-                    song: song,
-                    onNavigate: { onNavigate?($0) }
-                )
-            }
+            Spacer(minLength: 0)
         }
         .padding(.leading, DesignTokens.screenHPadding)
-        .padding(.trailing, 6)
+        .padding(.trailing, 4)
         .padding(.vertical, 6)
         .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
-        .task { await durations.resolve(videoId: song.videoId, knownDuration: song.duration) }
-        .onReceive(NotificationCenter.default.publisher(for: .durationDidUpdate)) { notification in
-            durations.handleUpdate(notification, videoId: song.videoId)
-        }
     }
 }
 
