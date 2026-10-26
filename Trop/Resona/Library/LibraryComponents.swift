@@ -164,6 +164,11 @@ struct LibraryArtworkView: View {
     }
 }
 
+enum LibraryCardMetrics {
+    /// Fixed card height (76 pt artwork + 14 pt padding top and bottom).
+    static let height: CGFloat = 104
+}
+
 /// Rounded tonal library card (list mode).
 struct LibraryCard<MenuContent: View>: View {
     @Environment(\.m3) private var m3
@@ -227,7 +232,7 @@ struct LibraryCard<MenuContent: View>: View {
         }
         .padding(.leading, 14)
         .padding(.trailing, 6)
-        .padding(.vertical, 14)
+        .frame(height: LibraryCardMetrics.height)
         .background {
             // Frosted, cover-tinted card (pre-blurred, cached → smooth lists).
             ZStack {

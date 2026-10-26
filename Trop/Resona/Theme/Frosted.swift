@@ -99,17 +99,23 @@ struct BlurredArtwork: View {
     @State private var blurred: UIImage?
 
     var body: some View {
-        ZStack {
-            if let blurred {
-                Image(uiImage: blurred)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFill()
-                    .transition(.opacity)
+        // Takes exactly the proposed size: the filled image is an overlay
+        // of a size-neutral Color.clear and is clipped to it. (A ZStack would
+        // adopt the overflowing scaledToFill size — backgrounds then spilled
+        // over neighbouring cards and clipShape lost the rounded corners.)
+        Color.clear
+            .overlay {
+                if let blurred {
+                    Image(uiImage: blurred)
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFill()
+                        .transition(.opacity)
+                }
             }
-        }
-        .animation(M3Motion.quickFade, value: blurred != nil)
-        .task(id: cacheKey) { await load() }
+            .clipped()
+            .animation(M3Motion.quickFade, value: blurred != nil)
+            .task(id: cacheKey) { await load() }
     }
 
     private var cacheKey: String {

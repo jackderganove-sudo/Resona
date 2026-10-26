@@ -418,11 +418,6 @@ struct LibraryView: View {
                 .font(.m3(.titleLarge))
                 .foregroundStyle(m3.onSurface)
             Spacer()
-            if let count {
-                Text("\(count)")
-                    .font(.m3(.labelLarge))
-                    .foregroundStyle(m3.onSurfaceVariant)
-            }
         }
         .padding(.horizontal, DesignTokens.screenHPadding)
         .padding(.top, 8)
