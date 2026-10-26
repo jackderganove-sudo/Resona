@@ -16,3 +16,4 @@ Trop.xcodeproj/xcshareddata/xcschemes/Trop.xcscheme
 .DS_Store
 /build
 __pycache__/
+reference/frames/

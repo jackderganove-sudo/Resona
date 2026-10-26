@@ -296,7 +296,7 @@ private struct StageRow: ViewModifier {
     private var delay: Double {
         let rel = index - activeIndex
         guard rel >= -1 else { return 0 }
-        return min(Double(rel + 1), 8) * 0.04
+        return min(Double(rel + 1), 8) * 0.035
     }
 }
 
@@ -402,16 +402,20 @@ private struct ActiveKaraokeLine: View {
     }
 }
 
-/// Draws each word dim, then the sung part bright with a feathered leading
-/// edge. The word being sung glows strongly, grows to ~1.07× and lifts by
-/// ~2.5 pt; afterwards it eases back over 0.35 s and its glow fades.
+/// Word-by-word karaoke, matched to reference/lyrics-original.mp4:
+/// • unsung words at 40 %, sung words full white without glow
+/// • the word being sung fills left→right with a ~1-character soft edge,
+///   is full opacity, glows strongly (stacked shadows r 4 + 12 + 24), grows
+///   to 1.08× and lifts 2.5 pt; after it ends it settles back in 0.25 s
+/// The glow is generated from an already-masked layer, so it radiates freely
+/// instead of being cut off at the word's box (the old bug), and the
+/// renderer reserves display padding larger than the glow radius.
 private struct KaraokeRenderer: TextRenderer {
     var time: TimeInterval
     var words: [LyricWord]
-    var dimOpacity: Double = 0.38
+    var dimOpacity: Double = 0.4
 
-    /// Room for the glow and the scaled/lifted word outside the text frame.
-    var displayPadding: EdgeInsets { EdgeInsets(top: 14, leading: 12, bottom: 14, trailing: 12) }
+    var displayPadding: EdgeInsets { EdgeInsets(top: 40, leading: 40, bottom: 40, trailing: 40) }
 
     func draw(layout: Text.Layout, in ctx: inout GraphicsContext) {
         for line in layout {
@@ -425,63 +429,71 @@ private struct KaraokeRenderer: TextRenderer {
                 let p = min(max((time - word.start) / duration, 0), 1)
                 let rect = run.typographicBounds.rect
 
-                // Emphasis 0…1: rises quickly while the word is sung, settles
-                // smoothly after it ends.
+                // Emphasis: rises fast at the start of the word, settles back
+                // over 0.25 s after it ends.
                 let emphasis: Double
                 if p > 0 && p < 1 {
-                    emphasis = Self.easeOut(min(1, p * 3))
+                    emphasis = Self.easeOut(min(1, p * 4))
                 } else if p >= 1 {
-                    emphasis = Self.easeOut(max(0, 1 - (time - word.end) / 0.35))
+                    emphasis = Self.easeOut(max(0, 1 - (time - word.end) / 0.25))
                 } else {
                     emphasis = 0
                 }
 
                 var c = ctx
                 if emphasis > 0.001 {
-                    let scale = 1 + 0.07 * emphasis
+                    let scale = 1 + 0.08 * emphasis
                     c.translateBy(x: rect.midX, y: rect.midY - 2.5 * emphasis)
                     c.scaleBy(x: scale, y: scale)
                     c.translateBy(x: -rect.midX, y: -rect.midY)
                 }
 
-                if p >= 1 {
-                    // Sung: bright; glow strong while emphasised, then fades.
-                    let since = time - word.end
-                    let glow = max(emphasis, max(0, 1 - since / 0.6) * 0.5)
-                    var lit = c
-                    if glow > 0.01 {
-                        lit.addFilter(.shadow(color: .white.opacity(0.75 * glow), radius: 4 + 10 * glow))
-                    }
-                    lit.draw(run)
+                if p >= 1 && emphasis <= 0.001 {
+                    // Sung and settled: bright, no glow.
+                    c.draw(run)
                     continue
                 }
 
-                var base = c
-                base.opacity = dimOpacity
-                base.draw(run)
+                // Unsung part (or whole word before it starts): dimmed.
+                if p < 1 {
+                    var base = c
+                    base.opacity = dimOpacity
+                    base.draw(run)
+                }
                 guard p > 0 else { continue }
 
-                // Leading edge travels from left to right with a soft feather.
-                let feather = max(10, rect.width * 0.35)
+                // Bright part: masked inside its own layer…
+                let feather = max(8, min(rect.width * 0.3, rect.height * 0.55))
                 let edge = rect.minX - feather + (rect.width + feather) * p
-                var lit = c
-                lit.clipToLayer { mask in
-                    let area = CGRect(x: rect.minX - 4, y: rect.minY - 18, width: rect.width + 8, height: rect.height + 36)
-                    mask.fill(
-                        Path(area),
-                        with: .linearGradient(
-                            Gradient(stops: [
-                                .init(color: .white, location: 0),
-                                .init(color: .white, location: 0.001),
-                                .init(color: .clear, location: 1)
-                            ]),
-                            startPoint: CGPoint(x: edge, y: rect.midY),
-                            endPoint: CGPoint(x: edge + feather, y: rect.midY)
-                        )
-                    )
+                let litLayer: (inout GraphicsContext) -> Void = { layer in
+                    if p < 1 {
+                        layer.clipToLayer { mask in
+                            let area = rect.insetBy(dx: -6, dy: -rect.height)
+                            mask.fill(
+                                Path(area),
+                                with: .linearGradient(
+                                    Gradient(stops: [
+                                        .init(color: .white, location: 0),
+                                        .init(color: .clear, location: 1)
+                                    ]),
+                                    startPoint: CGPoint(x: edge, y: rect.midY),
+                                    endPoint: CGPoint(x: edge + feather, y: rect.midY)
+                                )
+                            )
+                        }
+                    }
+                    layer.draw(run)
                 }
-                lit.addFilter(.shadow(color: .white.opacity(0.8 * emphasis), radius: 4 + 10 * emphasis))
-                lit.draw(run)
+                // …then the glow is derived from that layer (unclipped):
+                // three stacked shadows for a tight core and a wide halo.
+                if emphasis > 0.01 {
+                    for (radius, alpha) in [(4.0, 0.9), (12.0, 0.6), (24.0, 0.35)] {
+                        var glow = c
+                        glow.addFilter(.shadow(color: .white.opacity(alpha * emphasis), radius: radius))
+                        glow.drawLayer(content: litLayer)
+                    }
+                }
+                c.drawLayer(content: litLayer)
             }
         }
     }

@@ -183,9 +183,10 @@ enum M3Motion {
     /// Player sheet expand/collapse (no bounce, ≈ 0.3 s).
     static let bottomSheet = spring(damping: 0.92, stiffness: 440)
     /// Lyrics glide to the next line (reference video: ~0.55 s, soft settle).
-    /// Lyrics glide to the next line: soft spring with a slight bounce
-    /// (response 0.5 s, damping 0.75).
-    static let lyricsScroll = Animation.spring(response: 0.5, dampingFraction: 0.75)
+    /// Lyrics glide to the next line. Reference video: the move takes about
+    /// 8–9 frames at 24 fps with a small overshoot → response 0.42 s,
+    /// damping 0.75.
+    static let lyricsScroll = Animation.spring(response: 0.42, dampingFraction: 0.75)
     /// Theme colour cross-fade when the artwork changes.
     static let colorChange = Animation.easeInOut(duration: 0.4)
     /// Short fades (images appearing, small state changes).
