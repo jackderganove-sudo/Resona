@@ -13,8 +13,8 @@ struct LyricsSettingsView: View {
     var body: some View {
         @Bindable var settings = settings
 
-        List {
-            Section {
+        M3Form {
+            M3Section {
                 ForEach(LyricsProviderRegistry.all, id: \.id) { provider in
                     Toggle(isOn: Binding(
                         get: { !settings.disabledLyricsProviders.contains(provider.id) },
@@ -37,7 +37,7 @@ struct LyricsSettingsView: View {
                 Text("Disabled providers are skipped when fetching lyrics.")
             }
 
-            Section {
+            M3Section {
                 NavigationLink {
                     LyricsProviderOrderView()
                 } label: {

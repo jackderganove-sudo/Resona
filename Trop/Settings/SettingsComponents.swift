@@ -1,14 +1,17 @@
 //
 //  SettingsComponents.swift
-//  Trop
+//  Trop / Resona
 //
 //  Created by 686udjie on 20/08/2026.
+//  Material 3 rows for the settings subpages (used inside `M3Section`):
+//  outline icon in a tonal circle, M3 switch, M3 dropdown, slider instead
+//  of a stepper.
 //
 
 import SwiftUI
 
 struct SettingsNavigationRow<Destination: View>: View {
-    @Environment(SettingsStore.self) private var settings
+    @Environment(\.m3) private var m3
     let title: String
     let icon: String
     @ViewBuilder var destination: () -> Destination
@@ -23,14 +26,22 @@ struct SettingsNavigationRow<Destination: View>: View {
         NavigationLink {
             destination()
         } label: {
-            Label(LocalizedStringKey(title), systemImage: icon)
+            HStack(spacing: 12) {
+                Label(LocalizedStringKey(title), systemImage: icon)
+                    .foregroundStyle(m3.onSurface)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(m3.onSurfaceVariant)
+            }
+            .contentShape(Rectangle())
         }
-        .tint(settings.accentColor)
+        .buttonStyle(M3RowPressStyle())
     }
 }
 
 struct SettingsToggleRow: View {
-    @Environment(SettingsStore.self) private var settings
+    @Environment(\.m3) private var m3
     let title: String
     let icon: String?
     @Binding var isOn: Bool
@@ -47,14 +58,16 @@ struct SettingsToggleRow: View {
                 Label(LocalizedStringKey(title), systemImage: icon)
             } else {
                 Text(LocalizedStringKey(title))
+                    .font(.m3(.titleMedium, weight: .regular))
             }
         }
-        .tint(settings.accentColor)
+        .toggleStyle(.m3)
+        .foregroundStyle(m3.onSurface)
     }
 }
 
 struct SettingsPickerRow<T: SettingsOption>: View {
-    @Environment(SettingsStore.self) private var settings
+    @Environment(\.m3) private var m3
     let title: String
     let icon: String?
     @Binding var selection: T
@@ -66,23 +79,24 @@ struct SettingsPickerRow<T: SettingsOption>: View {
     }
 
     var body: some View {
-        Picker(selection: $selection) {
-            ForEach(Array(T.allCases)) { option in
-                Text(LocalizedStringKey(option.displayName)).tag(option)
-            }
-        } label: {
+        M3DropdownRow(
+            selection: $selection,
+            options: T.allCases.map { (value: $0, title: String(localized: String.LocalizationValue($0.displayName))) }
+        ) {
             if let icon {
                 Label(LocalizedStringKey(title), systemImage: icon)
             } else {
                 Text(LocalizedStringKey(title))
+                    .font(.m3(.titleMedium, weight: .regular))
             }
         }
-        .id(settings.accentName)
-        .tint(settings.accentColor)
+        .foregroundStyle(m3.onSurface)
     }
 }
 
+/// Former stepper: now a stepped expressive slider with the value on the right.
 struct SettingsStepperRow: View {
+    @Environment(\.m3) private var m3
     let title: String
     let icon: String?
     let range: ClosedRange<Double>
@@ -105,27 +119,20 @@ struct SettingsStepperRow: View {
     }
 
     var body: some View {
-        Stepper {
+        M3SliderRow(value: $value, range: range, step: step, format: format) {
             if let icon {
                 Label(LocalizedStringKey(title), systemImage: icon)
-                    .overlay(alignment: .trailing) {
-                        Text(": \(format(value))")
-                    }
             } else {
-                HStack(spacing: 0) {
-                    Text(LocalizedStringKey(title))
-                    Text(": \(format(value))")
-                }
+                Text(LocalizedStringKey(title))
+                    .font(.m3(.titleMedium, weight: .regular))
             }
-        } onIncrement: {
-            value = min(value + step, range.upperBound)
-        } onDecrement: {
-            value = max(value - step, range.lowerBound)
         }
+        .foregroundStyle(m3.onSurface)
     }
 }
 
 struct SettingsLinkRow: View {
+    @Environment(\.m3) private var m3
     let title: String
     let icon: String
     let url: URL
@@ -138,9 +145,16 @@ struct SettingsLinkRow: View {
 
     var body: some View {
         Link(destination: url) {
-            Label(LocalizedStringKey(title), systemImage: icon)
-                .fontWeight(.semibold)
-                .foregroundStyle(.tint)
+            HStack(spacing: 12) {
+                Label(LocalizedStringKey(title), systemImage: icon)
+                    .foregroundStyle(m3.onSurface)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(m3.onSurfaceVariant)
+            }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(M3RowPressStyle())
     }
 }

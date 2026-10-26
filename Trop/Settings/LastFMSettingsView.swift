@@ -30,9 +30,9 @@ struct LastFMSettingsView: View {
     private var isLoggedIn: Bool { !sessionKey.isEmpty }
 
     var body: some View {
-        List {
+        M3Form {
             // Login / Profile — top cell handles both states (mirrors Discord)
-            Section("Account") {
+            M3Section("Account") {
                 if isLoggedIn {
                     HStack(spacing: 14) {
                         CachedAvatarView(url: avatarURL, size: 56)
@@ -90,7 +90,7 @@ struct LastFMSettingsView: View {
                 }
             }
 
-            Section {
+            M3Section {
                 Toggle("Enable Scrobbling", isOn: $scrobblingEnabled)
                     .disabled(!isLoggedIn)
                 Toggle("Now Playing", isOn: $useNowPlaying)
@@ -103,7 +103,7 @@ struct LastFMSettingsView: View {
                 Text("Now Playing sends track.start when playback begins. Likes sync with track.love/unlove.")
             }
 
-            Section {
+            M3Section {
                 Button {
                     showMinDurationEditor = true
                 } label: {

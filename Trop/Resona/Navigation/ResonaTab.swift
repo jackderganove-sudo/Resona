@@ -26,6 +26,15 @@ enum ResonaTab: Int, CaseIterable, Identifiable {
         }
     }
 
+    /// Localized title as a plain string (menus, dropdowns).
+    var plainTitle: String {
+        switch self {
+        case .home: String(localized: "Home")
+        case .search: String(localized: "Search")
+        case .library: String(localized: "Library")
+        }
+    }
+
     var icon: String {
         switch self {
         case .home: "safari"

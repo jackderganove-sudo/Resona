@@ -48,6 +48,7 @@ struct TropApp: App {
         WindowGroup {
             ContentView()
                 .m3Theme()
+                .toggleStyle(.m3)
                 .preferredColorScheme(settings.preferredColorScheme)
                 .environment(settings)
                 .environment(\.downloadManager, DownloadManager.shared)

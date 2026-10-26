@@ -9,11 +9,11 @@ import SwiftUI
 
 struct AboutSettingsView: View {
     var body: some View {
-        List {
-            Section {
+        M3Form {
+            M3Section {
                 if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
                     HStack {
-                        Text("Version")
+                        Label("Version", systemImage: "info.circle")
                         Spacer()
                         Text(version)
                             .foregroundStyle(.secondary)
@@ -21,13 +21,9 @@ struct AboutSettingsView: View {
                 }
             }
 
-            Section {
-                Link(destination: URL(string: "https://github.com/SwiftyMedia/Trop")!) {
-                    Text("GitHub")
-                }
-                Link(destination: URL(string: "https://discord.gg/QrMwZAfU97")!) {
-                    Text("Discord")
-                }
+            M3Section {
+                SettingsLinkRow("GitHub", icon: "chevron.left.forwardslash.chevron.right", url: URL(string: "https://github.com/SwiftyMedia/Trop")!)
+                SettingsLinkRow("Discord", icon: "bubble.left.and.bubble.right", url: URL(string: "https://discord.gg/QrMwZAfU97")!)
             } header: {
                 Text("Links")
             }

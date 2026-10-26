@@ -11,8 +11,8 @@ struct SponsorBlockSettingsView: View {
     @State private var enabled = SponsorBlock.isEnabled
 
     var body: some View {
-        List {
-            Section {
+        M3Form {
+            M3Section {
                 Toggle("Skip Segments", isOn: $enabled)
             } footer: {
                 Text("Skips non-music parts of music videos, like talking intros, skits and long outros.")

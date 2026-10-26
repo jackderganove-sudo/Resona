@@ -9,14 +9,15 @@ import SwiftUI
 
 struct AppearanceSettingsView: View {
     @Environment(SettingsStore.self) private var settings
+    @Environment(\.m3) private var m3
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 14), count: 6)
 
     var body: some View {
         @Bindable var settings = settings
 
-        List {
-            Section {
+        M3Form {
+            M3Section {
                 SettingsPickerRow("Theme Mode", icon: "sun.max", selection: $settings.themeMode)
             } header: {
                 Text("Theme")
@@ -24,7 +25,7 @@ struct AppearanceSettingsView: View {
                 Text("Choose how the app follows your device appearance.")
             }
 
-            Section {
+            M3Section {
                 Toggle(isOn: Binding(
                     get: { ThemeStore.shared.dynamicColor },
                     set: { ThemeStore.shared.dynamicColor = $0 }
@@ -43,37 +44,49 @@ struct AppearanceSettingsView: View {
                 Text("The whole app takes its colors from the current album cover.")
             }
 
-            Section {
+            M3Section {
                 SettingsPickerRow("Player Background", icon: "photo", selection: $settings.playerBackgroundStyle)
             } header: {
                 Text("Player")
             }
 
-            Section {
+            M3Section {
                 SettingsPickerRow("Lyrics Alignment", icon: settings.lyricsAlignment.iconName, selection: $settings.lyricsAlignment)
-                Stepper(value: $settings.lyricsFontSize, in: 16...44) {
-                    HStack(spacing: 0) {
-                        Label("Lyrics Font Size", systemImage: "textformat.size")
-                        Text(": \(Int(settings.lyricsFontSize))")
-                    }
+                M3SliderRow(
+                    value: $settings.lyricsFontSize,
+                    range: 16...44,
+                    step: 1,
+                    format: { "\(Int($0)) pt" }
+                ) {
+                    Label("Lyrics Font Size", systemImage: "textformat.size")
+                } preview: {
+                    // Live preview in the karaoke style of the player.
+                    Text("Sing it loud")
+                        .font(.system(size: settings.lyricsFontSize, weight: .bold))
+                        .foregroundStyle(m3.onSurface)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        .frame(maxWidth: .infinity, alignment: settings.lyricsAlignment.textAlignment)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 16)
+                        .background(m3.surfaceContainerHighest, in: RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous))
+                        .animation(M3Motion.fastSpatial, value: settings.lyricsFontSize)
                 }
             } header: {
                 Text("Lyrics")
             }
 
-            Section {
-                Picker("Default Tab", selection: $settings.defaultTab) {
-                    Text("Home").tag(0)
-                    Text("Library").tag(1)
-                    Text("Explore").tag(2)
-                    Text("Search").tag(3)
+            M3Section {
+                M3DropdownRow(
+                    selection: $settings.defaultTab,
+                    options: ResonaTab.ordered.map { (value: $0.rawValue, title: $0.plainTitle) }
+                ) {
+                    Label("Default Tab", systemImage: "square.grid.2x2")
                 }
             } header: {
                 Text("General")
             }
         }
-        .id(settings.accentName)
-        .tint(settings.accentColor)
         .navigationTitle("Appearance")
         .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)

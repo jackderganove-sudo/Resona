@@ -13,8 +13,8 @@ struct PlayerSettingsView: View {
     var body: some View {
         @Bindable var settings = settings
 
-        List {
-            Section {
+        M3Form {
+            M3Section {
                 SettingsNavigationRow("Equalizer", icon: "slider.vertical.3") {
                     EqualizerView()
                 }
@@ -24,7 +24,7 @@ struct PlayerSettingsView: View {
                 Text("Adjust the sound with presets or a custom curve.")
             }
 
-            Section {
+            M3Section {
                 SettingsPickerRow("Audio Quality", icon: "waveform", selection: $settings.audioQuality)
                 SettingsToggleRow("Audio Normalization", icon: "speaker.wave.2", isOn: $settings.audioNormalization)
                 SettingsToggleRow("Gapless Playback", icon: "arrow.right.arrow.left", isOn: $settings.gaplessPlayback)
@@ -32,7 +32,7 @@ struct PlayerSettingsView: View {
                 Text("Audio")
             }
 
-            Section {
+            M3Section {
                 SettingsToggleRow("Autoplay Similar", icon: "infinity", isOn: $settings.autoplaySimilar)
                 SettingsToggleRow("Persist Queue", icon: "clock.arrow.circlepath", isOn: $settings.persistQueue)
             } header: {
@@ -41,7 +41,7 @@ struct PlayerSettingsView: View {
                 Text("Persist Queue restores your queue, shuffle, and repeat state when the app relaunches.")
             }
 
-            Section {
+            M3Section {
                 SettingsToggleRow("Swipe Artwork to Skip", icon: "hand.draw", isOn: $settings.artworkSwipeNavigation)
             } header: {
                 Text("Gestures")

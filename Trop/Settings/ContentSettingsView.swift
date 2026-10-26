@@ -15,30 +15,36 @@ struct ContentSettingsView: View {
     var body: some View {
         @Bindable var settings = settings
 
-        List {
-            Section {
+        M3Form {
+            M3Section {
                 SettingsToggleRow("Hide Explicit Content", icon: "eye.slash", isOn: $settings.hideExplicit)
             } header: {
                 Text("Content Filtering")
             }
 
-            Section {
+            M3Section {
                 SettingsToggleRow("Show Quick Picks", icon: "sparkles", isOn: $settings.showQuickPicks)
-                Stepper(value: $settings.topListsLength, in: 4...20, step: 2) {
-                    HStack(spacing: 0) {
-                        Label("Top Lists Length", systemImage: "list.number")
-                        Text(": \(settings.topListsLength)")
-                    }
+                M3SliderRow(
+                    value: Binding(
+                        get: { Double(settings.topListsLength) },
+                        set: { settings.topListsLength = Int($0) }
+                    ),
+                    range: 4...20,
+                    step: 2,
+                    format: { "\(Int($0))" }
+                ) {
+                    Label("Top Lists Length", systemImage: "list.number")
                 }
             } header: {
                 Text("Home Feed")
             }
 
-            Section {
-                Picker("Country", selection: $settings.contentCountry) {
-                    ForEach(Self.countries, id: \.self) { code in
-                        Text(countryName(for: code)).tag(code)
-                    }
+            M3Section {
+                M3DropdownRow(
+                    selection: $settings.contentCountry,
+                    options: Self.countries.map { (value: $0, title: countryName(for: $0)) }
+                ) {
+                    Label("Country", systemImage: "globe")
                 }
             } header: {
                 Text("Region")
@@ -46,7 +52,7 @@ struct ContentSettingsView: View {
                 Text("Controls the region used for YouTube Music requests.")
             }
 
-            Section {
+            M3Section {
                 SettingsToggleRow("Track Search History", icon: "magnifyingglass", isOn: $settings.trackSearchHistory)
                 SettingsToggleRow("Track Play History", icon: "clock.arrow.circlepath", isOn: $settings.trackPlayHistory)
             } header: {
@@ -55,7 +61,7 @@ struct ContentSettingsView: View {
                 Text("When off, searches and playback are not recorded locally.")
             }
 
-            Section {
+            M3Section {
                 SettingsToggleRow("Sync Artists", icon: "music.mic", isOn: $settings.syncArtists)
                 SettingsToggleRow("Sync Playlists", icon: "music.note.list", isOn: $settings.syncPlaylists)
                 SettingsToggleRow("Sync Albums", icon: "square.stack", isOn: $settings.syncAlbums)

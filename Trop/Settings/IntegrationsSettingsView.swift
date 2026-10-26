@@ -7,8 +7,8 @@ import SwiftUI
 
 struct IntegrationsSettingsView: View {
     var body: some View {
-        List {
-            Section {
+        M3Form {
+            M3Section {
                 SettingsNavigationRow("Last.fm", icon: "music.note") {
                     LastFMSettingsView()
                 }

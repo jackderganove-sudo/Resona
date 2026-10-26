@@ -20,8 +20,8 @@ struct CanvasSettingsView: View {
 
     var body: some View {
         @Bindable var settings = settings
-        List {
-            Section {
+        M3Form {
+            M3Section {
                 if isLoggedIn {
                     HStack(spacing: 14) {
                         CachedAvatarView(url: profile?.avatarURL, size: 56)
@@ -82,7 +82,7 @@ struct CanvasSettingsView: View {
                 Text("Account")
             }
 
-            Section {
+            M3Section {
                 Toggle("Spotify Canvas", isOn: $settings.canvasEnabled)
                     .disabled(!isLoggedIn)
                 Toggle("Use cellular data", isOn: $settings.canvasOverCellular)
