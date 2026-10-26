@@ -169,8 +169,10 @@ private struct MiniPlayerInfo: View {
     var body: some View {
         HStack(spacing: 0) {
             ZStack {
-                ProgressRing(progress: isCurrent ? Double(np.progress) : 0, isLoading: isCurrent && np.isPlaying && np.duration <= 0)
-                    .frame(width: 52, height: 52)
+                PlaybackProgressReader { _, progress in
+                    ProgressRing(progress: isCurrent ? progress : 0, isLoading: isCurrent && np.isPlaying && np.duration <= 0)
+                }
+                .frame(width: 52, height: 52)
                 artwork
                     .frame(width: 42, height: 42)
                     .clipShape(Circle())
@@ -240,7 +242,6 @@ struct ProgressRing: View {
                     .trim(from: 0, to: max(0.001, min(progress, 1)))
                     .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 0.25), value: progress)
             }
         }
         .padding(lineWidth / 2)

@@ -21,6 +21,7 @@ import Foundation
 import Libmpv
 import os
 import QuartzCore
+import SwiftUI
 
 final class PlaybackClock: @unchecked Sendable {
     static let shared = PlaybackClock()
@@ -126,5 +127,29 @@ final class PlaybackClock: @unchecked Sendable {
             }
             if !s.playing { s.lastReported = values.pos }
         }
+    }
+}
+
+// MARK: - Smooth progress for views
+
+/// Supplies the current playback time/progress on every display frame
+/// while playing (from the PlaybackClock), so seek bars and rings glide
+/// continuously like a clock hand instead of stepping with the 250 ms
+/// NowPlaying timer; frozen while paused.
+struct PlaybackProgressReader<Content: View>: View {
+    @ViewBuilder let content: (_ time: TimeInterval, _ progress: Double) -> Content
+    private let np = NowPlaying.shared
+
+    var body: some View {
+        TimelineView(.animation(paused: !np.isPlaying)) { _ in
+            // Reading currentTime keeps paused views in sync after seeks.
+            let fallback = np.currentTime
+            let clock = PlaybackClock.shared.now()
+            let t = np.isPlaying ? clock : (abs(clock - fallback) < 1 ? clock : fallback)
+            let d = np.duration
+            content(t, d > 0 ? min(max(t / d, 0), 1) : 0)
+        }
+        .onAppear { PlaybackClock.shared.retain() }
+        .onDisappear { PlaybackClock.shared.release() }
     }
 }

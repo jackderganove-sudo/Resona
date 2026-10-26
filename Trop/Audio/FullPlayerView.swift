@@ -384,38 +384,39 @@ struct FullPlayerView: View {
     // MARK: Slider
 
     private func progressSlider(compact: Bool) -> some View {
-        let shown = isEditingSlider ? editingProgress : Double(np.progress)
-        return VStack(spacing: compact ? 4 : 6) {
-            ExpressiveSlider(
-                value: Binding(
-                    get: { shown },
-                    set: { editingProgress = $0 }
-                ),
-                trackHeight: compact ? 6 : 14,
-                handleHeight: compact ? 20 : 40,
-                activeColor: .white,
-                inactiveColor: .white.opacity(0.28),
-                onEditingChanged: { editing in
-                    if editing {
-                        editingProgress = Double(np.progress)
-                    } else {
-                        let target = editingProgress * np.duration
-                        player.seek(to: target)
-                        np.currentTime = target
-                        player.updateNowPlayingProgress()
+        PlaybackProgressReader { time, progress in
+            VStack(spacing: compact ? 4 : 6) {
+                ExpressiveSlider(
+                    value: Binding(
+                        get: { isEditingSlider ? editingProgress : progress },
+                        set: { editingProgress = $0 }
+                    ),
+                    trackHeight: compact ? 6 : 14,
+                    handleHeight: compact ? 20 : 40,
+                    activeColor: .white,
+                    inactiveColor: .white.opacity(0.28),
+                    onEditingChanged: { editing in
+                        if editing {
+                            editingProgress = progress
+                        } else {
+                            let target = editingProgress * np.duration
+                            player.seek(to: target)
+                            np.currentTime = target
+                            player.updateNowPlayingProgress()
+                        }
+                        isEditingSlider = editing
                     }
-                    isEditingSlider = editing
-                }
-            )
+                )
 
-            HStack {
-                Text(DurationFormat.playbackTime(isEditingSlider ? editingProgress * np.duration : np.currentTime))
-                Spacer()
-                Text(DurationFormat.playbackTime(np.duration))
+                HStack {
+                    Text(DurationFormat.playbackTime(isEditingSlider ? editingProgress * np.duration : time))
+                    Spacer()
+                    Text(DurationFormat.playbackTime(np.duration))
+                }
+                .font(.poppins(14, weight: .medium).monospacedDigit())
+                .foregroundStyle(.white.opacity(0.9))
+                .padding(.horizontal, 4)
             }
-            .font(.poppins(14, weight: .medium).monospacedDigit())
-            .foregroundStyle(.white.opacity(0.9))
-            .padding(.horizontal, 4)
         }
     }
 

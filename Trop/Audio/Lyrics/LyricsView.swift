@@ -209,39 +209,41 @@ struct LyricsView<ProgressSlider: View>: View {
 
     private var controls: some View {
         VStack(spacing: 18) {
-            VStack(spacing: 8) {
-                ExpressiveSlider(
-                    value: Binding(
-                        get: { isEditingSlider ? editingProgress : Double(np.progress) },
-                        set: { editingProgress = $0 }
-                    ),
-                    trackHeight: 7,
-                    handleHeight: 7,
-                    activeColor: .white.opacity(0.9),
-                    inactiveColor: .white.opacity(0.25),
-                    handleColor: .clear,
-                    showsStopIndicator: false,
-                    onEditingChanged: { editing in
-                        if editing {
-                            editingProgress = Double(np.progress)
-                        } else {
-                            let target = editingProgress * np.duration
-                            player.seek(to: target)
-                            np.currentTime = target
-                            player.updateNowPlayingProgress()
+            PlaybackProgressReader { time, progress in
+                VStack(spacing: 8) {
+                    ExpressiveSlider(
+                        value: Binding(
+                            get: { isEditingSlider ? editingProgress : progress },
+                            set: { editingProgress = $0 }
+                        ),
+                        trackHeight: 7,
+                        handleHeight: 7,
+                        activeColor: .white.opacity(0.9),
+                        inactiveColor: .white.opacity(0.25),
+                        handleColor: .clear,
+                        showsStopIndicator: false,
+                        onEditingChanged: { editing in
+                            if editing {
+                                editingProgress = progress
+                            } else {
+                                let target = editingProgress * np.duration
+                                player.seek(to: target)
+                                np.currentTime = target
+                                player.updateNowPlayingProgress()
+                            }
+                            isEditingSlider = editing
                         }
-                        isEditingSlider = editing
-                    }
-                )
-                .frame(height: 16)
+                    )
+                    .frame(height: 16)
 
-                HStack {
-                    Text(DurationFormat.playbackTime(isEditingSlider ? editingProgress * np.duration : np.currentTime))
-                    Spacer()
-                    Text("-" + DurationFormat.playbackTime(max(0, np.duration - (isEditingSlider ? editingProgress * np.duration : np.currentTime))))
+                    HStack {
+                        Text(DurationFormat.playbackTime(isEditingSlider ? editingProgress * np.duration : time))
+                        Spacer()
+                        Text("-" + DurationFormat.playbackTime(max(0, np.duration - (isEditingSlider ? editingProgress * np.duration : time))))
+                    }
+                    .font(.poppins(14, weight: .medium).monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.6))
                 }
-                .font(.poppins(14, weight: .medium).monospacedDigit())
-                .foregroundStyle(.white.opacity(0.6))
             }
 
             HStack {
