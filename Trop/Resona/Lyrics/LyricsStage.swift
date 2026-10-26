@@ -31,6 +31,12 @@ struct LyricsStage<Accessory: View>: View {
     @ViewBuilder let accessory: (Int) -> Accessory
 
     @State private var lineTops: [Int: CGFloat] = [:]
+    /// Where the list is scrolled to (top of the active row − anchor).
+    /// Every change animates with the staggered spring, so the list never
+    /// jumps — not on line changes, not when row positions shift.
+    @State private var scrollTarget: CGFloat = 0
+    @State private var stageHeight: CGFloat = 0
+    @State private var hasPositioned = false
     @State private var manualOffset: CGFloat = 0
     @State private var dragStart: CGFloat?
     @State private var isManual = false
@@ -41,26 +47,22 @@ struct LyricsStage<Accessory: View>: View {
 
     var body: some View {
         GeometryReader { geo in
-            let anchor = geo.size.height * anchorFraction
-            let target = (lineTops[activeIndex] ?? 0) - anchor
-
             VStack(alignment: horizontalAlignment, spacing: 0) {
+                if let intro = introGap {
+                    InterludeDots(gap: intro, alignment: alignment)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, fontSize * 0.36)
+                        .frame(maxWidth: .infinity, alignment: Alignment(horizontal: horizontalAlignment, vertical: .center))
+                        .modifier(StageRow(index: -1, activeIndex: activeIndex, scrollTarget: scrollTarget, manualOffset: manualOffset, lineTops: $lineTops))
+                }
                 ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
                     row(index: index, line: line)
-                        // Natural layout position (measured before offsets).
-                        .onGeometryChange(for: CGFloat.self) { proxy in
-                            proxy.frame(in: .named(Self.space)).minY
-                        } action: { top in
-                            lineTops[index] = top
-                        }
-                        // Staggered glide: lines at/below the new active line
-                        // start a little later the further down they are.
-                        .offset(y: -target)
-                        .animation(M3Motion.lyricsScroll.delay(delay(for: index)), value: activeIndex)
-                        .offset(y: manualOffset)
+                        .modifier(StageRow(index: index, activeIndex: activeIndex, scrollTarget: scrollTarget, manualOffset: manualOffset, lineTops: $lineTops))
                 }
                 Color.clear.frame(height: geo.size.height)
             }
+            .onAppear { stageHeight = geo.size.height }
+            .onChange(of: geo.size.height) { _, h in stageHeight = h }
             .frame(width: geo.size.width, alignment: Alignment(horizontal: horizontalAlignment, vertical: .top))
             .coordinateSpace(.named(Self.space))
             .contentShape(Rectangle())
@@ -86,6 +88,41 @@ struct LyricsStage<Accessory: View>: View {
         .clipped()
         .mask(edgeFade)
         .animation(M3Motion.fastSpatial, value: isManual)
+        .onChange(of: activeIndex) { _, _ in updateScrollTarget() }
+        .onChange(of: lineTops) { _, _ in updateScrollTarget() }
+        .onChange(of: stageHeight) { _, _ in updateScrollTarget() }
+    }
+
+    /// Recomputes the scroll target; the very first placement is instant.
+    private func updateScrollTarget() {
+        let key = lineTops[activeIndex] != nil ? activeIndex : (introGap != nil ? -1 : 0)
+        guard let top = lineTops[key], stageHeight > 0 else { return }
+        let target = top - stageHeight * anchorFraction
+        guard abs(target - scrollTarget) > 0.5 else { return }
+        if hasPositioned {
+            scrollTarget = target          // animated per row (StageRow)
+        } else {
+            var t = Transaction()
+            t.disablesAnimations = true
+            withTransaction(t) { scrollTarget = target }
+            hasPositioned = true
+        }
+    }
+
+    // MARK: Interludes
+
+    /// Intro before the first line (≥ 3 s of music without words).
+    private var introGap: InterludeGap? {
+        guard let first = lines.lazy.compactMap(\.startTime).first, first >= 3 else { return nil }
+        return InterludeGap(start: 0, end: first)
+    }
+
+    /// Pause after a line: from its estimated end to the next line, ≥ 3 s.
+    private func gap(after index: Int) -> InterludeGap? {
+        guard let next = nextStart(after: index) else { return nil }
+        let words = KaraokeTiming.words(for: lines[index], nextStart: next)
+        guard let end = words.last?.end, next - end >= 3 else { return nil }
+        return InterludeGap(start: end, end: next)
     }
 
     private static var space: String { "lyricsStage" }
@@ -96,12 +133,6 @@ struct LyricsStage<Accessory: View>: View {
         case .center: .center
         case .right: .trailing
         }
-    }
-
-    private func delay(for index: Int) -> Double {
-        let rel = index - activeIndex
-        guard rel >= -1 else { return 0 }
-        return min(Double(rel + 1), 8) * 0.045
     }
 
     // MARK: Row
@@ -127,6 +158,12 @@ struct LyricsStage<Accessory: View>: View {
                     .multilineTextAlignment(alignment.multilineTextAlignment)
             }
             accessory(index)
+            if let pause = gap(after: index) {
+                // Space is always reserved so rows never shift when the
+                // dots appear; they only draw during the pause.
+                InterludeDots(gap: pause, alignment: alignment)
+                    .padding(.top, fontSize * 0.5)
+            }
         }
         .frame(maxWidth: .infinity, alignment: Alignment(horizontal: horizontalAlignment, vertical: .center))
         .padding(.horizontal, 28)
@@ -214,6 +251,7 @@ struct LyricsStage<Accessory: View>: View {
             manualOffset = 0
             isManual = false
         }
+        updateScrollTarget()
     }
 
     private var edgeFade: some View {
@@ -227,6 +265,86 @@ struct LyricsStage<Accessory: View>: View {
             startPoint: .top,
             endPoint: .bottom
         )
+    }
+}
+
+// MARK: - Row positioning
+
+/// Measures a row's natural position and offsets it by the scroll target.
+/// The offset animates with a bouncy spring whose start is staggered: rows
+/// at and below the active line follow slightly later the further down
+/// they are, so the list ripples instead of moving as one block.
+private struct StageRow: ViewModifier {
+    let index: Int
+    let activeIndex: Int
+    let scrollTarget: CGFloat
+    let manualOffset: CGFloat
+    @Binding var lineTops: [Int: CGFloat]
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.frame(in: .named("lyricsStage")).minY
+            } action: { top in
+                lineTops[index] = top
+            }
+            .offset(y: -scrollTarget)
+            .animation(M3Motion.lyricsScroll.delay(delay), value: scrollTarget)
+            .offset(y: manualOffset)
+    }
+
+    private var delay: Double {
+        let rel = index - activeIndex
+        guard rel >= -1 else { return 0 }
+        return min(Double(rel + 1), 8) * 0.04
+    }
+}
+
+// MARK: - Interlude dots
+
+struct InterludeGap: Equatable {
+    let start: TimeInterval
+    let end: TimeInterval
+}
+
+/// Three dots shown while no words are sung (intro, pauses ≥ 3 s). They
+/// fill one after another with the remaining time, breathe gently and
+/// shrink away just before the next line starts.
+private struct InterludeDots: View {
+    let gap: InterludeGap
+    let alignment: LyricsAlignment
+
+    private let np = NowPlaying.shared
+    @Environment(SettingsStore.self) private var settings
+
+    var body: some View {
+        TimelineView(.animation(paused: !np.isPlaying)) { _ in
+            let t = PlaybackClock.shared.now() + settings.lyricsOffsetSeconds
+            let visible = t >= gap.start - 0.1 && t < gap.end
+            let duration = max(0.5, gap.end - gap.start)
+            let p = min(max((t - gap.start) / duration, 0), 1)
+            // Fade/shrink in over the first 0.3 s, out over the last 0.45 s.
+            let enter = min(1, max(0, (t - gap.start) / 0.3))
+            let exit = min(1, max(0, (gap.end - t) / 0.45))
+            let presence = visible ? min(enter, exit) : 0
+
+            HStack(spacing: 10) {
+                ForEach(0..<3, id: \.self) { i in
+                    let fill = min(1, max(0, p * 3 - Double(i)))
+                    let breathe = 1 + 0.12 * sin(t * 2 * .pi / 1.6 + Double(i) * 0.6)
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 11, height: 11)
+                        .opacity(0.28 + 0.72 * fill)
+                        .scaleEffect((0.85 + 0.25 * fill) * breathe)
+                        .shadow(color: .white.opacity(0.5 * fill), radius: 6 * fill)
+                }
+            }
+            .scaleEffect(0.6 + 0.4 * presence)
+            .opacity(presence)
+            .frame(height: 22)
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -285,11 +403,15 @@ private struct ActiveKaraokeLine: View {
 }
 
 /// Draws each word dim, then the sung part bright with a feathered leading
-/// edge and a glow that builds while the word is sung and settles after.
+/// edge. The word being sung glows strongly, grows to ~1.07× and lifts by
+/// ~2.5 pt; afterwards it eases back over 0.35 s and its glow fades.
 private struct KaraokeRenderer: TextRenderer {
     var time: TimeInterval
     var words: [LyricWord]
     var dimOpacity: Double = 0.38
+
+    /// Room for the glow and the scaled/lifted word outside the text frame.
+    var displayPadding: EdgeInsets { EdgeInsets(top: 14, leading: 12, bottom: 14, trailing: 12) }
 
     func draw(layout: Text.Layout, in ctx: inout GraphicsContext) {
         for line in layout {
@@ -303,19 +425,38 @@ private struct KaraokeRenderer: TextRenderer {
                 let p = min(max((time - word.start) / duration, 0), 1)
                 let rect = run.typographicBounds.rect
 
+                // Emphasis 0…1: rises quickly while the word is sung, settles
+                // smoothly after it ends.
+                let emphasis: Double
+                if p > 0 && p < 1 {
+                    emphasis = Self.easeOut(min(1, p * 3))
+                } else if p >= 1 {
+                    emphasis = Self.easeOut(max(0, 1 - (time - word.end) / 0.35))
+                } else {
+                    emphasis = 0
+                }
+
+                var c = ctx
+                if emphasis > 0.001 {
+                    let scale = 1 + 0.07 * emphasis
+                    c.translateBy(x: rect.midX, y: rect.midY - 2.5 * emphasis)
+                    c.scaleBy(x: scale, y: scale)
+                    c.translateBy(x: -rect.midX, y: -rect.midY)
+                }
+
                 if p >= 1 {
-                    // Sung: bright, glow fading out over 0.6 s.
+                    // Sung: bright; glow strong while emphasised, then fades.
                     let since = time - word.end
-                    let glow = max(0, 1 - since / 0.6)
-                    var lit = ctx
+                    let glow = max(emphasis, max(0, 1 - since / 0.6) * 0.5)
+                    var lit = c
                     if glow > 0.01 {
-                        lit.addFilter(.shadow(color: .white.opacity(0.45 * glow), radius: 9 * glow))
+                        lit.addFilter(.shadow(color: .white.opacity(0.75 * glow), radius: 4 + 10 * glow))
                     }
                     lit.draw(run)
                     continue
                 }
 
-                var base = ctx
+                var base = c
                 base.opacity = dimOpacity
                 base.draw(run)
                 guard p > 0 else { continue }
@@ -323,9 +464,9 @@ private struct KaraokeRenderer: TextRenderer {
                 // Leading edge travels from left to right with a soft feather.
                 let feather = max(10, rect.width * 0.35)
                 let edge = rect.minX - feather + (rect.width + feather) * p
-                var lit = ctx
+                var lit = c
                 lit.clipToLayer { mask in
-                    let area = CGRect(x: rect.minX - 2, y: rect.minY - 16, width: rect.width + 4, height: rect.height + 32)
+                    let area = CGRect(x: rect.minX - 4, y: rect.minY - 18, width: rect.width + 8, height: rect.height + 36)
                     mask.fill(
                         Path(area),
                         with: .linearGradient(
@@ -339,10 +480,14 @@ private struct KaraokeRenderer: TextRenderer {
                         )
                     )
                 }
-                lit.addFilter(.shadow(color: .white.opacity(0.45 * min(1, p * 2)), radius: 9))
+                lit.addFilter(.shadow(color: .white.opacity(0.8 * emphasis), radius: 4 + 10 * emphasis))
                 lit.draw(run)
             }
         }
+    }
+
+    private static func easeOut(_ x: Double) -> Double {
+        1 - pow(1 - min(max(x, 0), 1), 3)
     }
 }
 

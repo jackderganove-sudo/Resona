@@ -21,7 +21,8 @@ struct LyricsView<ProgressSlider: View>: View {
     @ViewBuilder var progressSlider: () -> ProgressSlider
 
     @State private var lines: [LyricLine] = []
-    @State private var activeIndex: Int = 0
+    /// Index of the line being sung; -1 before the first line (intro).
+    @State private var activeIndex: Int = -1
     @State private var displayTime: TimeInterval = 0
     @State private var showLyricsMenu = false
     @State private var instrumentalGaps: [InstrumentalGap] = []
@@ -156,8 +157,9 @@ struct LyricsView<ProgressSlider: View>: View {
                     fontSize: settings.lyricsFontSize,
                     alignment: settings.lyricsAlignment,
                     onSeek: { seek(to: $0) }
-                ) { index in
-                    gapIndicator(after: index)
+                ) { _ in
+                    // Pauses are shown by the stage's interlude dots.
+                    EmptyView()
                 }
             }
         } else {
@@ -392,7 +394,7 @@ struct LyricsView<ProgressSlider: View>: View {
         }
         lines = []
         instrumentalGaps = []
-        activeIndex = 0
+        activeIndex = -1
         isLoading = true
         LyricsState.shared.providerName = nil
         defer { isLoading = false }
@@ -419,6 +421,8 @@ struct LyricsView<ProgressSlider: View>: View {
 
     /// Last line whose start time has passed (binary search; lines are sorted).
     static func activeIndex(in lines: [LyricLine], at t: TimeInterval) -> Int {
+        // Before the first timed line: intro (no active line yet).
+        if let first = lines.lazy.compactMap(\.startTime).first, t < first { return -1 }
         var lo = 0, hi = lines.count - 1, result = 0
         while lo <= hi {
             let mid = (lo + hi) / 2
