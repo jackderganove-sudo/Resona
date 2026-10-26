@@ -1,56 +1,41 @@
-# Trop
+# Resona
 
-A free and open source YouTube Music client for iOS.
+A YouTube Music client for iOS and iPadOS with a Material 3 Expressive look:
+dynamic colours from the album artwork, a floating navigation bar, an
+expandable mini player and karaoke-style synced lyrics.
 
-<p>
-	<img src=".github/assets/1.png" width="25%" alt="Homepage" />
-	<img src=".github/assets/2.png" width="25%" alt="Player" />
-	<img src=".github/assets/3.png" width="25%" alt="Queue" />
-</p>
+Resona is a UI fork of [Trop](https://github.com/SwiftyMedia/Trop) by 686udjie.
+All networking, playback, library sync, downloads and lyrics providers come
+from Trop unchanged; Resona replaces the SwiftUI views. The visual design is
+inspired by the Android app ArchiveTune (GPLv3) and re-implemented in SwiftUI.
 
 ## Features
 
-- No ads
-- SponsorBlock: skips sponsor reads, intros, outros and non-music sections (silence, talking)
-- Stream songs and videos from YouTube Music
-- Synced lyrics (Musixmatch, Netease, Kugou, LRCLIB, Genius)
-- Library sync (playlists, albums, artists, podcasts)
-- Downloads
-- Equalizer
-- Custom app icons and themes
-- Queue management and listening history
+- Google sign-in through an in-app web view, library sync (playlists, albums, artists, podcasts)
+- Streaming, downloads, queue, listening history, equalizer, SponsorBlock
+- Synced lyrics (Musixmatch, LRCLIB, Netease, Kugou, Genius)
+- Colour scheme generated from the current artwork (tonal palettes)
+- Floating navigation bar on iPhone, navigation rail on iPad / wide screens
+- Universal app, iPad landscape supported
 
-## Installation
+## Install
 
-Requires iOS 26 or later and a YouTube Music account (sign in through the in-app web view).
+Requires iOS 18 or later. Grab the unsigned `Resona.ipa`:
 
-### Feather / AltStore / SideStore
+- latest build: **Actions** tab → newest *Build IPA* run → artifact `Resona-<n>`
+- releases: push a tag `vX.Y.Z` and the workflow publishes a GitHub release
 
-Add the Trop source, then install the latest stable release (unsigned - your client re-signs it with your Apple ID):
+Sideload it with ESign, Feather, AltStore or SideStore (they re-sign it).
 
-```
-https://raw.githubusercontent.com/SwiftyMedia/Trop/main/altstore.json
-```
+## Building
 
+The IPA is built on GitHub Actions (`.github/workflows/build.yml`, `macos-latest`,
+latest stable Xcode). Locally on a Mac: `./build_ipa.sh` → `build/Resona.ipa`.
+The first build compiles ffmpeg-kit from source and takes a while; CI caches it.
 
-> **Note:** AltStore PAL is not supported.
-
-Stable releases are available from the [releases page](../../releases). Nightly builds are available in the[Actions](../../actions) tab.
-
-### Manual Installation
-
- To build an unsigned IPA locally, run `./build_ipa.sh`; the output is `build/Trop.ipa`.
-
-## Notable mentions
-
-- [InnerTubeX](https://github.com/MetrolistGroup/innertubex) - eXtended InnerTube API library for Kotlin
-- [zemer-cipher](https://github.com/ZemerTeam/zemer-cipher) - YouTube cipher deobfuscation and PoToken generation
-- [Metrolist](https://github.com/MetrolistGroup/Metrolist) - YouTube Music client for Android
-
-## Community
-
-Join the [Discord server](https://discord.gg/QrMwZAfU97) for support and discussion.
+Discord Rich Presence from upstream Trop is disabled because its SDK is
+proprietary and not redistributable.
 
 ## License
 
-This repo is licensed under [GPLv3](LICENSE.txt). Trop is not affiliated with, endorsed, or sponsored by Google or YouTube.
+GPLv3, see [LICENSE.txt](LICENSE.txt). Not affiliated with Google or YouTube.

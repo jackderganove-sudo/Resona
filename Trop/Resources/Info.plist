@@ -6,7 +6,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.686udjie.Trop.discord</string>
+			<string>dev.jackderganove.resona.discord</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>tropdiscord</string>

@@ -28,8 +28,6 @@
 		14B578DF2FF20DCD006B3990 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 14B578DE2FF20DCC006B3990 /* Nuke */; };
 		14B578E52FF20DCF006B3990 /* Marquee in Frameworks */ = {isa = PBXBuildFile; productRef = 14B578E42FF20DCF006B3990 /* Marquee */; };
 		14B578F32FF21002006B3990 /* SwiftyTube in Frameworks */ = {isa = PBXBuildFile; productRef = 14B578F22FF21001006B3990 /* SwiftyTube */; };
-		D15C00010000000000000001 /* discord_partner_sdk.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D15C00020000000000000001 /* discord_partner_sdk.xcframework */; };
-		D15C00030000000000000001 /* discord_partner_sdk.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D15C00020000000000000001 /* discord_partner_sdk.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -47,7 +45,6 @@
 				144200263040C1BE0032F8CD /* fk_libswresample.xcframework in Embed Frameworks */,
 				144200273040C1BE0032F8CD /* fk_libswscale.xcframework in Embed Frameworks */,
 				144200283040C1BE0032F8CD /* ffmpegkit.xcframework in Embed Frameworks */,
-				D15C00030000000000000001 /* discord_partner_sdk.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -64,7 +61,6 @@
 		144200073040C1BE0032F8CD /* fk_libswscale.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = fk_libswscale.xcframework; path = "build/ffmpeg-kit-xcframeworks/fk_libswscale.xcframework"; sourceTree = SOURCE_ROOT; };
 		144200083040C1BE0032F8CD /* ffmpegkit.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ffmpegkit.xcframework; path = "build/ffmpeg-kit-xcframeworks/ffmpegkit.xcframework"; sourceTree = SOURCE_ROOT; };
 		14B5762F2FF190EF006B3990 /* Trop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Trop.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		D15C00020000000000000001 /* discord_partner_sdk.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = discord_partner_sdk.xcframework; path = build/discord/discord_partner_sdk.xcframework; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -106,7 +102,6 @@
 				14B578DF2FF20DCD006B3990 /* Nuke in Frameworks */,
 				14B578E52FF20DCF006B3990 /* Marquee in Frameworks */,
 				14B578F32FF21002006B3990 /* SwiftyTube in Frameworks */,
-				D15C00010000000000000001 /* discord_partner_sdk.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -149,7 +144,6 @@
 		14D78C92308D012A00BE059E /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
-				D15C00020000000000000001 /* discord_partner_sdk.xcframework */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -345,7 +339,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -404,7 +398,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -427,14 +421,14 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/build/discord/discord_partner_sdk.xcframework/ios-arm64/discord_partner_sdk.framework/Headers";
+				INFOPLIST_KEY_CFBundleDisplayName = Resona;
 				INFOPLIST_FILE = Trop/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = com.686udjie.Trop;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.jackderganove.resona;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -459,14 +453,14 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/build/discord/discord_partner_sdk.xcframework/ios-arm64/discord_partner_sdk.framework/Headers";
+				INFOPLIST_KEY_CFBundleDisplayName = Resona;
 				INFOPLIST_FILE = Trop/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = com.686udjie.Trop;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.jackderganove.resona;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
