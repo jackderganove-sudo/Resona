@@ -44,6 +44,7 @@ final class DownloadManager: ObservableObject {
     private var activeFFmpegSessions: [String: FFmpegSession] = [:]
 
     private var tracksById: [String: DownloadedTrackEntity] = [:]
+    private var artworkRefreshes: Set<String> = []
 
     // Resona: bounded download queue so a playlist download doesn't start
     // dozens of stream resolutions and ffmpeg sessions at once.
@@ -315,7 +316,7 @@ extension DownloadManager {
                 try? fileManager.removeItem(at: fileURL)
             }
 
-            async let artworkData = prefetchArtwork(from: song.thumbnailUrl)
+            async let artworkData = prefetchArtwork(videoId: videoId, thumbnailUrl: song.thumbnailUrl)
 
             setProgress(0.05, for: videoId)
             let resolveStart = CFAbsoluteTimeGetCurrent()
@@ -552,10 +553,39 @@ extension DownloadManager {
         downloads[videoId] = .downloading(clamped)
     }
 
-    private func prefetchArtwork(from thumbnailUrl: String?) async -> Data? {
-        guard let thumbUrl = thumbnailUrl, let url = URL(string: thumbUrl) else { return nil }
-        guard let image = try? await ArtworkLoader.image(for: url) else { return nil }
-        return image.jpegData(compressionQuality: 0.9)
+    /// Cover in exactly the quality the player loads online (same candidate
+    /// chain), embedded without downscaling. The list thumbnail used before
+    /// was tiny, so downloaded songs looked pixelated.
+    private func prefetchArtwork(videoId: String, thumbnailUrl: String?) async -> Data? {
+        guard let image = await ArtworkURLs.loadBest(videoId: videoId, thumbnailUrl: thumbnailUrl) else { return nil }
+        return await Task.detached(priority: .utility) {
+            image.jpegData(compressionQuality: 0.95)
+        }.value
+    }
+
+    /// True when the network is reachable (unknown counts as online).
+    var isOnline: Bool {
+        guard let currentPath else { return true }
+        return currentPath.status == .satisfied
+    }
+
+    /// Re-embeds a sharp cover into an already downloaded file whose
+    /// embedded artwork is low-res (downloads made before the fix).
+    func refreshEmbeddedArtwork(videoId: String, thumbnailUrl: String?) {
+        guard !artworkRefreshes.contains(videoId), case .completed = state(for: videoId) else { return }
+        artworkRefreshes.insert(videoId)
+        Task {
+            defer { artworkRefreshes.remove(videoId) }
+            guard let fileURL = await localURL(for: videoId),
+                  let track = tracksById[videoId],
+                  let data = await prefetchArtwork(videoId: videoId, thumbnailUrl: thumbnailUrl ?? track.thumbnailUrl) else { return }
+            do {
+                try await attachMetadata(to: fileURL, title: track.title, artist: track.artist, artworkData: data, videoId: nil)
+                Log.downloadManager.debug("Re-embedded high-res artwork for \(videoId)")
+            } catch {
+                Log.downloadManager.error("Artwork refresh failed for \(videoId): \(error.localizedDescription)")
+            }
+        }
     }
 
     // MARK: - File Transfer (ffmpeg)
@@ -861,7 +891,7 @@ extension DownloadManager {
         title: String,
         artist: String,
         artworkData: Data?,
-        videoId: String
+        videoId: String?
     ) async throws {
         let tempOutput = fileManager.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).m4a")
         let artworkURL = try writeTempArtwork(artworkData)
@@ -879,7 +909,9 @@ extension DownloadManager {
                 "-map", "0:a",
                 "-map", "1",
                 "-c:a", "copy",
-                "-c:v", "mjpeg",
+                // Copy the JPEG as-is: re-encoding with ffmpeg's mjpeg
+                // defaults (~200 kbit/s) visibly blurred the cover.
+                "-c:v", "copy",
                 "-disposition:v", "attached_pic"
             ]
         } else {
@@ -913,7 +945,7 @@ extension DownloadManager {
                 "-map", "1",
                 "-c:a", "aac",
                 "-b:a", "\(bitrate)",
-                "-c:v", "mjpeg",
+                "-c:v", "copy",
                 "-disposition:v", "attached_pic"
             ]
         } else {

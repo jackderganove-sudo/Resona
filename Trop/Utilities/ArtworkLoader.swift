@@ -69,3 +69,29 @@ enum ArtworkURLs {
         SwiftyTube.ArtworkURLs.sdVariant(url)
     }
 }
+
+extension ArtworkURLs {
+    /// Artwork URLs from best to worst — the exact chain the player uses
+    /// online: full-resolution upgrade → maxres → sd → upgraded → ytimg
+    /// fallback. Shared by NowPlaying and DownloadManager so downloaded
+    /// songs embed the same quality the player shows.
+    static func candidates(videoId: String, thumbnailUrl: String?) -> [URL] {
+        var candidates: [String] = []
+        if let upgraded = highRes(thumbnailUrl) {
+            if let maxRes = maxResVariant(upgraded) { candidates.append(maxRes) }
+            if let standard = sdVariant(upgraded) { candidates.append(standard) }
+            candidates.append(upgraded)
+        }
+        let fallbackURL = fallback(for: videoId)
+        if !candidates.contains(fallbackURL) { candidates.append(fallbackURL) }
+        return candidates.compactMap(URL.init(string:))
+    }
+
+    /// Loads the best available artwork (first candidate that succeeds).
+    static func loadBest(videoId: String, thumbnailUrl: String?) async -> UIImage? {
+        for url in candidates(videoId: videoId, thumbnailUrl: thumbnailUrl) {
+            if let image = try? await ArtworkLoader.image(for: url) { return image }
+        }
+        return nil
+    }
+}

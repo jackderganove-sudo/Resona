@@ -440,10 +440,20 @@ final class NowPlaying {
                 }
             }
 
+            // Downloads made before the artwork fix embedded the small list
+            // thumbnail. Below ~1000 px: show it at once, then load the sharp
+            // cover online and re-embed it so it stays sharp offline.
+            let pixels = artworkImage.map { max($0.size.width * $0.scale, $0.size.height * $0.scale) } ?? 0
+            let isLowRes = artworkImage != nil && pixels < 1000
             await MainActor.run {
                 guard lastLoadedVideoId == videoId else { return }
                 if let artworkImage {
                     publishArtwork(artworkImage)
+                    if isLowRes, DownloadManager.shared.isOnline {
+                        let thumb = queueSongs.first { $0.videoId == videoId }?.thumbnailUrl
+                        loadThumbnailFromCDN(videoId: videoId, thumbnailUrl: thumb)
+                        DownloadManager.shared.refreshEmbeddedArtwork(videoId: videoId, thumbnailUrl: thumb)
+                    }
                 } else {
                     loadThumbnailFromCDN(videoId: videoId)
                 }
@@ -475,21 +485,7 @@ final class NowPlaying {
     private func loadThumbnailFromCDN(videoId: String, thumbnailUrl: String? = nil) {
         // Best source first: the track's own artwork upgraded to full
         // resolution, then ytimg step-downs, then the guaranteed hqdefault.
-        var candidates: [String] = []
-        if let upgraded = ArtworkURLs.highRes(thumbnailUrl) {
-            if let maxRes = ArtworkURLs.maxResVariant(upgraded) {
-                candidates.append(maxRes)
-            }
-            if let standard = ArtworkURLs.sdVariant(upgraded) {
-                candidates.append(standard)
-            }
-            candidates.append(upgraded)
-        }
-        let fallback = Self.artworkURL(for: videoId)
-        if !candidates.contains(fallback) {
-            candidates.append(fallback)
-        }
-        let urls = candidates.compactMap(URL.init(string:))
+        let urls = ArtworkURLs.candidates(videoId: videoId, thumbnailUrl: thumbnailUrl)
         guard !urls.isEmpty else {
             thumbnailUIImage = nil
             thumbnailImage = Image(systemName: "music.note")
