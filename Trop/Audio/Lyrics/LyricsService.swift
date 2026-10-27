@@ -25,6 +25,8 @@ struct LyricLine: Identifiable, Equatable, Sendable, Codable {
     var words: [LyricWord]? = nil
     /// Background vocals (TTML x-bg spans), shown small under the line.
     var backgroundText: String? = nil
+    /// Translation supplied by the provider (TTML x-translation).
+    var translation: String? = nil
 
     static let placeholder = LyricLine(text: "♪", startTime: nil)
 
@@ -51,7 +53,8 @@ struct LyricLine: Identifiable, Equatable, Sendable, Codable {
                 text: line.text,
                 startTime: line.startTime.map { $0 * factor },
                 words: line.words?.map { LyricWord(text: $0.text, start: $0.start * factor, end: $0.end * factor) },
-                backgroundText: line.backgroundText
+                backgroundText: line.backgroundText,
+                translation: line.translation
             )
             copy.id = line.id
             return copy

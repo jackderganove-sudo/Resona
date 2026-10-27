@@ -41,6 +41,23 @@ enum PlayerBackgroundStyle: String, CaseIterable, Identifiable, SettingsOption {
     }
 }
 
+/// How the current lyric line is animated.
+enum LyricsAnimationStyle: String, CaseIterable, Identifiable, SettingsOption {
+    case karaoke
+    case line
+    case still
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .karaoke: return "Karaoke word by word"
+        case .line: return "Line only"
+        case .still: return "Static"
+        }
+    }
+}
+
 enum LyricsAlignment: String, CaseIterable, Identifiable, SettingsOption {
     case left
     case center
@@ -245,6 +262,15 @@ final class SettingsStore {
         didSet { Self.defaults.set(removeDeletedPlaylistSongs, forKey: Keys.removeDeletedPlaylistSongs) }
     }
 
+    var lyricsAnimationStyle: LyricsAnimationStyle {
+        didSet { Self.defaults.set(lyricsAnimationStyle.rawValue, forKey: Keys.lyricsAnimationStyle) }
+    }
+
+    /// Show the provider's translation under each line.
+    var showLyricsTranslation: Bool {
+        didSet { Self.defaults.set(showLyricsTranslation, forKey: Keys.showLyricsTranslation) }
+    }
+
     /// Crossfade length between songs in seconds (0 = off).
     var crossfadeSeconds: Double {
         didSet { Self.defaults.set(crossfadeSeconds, forKey: Keys.crossfadeSeconds) }
@@ -398,6 +424,8 @@ final class SettingsStore {
         static let showAudioDetails = "resona.showAudioDetails"
         static let crossfadeSeconds = "resona.crossfadeSeconds"
         static let removeDeletedPlaylistSongs = "resona.removeDeletedPlaylistSongs"
+        static let lyricsAnimationStyle = "resona.lyricsAnimationStyle"
+        static let showLyricsTranslation = "resona.showLyricsTranslation"
         static let autoplaySimilar = "settings.autoplaySimilar"
         static let persistQueue = "settings.persistQueue"
         static let lastRadioStyle = "settings.lastRadioStyle"
@@ -468,6 +496,8 @@ final class SettingsStore {
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)
         removeDeletedPlaylistSongs = Self.load(Keys.removeDeletedPlaylistSongs, default: false)
+        lyricsAnimationStyle = Self.loadEnum(Keys.lyricsAnimationStyle, default: LyricsAnimationStyle.karaoke)
+        showLyricsTranslation = Self.load(Keys.showLyricsTranslation, default: true)
         autoplaySimilar = Self.load(Keys.autoplaySimilar, default: true)
         persistQueue = Self.load(Keys.persistQueue, default: false)
         lastRadioStyle = Self.loadEnum(Keys.lastRadioStyle, default: .similar)

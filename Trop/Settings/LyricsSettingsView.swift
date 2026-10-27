@@ -53,6 +53,16 @@ struct LyricsSettingsView: View {
             }
 
             M3Section {
+                SettingsPickerRow("Animation", icon: "sparkles", selection: $settings.lyricsAnimationStyle)
+                SettingsToggleRow("Show translation", icon: "character.bubble", isOn: $settings.showLyricsTranslation)
+                SettingsToggleRow("Show romanization", icon: "globe", isOn: $settings.romanizeCurrentTrack)
+            } header: {
+                Text("Display")
+            } footer: {
+                Text("Translations appear when the lyrics source provides them (e.g. Better Lyrics, YouLyPlus).")
+            }
+
+            M3Section {
                 if SpotifyAccountStore.shared.isLoggedIn {
                     Label("Spotify account connected", systemImage: "checkmark.circle")
                 } else {

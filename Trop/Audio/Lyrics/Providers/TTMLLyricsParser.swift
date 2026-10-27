@@ -68,8 +68,10 @@ enum TTMLLyricsParser {
 
         private var inBackground: Bool { spans.contains { $0.role == "x-bg" } }
         private var inIgnored: Bool {
-            spans.contains { ["x-translation", "x-roman", "x-romanization", "x-transliteration"].contains($0.role ?? "") }
+            spans.contains { ["x-roman", "x-romanization", "x-transliteration"].contains($0.role ?? "") }
         }
+        private var inTranslation: Bool { spans.contains { $0.role == "x-translation" } }
+        private var translation = ""
 
         func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?,
                     qualifiedName qName: String?, attributes: [String: String] = [:]) {
@@ -81,6 +83,7 @@ enum TTMLLyricsParser {
                 lineBegin = TTMLLyricsParser.time(attributes["begin"])
                 lineText = ""
                 background = ""
+                translation = ""
                 words = []
                 spans = []
             case "span" where inLine:
@@ -97,6 +100,10 @@ enum TTMLLyricsParser {
 
         func parser(_ parser: XMLParser, foundCharacters string: String) {
             guard inLine, !inIgnored else { return }
+            if inTranslation {
+                translation += string
+                return
+            }
             if inBackground {
                 background += string
                 return
@@ -117,7 +124,7 @@ enum TTMLLyricsParser {
             switch local(elementName) {
             case "span" where inLine:
                 guard let frame = spans.popLast() else { return }
-                guard !inBackground, !inIgnored, frame.role != "x-bg",
+                guard !inBackground, !inIgnored, !inTranslation, frame.role != "x-bg", frame.role != "x-translation",
                       let begin = frame.begin, !frame.text.isEmpty, !frame.hasChildSpans else { return }
                 words.append(LyricWord(text: frame.text, start: begin, end: frame.end ?? begin))
                 lineText += frame.text
@@ -133,7 +140,11 @@ enum TTMLLyricsParser {
                     text: text,
                     startTime: start,
                     words: words.count > 1 ? trimmedWords() : nil,
-                    backgroundText: bg.isEmpty ? nil : bg
+                    backgroundText: bg.isEmpty ? nil : bg,
+                    translation: {
+                        let t = translation.trimmingCharacters(in: .whitespacesAndNewlines)
+                        return t.isEmpty ? nil : t
+                    }()
                 ))
             case "body":
                 inBody = false

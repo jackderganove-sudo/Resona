@@ -580,5 +580,13 @@
   "Delete all downloads?": "Delete all downloads?",
   "All downloaded songs are removed from this device. They stay in your library and stream again when online.": "All downloaded songs are removed from this device. They stay in your library and stream again when online.",
   "Images": "Images",
-  "Streams & Canvas": "Streams & Canvas"
+  "Streams & Canvas": "Streams & Canvas",
+  "Karaoke word by word": "Karaoke word by word",
+  "Line only": "Line only",
+  "Static": "Static",
+  "Animation": "Animation",
+  "Show translation": "Show translation",
+  "Show romanization": "Show romanization",
+  "Display": "Display",
+  "Translations appear when the lyrics source provides them (e.g. Better Lyrics, YouLyPlus).": "Translations appear when the lyrics source provides them (e.g. Better Lyrics, YouLyPlus)."
 }

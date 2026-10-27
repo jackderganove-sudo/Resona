@@ -57,6 +57,8 @@ struct LyricsStage<Accessory: View>: View {
     @State private var dragStart: CGFloat?
     @Environment(\.displayScale) private var displayScale
     private let debug = LyricsDebugOptions.shared
+    @Environment(SettingsStore.self) private var settings
+    private var style: LyricsAnimationStyle { settings.lyricsAnimationStyle }
     @State private var isManual = false
     @GestureState private var isTouching = false
     @State private var resumeTask: Task<Void, Never>?
@@ -148,7 +150,7 @@ struct LyricsStage<Accessory: View>: View {
         if !hasPositioned {
             scroller.jump(to: target, reason: .initial)
             hasPositioned = true
-        } else if debug.scrollAnimationOff {
+        } else if debug.scrollAnimationOff || style == .still {
             if abs(target - scroller.target) > 0.5 { scroller.jump(to: target, reason: reason) }
         } else {
             scroller.animate(to: target, reason: reason)
@@ -216,11 +218,25 @@ struct LyricsStage<Accessory: View>: View {
         return VStack(alignment: horizontalAlignment, spacing: 4) {
             // Same view and layout for every row; becoming active only
             // switches the renderer on (no identity or height change).
-            KaraokeLine(line: line, nextStart: nextStart(after: index), isActive: isActive, fontSize: fontSize, alignment: alignment)
+            KaraokeLine(
+                line: line,
+                nextStart: nextStart(after: index),
+                // "Line only" / "Static": no word-by-word highlight.
+                isActive: isActive && style == .karaoke,
+                fontSize: fontSize,
+                alignment: alignment
+            )
             if let roman = romanized(index), !roman.isEmpty, !Self.sameText(roman, line.text) {
                 Text(roman)
                     .font(.system(size: max(12, fontSize * 0.55), weight: .semibold))
                     .foregroundStyle(.white.opacity(isActive ? 0.8 : 0.6))
+                    .multilineTextAlignment(alignment.multilineTextAlignment)
+            }
+            if settings.showLyricsTranslation, let translation = line.translation, !translation.isEmpty,
+               !Self.sameText(translation, line.text) {
+                Text(translation)
+                    .font(.system(size: max(13, fontSize * 0.55), weight: .medium))
+                    .foregroundStyle(.white.opacity(isActive ? 0.75 : 0.55))
                     .multilineTextAlignment(alignment.multilineTextAlignment)
             }
             if let background = line.backgroundText, !background.isEmpty {
@@ -247,7 +263,7 @@ struct LyricsStage<Accessory: View>: View {
         .animation(.easeOut(duration: isActive ? 0.18 : 0.42)) { content in
             content
                 .opacity(isActive ? 1 : opacity(distance: distance))
-                .blur(radius: isActive || isManual || debug.blurOff || distance > 10 ? 0 : blur(rel: rel))
+                .blur(radius: isActive || isManual || debug.blurOff || style == .still || distance > 10 ? 0 : blur(rel: rel))
         }
         .contentShape(Rectangle())
         .onTapGesture { onSeek(line); resume() }
