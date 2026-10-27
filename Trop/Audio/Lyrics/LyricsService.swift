@@ -15,7 +15,9 @@ struct LyricWord: Equatable, Sendable {
 }
 
 struct LyricLine: Identifiable, Equatable, Sendable {
-    let id = UUID()
+    /// Replaced by `LyricLine.stable(_:)` before display: a UUID per
+    /// construction made every reload look like brand-new rows to SwiftUI.
+    var id: String = UUID().uuidString
     let text: String
     let startTime: TimeInterval?
     /// Real word timings when the provider supplies them (enhanced LRC);
@@ -23,6 +25,22 @@ struct LyricLine: Identifiable, Equatable, Sendable {
     var words: [LyricWord]? = nil
 
     static let placeholder = LyricLine(text: "♪", startTime: nil)
+
+    /// Deterministic IDs from position + timestamp — unique even for
+    /// identical refrain lines, identical across reloads of the same lyrics.
+    static func stable(_ lines: [LyricLine]) -> [LyricLine] {
+        lines.enumerated().map { index, line in
+            var copy = line
+            let time = line.startTime.map { String(format: "%.3f", $0) } ?? "-"
+            copy.id = "\(index)@\(time)"
+            return copy
+        }
+    }
+
+    /// Same text, timing and words (ignores the id).
+    func sameContent(as other: LyricLine) -> Bool {
+        text == other.text && startTime == other.startTime && words == other.words
+    }
 }
 
 @MainActor

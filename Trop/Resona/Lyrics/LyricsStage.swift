@@ -185,14 +185,9 @@ struct LyricsStage<Accessory: View>: View {
         let distance = abs(rel)
 
         return VStack(alignment: horizontalAlignment, spacing: 4) {
-            Group {
-                if isActive {
-                    ActiveKaraokeLine(line: line, nextStart: nextStart(after: index), fontSize: fontSize, alignment: alignment)
-                } else {
-                    LyricsLineText(text: line.text, fontSize: fontSize, alignment: alignment)
-                        .foregroundStyle(.white)
-                }
-            }
+            // Same view and layout for every row; becoming active only
+            // switches the renderer on (no identity or height change).
+            KaraokeLine(line: line, nextStart: nextStart(after: index), isActive: isActive, fontSize: fontSize, alignment: alignment)
             if let roman = romanized(index), !roman.isEmpty, !Self.sameText(roman, line.text) {
                 Text(roman)
                     .font(.system(size: max(12, fontSize * 0.55), weight: .semibold))
@@ -210,10 +205,13 @@ struct LyricsStage<Accessory: View>: View {
         .frame(maxWidth: .infinity, alignment: Alignment(horizontal: horizontalAlignment, vertical: .center))
         .padding(.horizontal, 28)
         .padding(.vertical, fontSize * 0.36)
-        .opacity(isActive ? 1 : opacity(distance: distance))
-        .blur(radius: isActive || isManual || distance > 10 ? 0 : blur(rel: rel))
-        .animation(.easeOut(duration: isActive ? 0.18 : 0.42), value: isActive)
-        .animation(.easeOut(duration: 0.25), value: isManual)
+        // Scoped: only opacity/blur animate here. Positions are moved
+        // exclusively by the stage's single offset spring.
+        .animation(.easeOut(duration: isActive ? 0.18 : 0.42)) { content in
+            content
+                .opacity(isActive ? 1 : opacity(distance: distance))
+                .blur(radius: isActive || isManual || distance > 10 ? 0 : blur(rel: rel))
+        }
         .contentShape(Rectangle())
         .onTapGesture { onSeek(line); resume() }
         .accessibilityAddTraits(.isButton)
@@ -356,7 +354,8 @@ private struct InterludeDots: View {
     @Environment(SettingsStore.self) private var settings
 
     var body: some View {
-        TimelineView(.animation(paused: !np.isPlaying)) { _ in
+        // Inactive rows: paused timeline, renderer without words = plain.
+        TimelineView(.animation(paused: !isActive || !np.isPlaying)) { _ in
             let t = PlaybackClock.shared.now() + settings.lyricsOffsetSeconds
             let visible = t >= gap.start - 0.1 && t < gap.end
             let duration = max(0.5, gap.end - gap.start)
@@ -410,9 +409,10 @@ private struct WordIndexAttribute: TextAttribute {
     let index: Int
 }
 
-private struct ActiveKaraokeLine: View {
+private struct KaraokeLine: View {
     let line: LyricLine
     let nextStart: TimeInterval?
+    let isActive: Bool
     let fontSize: Double
     let alignment: LyricsAlignment
 
@@ -433,8 +433,8 @@ private struct ActiveKaraokeLine: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(.white)
                 .textRenderer(KaraokeRenderer(
-                    time: PlaybackClock.shared.now() + settings.lyricsOffsetSeconds,
-                    words: words
+                    time: isActive ? PlaybackClock.shared.now() + settings.lyricsOffsetSeconds : 0,
+                    words: isActive ? words : []
                 ))
         }
     }

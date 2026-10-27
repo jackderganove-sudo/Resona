@@ -21,6 +21,7 @@ struct LyricsView<ProgressSlider: View>: View {
     @ViewBuilder var progressSlider: () -> ProgressSlider
 
     @State private var lines: [LyricLine] = []
+    @State private var loadedVideoId: String?
     /// Index of the line being sung; -1 before the first line (intro).
     @State private var activeIndex: Int = -1
     /// Line the list glides to — `LyricsTiming.scrollLead` ahead (same clock).
@@ -396,11 +397,15 @@ struct LyricsView<ProgressSlider: View>: View {
             lines = []
             return
         }
-        lines = []
-        instrumentalGaps = []
-        activeIndex = -1
-        scrollIndex = -1
-        isLoading = true
+        // A reload for the same song (refresh signal, view re-appearing)
+        // keeps the existing rows; only a different song clears them.
+        if loadedVideoId != videoId {
+            lines = []
+            instrumentalGaps = []
+            activeIndex = -1
+            scrollIndex = -1
+        }
+        isLoading = lines.isEmpty
         LyricsState.shared.providerName = nil
         defer { isLoading = false }
 
@@ -409,9 +414,12 @@ struct LyricsView<ProgressSlider: View>: View {
             let result = try await LyricsService.shared.fetchLyrics(videoId: videoId)
             guard !result.isEmpty else { return }
             let withoutMarkers = result.filter { !Self.isInstrumentalMarker($0) }
-            withAnimation(M3Motion.defaultEffects) {
-                lines = withoutMarkers.isEmpty ? result : withoutMarkers
+            let fresh = LyricLine.stable(withoutMarkers.isEmpty ? result : withoutMarkers)
+            let unchanged = fresh.count == lines.count && zip(fresh, lines).allSatisfy { $0.sameContent(as: $1) }
+            if !unchanged {
+                withAnimation(M3Motion.defaultEffects) { lines = fresh }
             }
+            loadedVideoId = videoId
             instrumentalGaps = detectGaps(in: result)
             updateActiveLine()
             await rebuildRomanization()
