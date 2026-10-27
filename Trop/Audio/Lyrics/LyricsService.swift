@@ -201,6 +201,12 @@ actor LyricsService {
         }
     }
 
+    /// Settings → Storage → clear lyrics cache.
+    func clearMemoryCache() {
+        cache.removeAll()
+        providerNames.removeAll()
+    }
+
     // MARK: - Manual Manipulations (edit / refetch / search selection / copy)
 
     /// Raw text of the active lyrics for the editor.

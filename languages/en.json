@@ -572,5 +572,13 @@
   "Adjusted to sped-up version (%@)": "Adjusted to sped-up version (%@)",
   "Remove songs deleted from playlists": "Remove songs deleted from playlists",
   "Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically.": "Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically.",
-  "Play mix": "Play mix"
+  "Play mix": "Play mix",
+  "In memory": "In memory",
+  "Cache": "Cache",
+  "Clearing caches never touches your downloads; images and lyrics are loaded again when needed.": "Clearing caches never touches your downloads; images and lyrics are loaded again when needed.",
+  "Delete all downloads": "Delete all downloads",
+  "Delete all downloads?": "Delete all downloads?",
+  "All downloaded songs are removed from this device. They stay in your library and stream again when online.": "All downloaded songs are removed from this device. They stay in your library and stream again when online.",
+  "Images": "Images",
+  "Streams & Canvas": "Streams & Canvas"
 }

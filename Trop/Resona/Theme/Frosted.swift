@@ -107,6 +107,10 @@ final class BlurredImageCache: @unchecked Sendable {
         cache.countLimit = 120
     }
 
+    func removeAll() {
+        cache.removeAllObjects()
+    }
+
     func cached(_ key: String) -> UIImage? {
         cache.object(forKey: key as NSString)
     }

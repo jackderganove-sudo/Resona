@@ -11,6 +11,8 @@ struct DownloadSettingsView: View {
     @ObservedObject private var downloadManager = DownloadManager.shared
     @State private var storageBytes: Int64 = 0
     @State private var trackCount = 0
+    @State private var cacheSizes: [StorageMaintenance.Area: Int64?] = [:]
+    @State private var confirmDeleteAll = false
 
     private var storageLabel: String {
         ByteCountFormatter.string(fromByteCount: storageBytes, countStyle: .file)
@@ -35,12 +37,61 @@ struct DownloadSettingsView: View {
             } footer: {
                 Text("Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically.")
             }
+
+            M3Section {
+                ForEach(StorageMaintenance.Area.allCases) { area in
+                    HStack(spacing: 12) {
+                        Label(Self.title(area), systemImage: Self.icon(area))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(cacheSizes[area].flatMap { $0 }.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? String(localized: "In memory"))
+                            .font(.m3(.bodyMedium))
+                            .foregroundStyle(m3.onSurfaceVariant)
+                        Button("Clear") {
+                            Task {
+                                await StorageMaintenance.clear(area)
+                                await refreshCacheSizes()
+                            }
+                        }
+                        .buttonStyle(.m3Tonal)
+                    }
+                }
+            } header: {
+                Text("Cache")
+            } footer: {
+                Text("Clearing caches never touches your downloads; images and lyrics are loaded again when needed.")
+            }
+
+            M3Section {
+                Button(role: .destructive) {
+                    confirmDeleteAll = true
+                } label: {
+                    Label("Delete all downloads", systemImage: "trash")
+                        .foregroundStyle(m3.error)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .disabled(downloadManager.tracks.isEmpty)
+            }
         }
         .navigationTitle("Download Settings")
         .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
-        .task { await refreshStats() }
+        .task {
+            await refreshStats()
+            await refreshCacheSizes()
+        }
+        .confirmationDialog("Delete all downloads?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
+            Button("Delete all downloads", role: .destructive) {
+                Task {
+                    await StorageMaintenance.deleteAllDownloads()
+                    await refreshStats()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("All downloaded songs are removed from this device. They stay in your library and stream again when online.")
+        }
         .onChange(of: downloadManager.persistedDownloadCount) { _, _ in
             Task { await refreshStats() }
         }
@@ -61,6 +112,30 @@ struct DownloadSettingsView: View {
             Spacer(minLength: 0)
         }
         .padding(.vertical, 8)
+    }
+
+    private func refreshCacheSizes() async {
+        var sizes: [StorageMaintenance.Area: Int64?] = [:]
+        for area in StorageMaintenance.Area.allCases {
+            sizes[area] = await StorageMaintenance.size(of: area)
+        }
+        cacheSizes = sizes
+    }
+
+    private static func title(_ area: StorageMaintenance.Area) -> LocalizedStringKey {
+        switch area {
+        case .images: "Images"
+        case .lyrics: "Lyrics"
+        case .streams: "Streams & Canvas"
+        }
+    }
+
+    private static func icon(_ area: StorageMaintenance.Area) -> String {
+        switch area {
+        case .images: "photo"
+        case .lyrics: "quote.bubble"
+        case .streams: "dot.radiowaves.left.and.right"
+        }
     }
 
     private func refreshStats() async {
