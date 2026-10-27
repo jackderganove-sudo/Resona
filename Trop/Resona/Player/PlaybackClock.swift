@@ -53,12 +53,13 @@ final class PlaybackClock: @unchecked Sendable {
         // Seed from the player state so the very first frames (e.g. lyrics
         // opened mid-song) read the right position instead of a stale or
         // zero sample; the first real sample follows within 33 ms.
-        let np = NowPlaying.shared
+        let position = NowPlaying.shared.currentTime
+        let playing = NowPlaying.shared.isPlaying
         lock.withLock {
-            $0.position = np.currentTime
+            $0.position = position
             $0.host = CACurrentMediaTime()
-            $0.playing = np.isPlaying
-            $0.lastReported = np.currentTime
+            $0.playing = playing
+            $0.lastReported = position
         }
         controller = PlayerController.shared
         let t = DispatchSource.makeTimerSource(queue: queue)
