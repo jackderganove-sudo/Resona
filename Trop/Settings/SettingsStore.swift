@@ -239,6 +239,12 @@ final class SettingsStore {
         didSet { Self.defaults.set(showAudioDetails, forKey: Keys.showAudioDetails) }
     }
 
+    /// Downloaded playlists: delete songs locally that were removed from the
+    /// playlist on YouTube Music.
+    var removeDeletedPlaylistSongs: Bool {
+        didSet { Self.defaults.set(removeDeletedPlaylistSongs, forKey: Keys.removeDeletedPlaylistSongs) }
+    }
+
     /// Crossfade length between songs in seconds (0 = off).
     var crossfadeSeconds: Double {
         didSet { Self.defaults.set(crossfadeSeconds, forKey: Keys.crossfadeSeconds) }
@@ -391,6 +397,7 @@ final class SettingsStore {
         static let playerBackgroundBrightness = "resona.playerBackgroundBrightness"
         static let showAudioDetails = "resona.showAudioDetails"
         static let crossfadeSeconds = "resona.crossfadeSeconds"
+        static let removeDeletedPlaylistSongs = "resona.removeDeletedPlaylistSongs"
         static let autoplaySimilar = "settings.autoplaySimilar"
         static let persistQueue = "settings.persistQueue"
         static let lastRadioStyle = "settings.lastRadioStyle"
@@ -460,6 +467,7 @@ final class SettingsStore {
         playerBackgroundBrightness = Self.load(Keys.playerBackgroundBrightness, default: 1.0)
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)
+        removeDeletedPlaylistSongs = Self.load(Keys.removeDeletedPlaylistSongs, default: false)
         autoplaySimilar = Self.load(Keys.autoplaySimilar, default: true)
         persistQueue = Self.load(Keys.persistQueue, default: false)
         lastRadioStyle = Self.loadEnum(Keys.lastRadioStyle, default: .similar)

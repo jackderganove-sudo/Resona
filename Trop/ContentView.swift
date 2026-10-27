@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var scrollState = MiniPlayerScrollState()
     private let accountMenu = AccountMenuState.shared
     private let updates = UpdateChecker.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     /// 0 = collapsed (mini player), 1 = full player.
     @State private var expansion: CGFloat = 0
@@ -92,6 +93,11 @@ struct ContentView: View {
         .onAppear {
             AppRouter.shared.selectedTabIndex = selectedTab.rawValue
             updates.checkIfDue()
+        }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            // Downloaded playlists: new songs are fetched in the foreground
+            // (at most every 4 h).
+            if phase == .active { PlaylistDownloadRefresher.shared.refreshIfDue() }
         }
         .animation(M3Motion.defaultSpatial, value: updates.available)
         .animation(M3Motion.defaultSpatial, value: updates.bannerDismissed)

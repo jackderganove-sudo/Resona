@@ -125,6 +125,8 @@ struct MediaDetailActions: View {
     var onSecondary: (() -> Void)?
     /// Songs for the header download button (playlists, albums).
     var downloadSongs: [SongItem]?
+    /// YouTube playlist id/title for automatic updates of the download.
+    var downloadCollection: (id: String, title: String)?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -147,7 +149,7 @@ struct MediaDetailActions: View {
                 .buttonStyle(MorphPressStyle())
             }
             if let downloadSongs, !downloadSongs.isEmpty {
-                CollectionDownloadButton(songs: downloadSongs)
+                CollectionDownloadButton(songs: downloadSongs, collection: downloadCollection)
             }
             if let secondaryIcon, let onSecondary {
                 circle(secondaryIcon, label: secondaryLabel, action: onSecondary)

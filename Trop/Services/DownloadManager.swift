@@ -79,7 +79,7 @@ final class DownloadManager: ObservableObject {
         Task { await reload() }
     }
 
-    private var isOnWiFi: Bool {
+    var isOnWiFi: Bool {
         // Until the first path update arrives, don't block downloads.
         guard let currentPath else { return true }
         return currentPath.usesInterfaceType(.wifi) == true

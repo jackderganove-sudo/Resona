@@ -29,10 +29,11 @@ struct DownloadSettingsView: View {
                 SettingsToggleRow("Wi-Fi Only", icon: "wifi", isOn: $settings.wifiOnlyDownloads)
                 SettingsToggleRow("Auto-Download on Like", icon: "heart.fill", isOn: $settings.autoDownloadOnLike)
                 SettingsToggleRow("Auto-Download New Episodes", icon: "antenna.radiowaves.left.and.right", isOn: $settings.autoDownloadNewEpisodes)
+                SettingsToggleRow("Remove songs deleted from playlists", icon: "minus.circle", isOn: $settings.removeDeletedPlaylistSongs)
             } header: {
                 Text("Preferences")
             } footer: {
-                Text("Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data.")
+                Text("Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically.")
             }
         }
         .navigationTitle("Download Settings")

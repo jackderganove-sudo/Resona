@@ -569,5 +569,7 @@
   "Auto (%@)": "Auto (%@)",
   "Tempo set manually (%@)": "Tempo set manually (%@)",
   "Adjusted to slowed version (%@)": "Adjusted to slowed version (%@)",
-  "Adjusted to sped-up version (%@)": "Adjusted to sped-up version (%@)"
+  "Adjusted to sped-up version (%@)": "Adjusted to sped-up version (%@)",
+  "Remove songs deleted from playlists": "Remove songs deleted from playlists",
+  "Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically.": "Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically."
 }

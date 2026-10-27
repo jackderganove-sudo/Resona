@@ -94,6 +94,9 @@ struct CollectionDownloadButton: View {
     @ObservedObject private var manager = DownloadManager.shared
     let songs: [SongItem]
     var diameter: CGFloat = 52
+    /// YouTube playlist this button belongs to: downloading it registers the
+    /// playlist for automatic updates, removing the downloads unregisters it.
+    var collection: (id: String, title: String)?
 
     @State private var confirmRemove = false
 
@@ -106,6 +109,9 @@ struct CollectionDownloadButton: View {
                 confirmRemove = true
             } else {
                 manager.enqueue(songs)
+                if let collection {
+                    DownloadedPlaylistStore.shared.register(id: collection.id, title: collection.title, songIds: songs.map(\.videoId))
+                }
             }
         } label: {
             ZStack {
@@ -134,6 +140,7 @@ struct CollectionDownloadButton: View {
         .confirmationDialog("Remove downloads?", isPresented: $confirmRemove, titleVisibility: .visible) {
             Button("Remove Download", role: .destructive) {
                 Task { await manager.delete(videoIds: songs.map(\.videoId)) }
+                if let collection { DownloadedPlaylistStore.shared.unregister(id: collection.id) }
             }
             Button("Cancel", role: .cancel) {}
         } message: {

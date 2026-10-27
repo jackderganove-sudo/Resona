@@ -504,7 +504,8 @@ struct PlaylistDetailView: View {
                 onPlay: { playAll(playlist) },
                 secondaryIcon: "ellipsis",
                 onSecondary: { showMoreSheet = true },
-                downloadSongs: playlist.songs
+                downloadSongs: playlist.songs,
+                downloadCollection: playlist.playlistId.isEmpty ? nil : (playlist.playlistId, playlist.title)
             )
         }
         .sheet(isPresented: $showMoreSheet) {
