@@ -26,7 +26,7 @@ struct RadioOptionsSheet: View {
                     .pickerStyle(.segmented)
                     Text(LocalizedStringKey(options.style.description))
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.m3OnSurfaceVariant)
                 } header: {
                     Text("Sound")
                 }
@@ -37,7 +37,7 @@ struct RadioOptionsSheet: View {
                             Text(LocalizedStringKey("Tracks"))
                             Spacer()
                             Text("\(options.limit)")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.m3OnSurfaceVariant)
                         }
                     }
                     Toggle("Include explicit", isOn: $options.allowExplicit)
@@ -99,7 +99,7 @@ struct SimilarSongsView: View {
                     ProgressView()
                                 Text(LocalizedStringKey("Finding similar tracks…"))
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.m3OnSurfaceVariant)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if songs.isEmpty {

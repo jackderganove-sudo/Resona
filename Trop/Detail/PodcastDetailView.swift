@@ -469,7 +469,7 @@ struct PodcastDetailView: View {
                     Spacer().frame(height: 40)
                     Text("No episodes found")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.m3OnSurfaceVariant)
                 }
             } else {
                 episodeList(for: podcast)
@@ -495,13 +495,13 @@ struct PodcastDetailView: View {
                 Text(author)
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.m3OnSurfaceVariant)
             }
 
             if !podcast.episodes.isEmpty {
                 Text(L10n.episodes(podcast.episodes.count))
                     .font(.subheadline)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.m3Outline)
             }
 
             if let desc = podcast.descriptionText, !desc.isEmpty {
@@ -520,12 +520,12 @@ struct PodcastDetailView: View {
                         systemImage: viewModel.isSubscribed ? "bookmark.fill" : "bookmark"
                     )
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(viewModel.isSubscribed ? Color.accentColor : Color.primary)
+                    .foregroundStyle(viewModel.isSubscribed ? AnyShapeStyle(.m3Primary) : AnyShapeStyle(.m3OnSurface))
                     .padding(.horizontal, 20)
                     .frame(height: 44)
                     .background(
                         Capsule()
-                            .fill(Color(.secondarySystemGroupedBackground))
+                            .fill(.m3SurfaceContainerLow)
                     )
                 })
                 .buttonStyle(.plain)
@@ -534,9 +534,9 @@ struct PodcastDetailView: View {
                 Button(action: { showMoreSheet = true }, label: {
                     Text("⋮")
                         .font(.title3)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.m3OnSurface)
                         .frame(width: 48, height: 48)
-                        .background(Circle().fill(Color(.secondarySystemGroupedBackground)))
+                        .background(Circle().fill(.m3SurfaceContainerLow))
                 })
                 .buttonStyle(.plain)
                 .accessibilityLabel("More options")
@@ -694,7 +694,7 @@ private struct ExpandableDescriptionText: View {
     var body: some View {
         Text(styledText)
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.m3OnSurfaceVariant)
             .multilineTextAlignment(alignment)
             .onTapGesture {
                 if isTruncated {
@@ -710,7 +710,7 @@ private struct ExpandableDescriptionText: View {
         var str = AttributedString(displayText)
         guard isTruncated else { return str }
         var toggle = AttributedString(toggleLabel)
-        toggle.foregroundColor = .accentColor
+        toggle.foregroundColor = .m3Primary
         toggle.font = .caption.weight(.semibold)
         str.append(toggle)
         return str
@@ -752,7 +752,7 @@ private struct EpisodeRowView: View {
                     Text(episode.title)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.m3OnSurface)
                         .lineLimit(2)
                         .onTapGesture(perform: onTap)
 
@@ -771,12 +771,12 @@ private struct EpisodeRowView: View {
                         if downloadManager.isDownloaded(videoId: episode.videoId) {
                             Image(systemName: "arrow.down.circle.fill")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.m3OnSurfaceVariant)
                                 .accessibilityLabel("Downloaded")
                         }
                         Text(episode.metaLine)
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.m3Outline)
                             .lineLimit(1)
                     }
                     .onTapGesture(perform: onTap)
@@ -794,8 +794,8 @@ private struct EpisodeRowView: View {
             if hasResume {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color(.systemGray5))
-                        Capsule().fill(Color.accentColor)
+                        Capsule().fill(.m3SurfaceContainerHighest)
+                        Capsule().fill(.m3Primary)
                             .frame(width: max(4, geo.size.width * progress))
                     }
                 }

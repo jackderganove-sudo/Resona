@@ -469,7 +469,7 @@ struct PlaylistDetailView: View {
                     Spacer().frame(height: 40)
                     Text("No songs found")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.m3OnSurfaceVariant)
                 }
             } else {
                 songList(for: playlist)
@@ -680,7 +680,7 @@ struct AddSongToPlaylistView: View {
                                     if let artist = song.artistName {
                                         Text(artist)
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundStyle(.m3OnSurfaceVariant)
                                             .lineLimit(1)
                                     }
                                 }

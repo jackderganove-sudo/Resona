@@ -36,10 +36,10 @@ struct LyricsMenuSheet: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Show Interval Indicator")
                                         .font(.body)
-                                        .foregroundStyle(.primary)
+                                        .foregroundStyle(.m3OnSurface)
                                     Text("Shows a progress ring during long instrumental gaps")
                                         .font(.footnote)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(.m3OnSurfaceVariant)
                                 }
                             }
                         }
@@ -57,7 +57,7 @@ struct LyricsMenuSheet: View {
                                     .frame(width: 26)
                                 Text("Romanize Current Track")
                                     .font(.body)
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(.m3OnSurface)
                             }
                         }
                         .tint(settings.accentColor)
@@ -111,14 +111,14 @@ struct LyricsMenuSheet: View {
                     .foregroundStyle(settings.accentColor)
                 Text(LocalizedStringKey(label))
                     .font(.caption)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.m3OnSurface)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(.m3SurfaceContainerLow)
     }
 
     private func refetchLyrics() {
@@ -149,7 +149,7 @@ struct LyricsMenuSheet: View {
                     .frame(width: 26)
                 Text("Lyric Offset")
                     .font(.body)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.m3OnSurface)
                 Spacer()
                 offsetValueLabel
                     .font(.footnote)
@@ -169,7 +169,7 @@ struct LyricsMenuSheet: View {
         let v = settings.lyricsOffsetSeconds
         if v == 0 {
             Text("Off")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.m3OnSurfaceVariant)
         } else {
             formattedOffset(v)
         }
@@ -198,7 +198,7 @@ struct LyricsMenuSheet: View {
         }
 
         return Text("\(sign)\(magnitude)s")
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.m3OnSurfaceVariant)
     }
 
     private func trimmedDecimalString(_ v: Double) -> String {
@@ -242,7 +242,7 @@ struct LyricsOffsetSheet: View {
 
                     Text("s")
                         .font(.title3.weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.m3OnSurfaceVariant)
 
                     if settings.lyricsOffsetSeconds != 0 {
                         Button {
@@ -297,7 +297,7 @@ struct LyricsOffsetSheet: View {
                     Text("+3s")
                 }
                 .font(.footnote.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.m3OnSurfaceVariant)
                 .padding(.horizontal, 48)
             }
             .padding(24)
@@ -438,7 +438,7 @@ struct SearchLyricsSheet: View {
 
                     HStack(spacing: 16) {
                         Button("Cancel") { dismiss() }
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.m3OnSurfaceVariant)
                         Spacer()
                         Button("Search Online") { searchOnline() }
                         Button("Search") { search() }
@@ -465,7 +465,7 @@ struct SearchLyricsSheet: View {
                 } else if hasSearched {
                     Section {
                         Text("Lyrics not found")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.m3OnSurfaceVariant)
                             .frame(maxWidth: .infinity)
                     }
                 }
@@ -488,16 +488,16 @@ struct SearchLyricsSheet: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(result.previewText)
                         .font(.callout)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.m3OnSurface)
                         .lineLimit(isExpanded ? nil : 2)
                     HStack(spacing: 4) {
                         Text(result.providerName)
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.m3OnSurfaceVariant)
                         if result.isSynced {
                             Image(systemName: "arrow.triangle.2.circlepath")
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.m3OnSurfaceVariant)
                         }
                     }
                 }
@@ -507,7 +507,7 @@ struct SearchLyricsSheet: View {
                 } label: {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.m3OnSurfaceVariant)
                         .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }

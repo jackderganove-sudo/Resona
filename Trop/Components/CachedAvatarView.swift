@@ -26,10 +26,10 @@ struct CachedAvatarView: View {
             } else if failed || url == nil {
                 Image(systemName: "person.circle.fill")
                     .resizable()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.m3OnSurfaceVariant)
             } else {
                 ZStack {
-                    Color.gray.opacity(0.2)
+                    Rectangle().fill(.m3SurfaceContainerHighest)
                     ProgressView()
                 }
             }

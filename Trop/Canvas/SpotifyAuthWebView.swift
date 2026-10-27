@@ -41,7 +41,7 @@ struct SpotifyAuthWebView: View {
                     }
                 }
                 ToolbarItem(placement: .principal) {
-                    Text(currentHost).font(.caption).foregroundStyle(.secondary)
+                    Text(currentHost).font(.caption).foregroundStyle(.m3OnSurfaceVariant)
                 }
             }
             .alert("Error", isPresented: Binding(

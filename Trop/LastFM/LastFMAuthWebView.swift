@@ -71,9 +71,9 @@ struct LastFMAuthWebView: View {
                 }
                 ToolbarItem(placement: .principal) {
                     if let urlStr = authUrl, let host = URL(string: urlStr)?.host {
-                        Text(host).font(.caption).foregroundStyle(.secondary)
+                        Text(host).font(.caption).foregroundStyle(.m3OnSurfaceVariant)
                     } else {
-                        Text("last.fm").font(.caption).foregroundStyle(.secondary)
+                        Text("last.fm").font(.caption).foregroundStyle(.m3OnSurfaceVariant)
                     }
                 }
             }

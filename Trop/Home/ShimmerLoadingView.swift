@@ -15,7 +15,7 @@ struct ShimmerFill: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 30)) { timeline in
             let sweep = (shimmerPhase(at: timeline.date) * 2 - 1)
-            Color(.systemGray5)
+            Rectangle().fill(.m3SurfaceContainerHigh)
                 .overlay(
                     GeometryReader { geo in
                         let w = max(geo.size.width, 1)

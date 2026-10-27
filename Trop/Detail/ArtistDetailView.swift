@@ -362,7 +362,7 @@ struct ArtistDetailView: View {
     private var topBarCopyLinkButton: some View {
         topBarCircleButton(
             systemName: linkCopied ? "checkmark" : "link",
-            fadedColor: linkCopied ? Color.accentColor : .primary,
+            fadedColor: linkCopied ? Color.m3Primary : .primary,
             accessibilityLabel: linkCopied ? "Artist link copied" : "Copy artist link",
             action: { copyArtistLink() }
         )
@@ -449,7 +449,7 @@ struct ArtistDetailView: View {
                     Spacer().frame(height: 40)
                     Text("No content found")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.m3OnSurfaceVariant)
                 }
             }
         }
@@ -605,7 +605,7 @@ struct ArtistDetailView: View {
 
                         Text(song.duration.formattedDuration)
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.m3Outline)
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
@@ -669,13 +669,13 @@ struct ArtistDetailView: View {
                         Text(video.title)
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(.primary)
+                            .foregroundStyle(.m3OnSurface)
                             .lineLimit(2)
                             .frame(width: 200, alignment: .leading)
                         if !video.duration.formattedDuration.isEmpty {
                             Text(video.duration.formattedDuration)
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.m3OnSurfaceVariant)
                         }
                     }
                 })

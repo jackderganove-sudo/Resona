@@ -28,7 +28,7 @@ struct DownloadsView: View {
                 contentView
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(.m3Surface)
         .navigationTitle("Downloads")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await downloadManager.reload() }

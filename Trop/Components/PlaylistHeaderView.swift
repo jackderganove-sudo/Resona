@@ -26,7 +26,7 @@ struct PlaylistHeaderView: View {
         thumbnails: [String] = [],
         songCount: Int,
         duration: Int,
-        accentColor: Color = .accentColor,
+        accentColor: Color = .m3Primary,
         onPlay: @escaping () -> Void,
         onShuffle: @escaping () -> Void,
         onMore: (() -> Void)? = nil
@@ -63,12 +63,12 @@ struct PlaylistHeaderView: View {
             if let subtitle, !subtitle.isEmpty {
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.m3OnSurfaceVariant)
                     .multilineTextAlignment(.center)
             } else if songCount > 0 {
                 Text(metadataLine)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.m3OnSurfaceVariant)
                     .multilineTextAlignment(.center)
             }
         }

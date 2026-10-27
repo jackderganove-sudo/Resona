@@ -21,7 +21,7 @@ struct LoadingStateView: View {
             ProgressView()
             Text(LocalizedStringKey(message))
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.m3OnSurfaceVariant)
             Spacer()
         }
     }

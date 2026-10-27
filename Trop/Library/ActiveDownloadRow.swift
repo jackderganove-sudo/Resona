@@ -29,7 +29,7 @@ struct ActiveDownloadRow: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
+                .fill(.m3SurfaceContainerLow)
         )
         .task { await loadMetadata() }
     }
@@ -69,7 +69,7 @@ struct ActiveDownloadRow: View {
                 .lineLimit(1)
             Text(artist.isEmpty ? "Preparing download…" : artist)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.m3OnSurfaceVariant)
                 .lineLimit(1)
             ProgressView(value: progress)
                 .tint(settings.accentColor)
@@ -79,7 +79,7 @@ struct ActiveDownloadRow: View {
     private var downloadRing: some View {
         ZStack {
             Circle()
-                .fill(Color(.systemBackground))
+                .fill(.m3Surface)
                 .frame(width: 22, height: 22)
             Circle()
                 .trim(from: 0, to: progress)

@@ -30,19 +30,19 @@ struct CanvasSettingsView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(profile?.displayName ?? "Spotify Connected").font(.headline)
                             if let profile {
-                                Text("@\(profile.userId)").font(.subheadline).foregroundStyle(.secondary)
+                                Text("@\(profile.userId)").font(.subheadline).foregroundStyle(.m3OnSurfaceVariant)
                                 if let product = profile.product, !product.isEmpty {
-                                    Text("Spotify \(product.capitalized)").font(.caption).foregroundStyle(.secondary)
+                                    Text("Spotify \(product.capitalized)").font(.caption).foregroundStyle(.m3OnSurfaceVariant)
                                 }
                             } else {
-                                Text("Profile unavailable").font(.subheadline).foregroundStyle(.secondary)
+                                Text("Profile unavailable").font(.subheadline).foregroundStyle(.m3OnSurfaceVariant)
                             }
                         }
                         Spacer()
                         Button("Logout", role: .destructive, action: logout)
                             .buttonStyle(.m3Tonal)
                             .controlSize(.small)
-                            .tint(.red)
+                            .tint(.m3Error)
                     }
                     .padding(.vertical, 4)
 
@@ -53,14 +53,14 @@ struct CanvasSettingsView: View {
                     HStack(spacing: 14) {
                         Image(systemName: "person.crop.circle.badge.xmark")
                             .font(.system(size: 36))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.m3OnSurfaceVariant)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Not logged in").font(.headline)
-                            Text("Connect to enable Spotify Canvas").font(.caption).foregroundStyle(.secondary)
+                            Text("Connect to enable Spotify Canvas").font(.caption).foregroundStyle(.m3OnSurfaceVariant)
                             if let err = lastError {
                                 Text(err).font(.caption2).foregroundStyle(.red).lineLimit(2)
                             } else if isBusy {
-                                Text("Waiting for login…").font(.caption2).foregroundStyle(.secondary)
+                                Text("Waiting for login…").font(.caption2).foregroundStyle(.m3OnSurfaceVariant)
                             }
                         }
                         Spacer()

@@ -180,7 +180,7 @@ struct SongMenuSheet: View {
                     .foregroundStyle(settings.accentColor)
                 Text(LocalizedStringKey(label))
                     .font(.caption)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.m3OnSurface)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)

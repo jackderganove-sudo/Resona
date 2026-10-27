@@ -127,7 +127,7 @@ struct PlayerMenuSheet: View {
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(Color(.secondarySystemGroupedBackground))
+            .fill(.m3SurfaceContainerLow)
     }
 
     private var eqVolumeCard: some View {
@@ -204,7 +204,7 @@ struct PlayerMenuSheet: View {
                     .foregroundStyle(settings.accentColor)
                 Text(LocalizedStringKey(label))
                     .font(.caption)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.m3OnSurface)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
@@ -253,10 +253,10 @@ struct PlayerMenuSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("View Artist")
                         .font(.body)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.m3OnSurface)
                     Text(song.artistNamesDisplay)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.m3OnSurfaceVariant)
                         .lineLimit(1)
                 }
                 Spacer()
@@ -371,11 +371,11 @@ struct AddSongToPlaylistSheet: View {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(playlist.name)
-                                        .foregroundStyle(.primary)
+                                        .foregroundStyle(.m3OnSurface)
                                     if let count = playlist.remoteSongCount {
                                         Text(L10n.songs(count))
                                             .font(.footnote)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(.m3OnSurfaceVariant)
                                     }
                                 }
                                 Spacer()
@@ -475,7 +475,7 @@ struct SongDetailsView: View {
             }
             .padding(16)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(.m3Surface)
         .navigationTitle("Details")
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadMetadata() }
@@ -532,7 +532,7 @@ struct SongDetailsView: View {
         VStack(alignment: .leading, spacing: 0) {
             Text(LocalizedStringKey(title))
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.m3OnSurfaceVariant)
                 .padding(.horizontal, 16)
                 .padding(.bottom, 6)
             VStack(spacing: 0) {
@@ -540,7 +540,7 @@ struct SongDetailsView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color(.secondarySystemGroupedBackground))
+                    .fill(.m3SurfaceContainerLow)
             )
         }
     }
@@ -549,7 +549,7 @@ struct SongDetailsView: View {
         HStack(alignment: .top) {
             Text(LocalizedStringKey(label))
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.m3OnSurfaceVariant)
             Spacer(minLength: 16)
             Text(value.isEmpty ? "—" : value)
                 .font(monospaced ? .footnote.monospaced() : .callout)
@@ -592,7 +592,7 @@ private struct VolumeSlider: View {
             let width = max(0, geo.size.width)
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color(.tertiarySystemFill))
+                    .fill(.m3SurfaceContainerHighest)
                 Capsule()
                     .fill(accentColor)
                     .frame(width: max(16, width * value))

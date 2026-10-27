@@ -40,7 +40,7 @@ struct LastFMSettingsView: View {
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(username.isEmpty ? "Last.fm User" : username).font(.headline)
-                            Text(username.isEmpty ? "Connected to Last.fm" : "@\(username)").font(.subheadline).foregroundStyle(.secondary)
+                            Text(username.isEmpty ? "Connected to Last.fm" : "@\(username)").font(.subheadline).foregroundStyle(.m3OnSurfaceVariant)
                         }
                         Spacer()
                         Button("Logout", role: .destructive) {
@@ -52,7 +52,7 @@ struct LastFMSettingsView: View {
                         }
                         .buttonStyle(.m3Tonal)
                         .controlSize(.small)
-                        .tint(.red)
+                        .tint(.m3Error)
                     }
                     .padding(.vertical, 4)
 
@@ -63,14 +63,14 @@ struct LastFMSettingsView: View {
                     HStack(spacing: 14) {
                         Image(systemName: "person.crop.circle.badge.xmark")
                             .font(.system(size: 36))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.m3OnSurfaceVariant)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Not logged in").font(.headline)
-                            Text("Connect to enable scrobbling").font(.caption).foregroundStyle(.secondary)
+                            Text("Connect to enable scrobbling").font(.caption).foregroundStyle(.m3OnSurfaceVariant)
                             if let err = lastError {
                                 Text(err).font(.caption2).foregroundStyle(.red).lineLimit(2)
                             } else if isBusy {
-                                Text("Authorizing…").font(.caption2).foregroundStyle(.secondary)
+                                Text("Authorizing…").font(.caption2).foregroundStyle(.m3OnSurfaceVariant)
                             }
                         }
                         Spacer()
@@ -110,7 +110,7 @@ struct LastFMSettingsView: View {
                     HStack {
                         Text("Minimum Track Duration")
                         Spacer()
-                        Text(DurationFormat.shortDuration(minDuration)).foregroundStyle(.secondary)
+                        Text(DurationFormat.shortDuration(minDuration)).foregroundStyle(.m3OnSurfaceVariant)
                     }
                 }
                 .disabled(!scrobblingEnabled)
@@ -121,7 +121,7 @@ struct LastFMSettingsView: View {
                     HStack {
                         Text("Scrobble Percent")
                         Spacer()
-                        Text("\(Int(scrobbleDelayPercent*100))%").foregroundStyle(.secondary)
+                        Text("\(Int(scrobbleDelayPercent*100))%").foregroundStyle(.m3OnSurfaceVariant)
                     }
                 }
                 .disabled(!scrobblingEnabled)
@@ -132,7 +132,7 @@ struct LastFMSettingsView: View {
                     HStack {
                         Text("Scrobble Delay Limit")
                         Spacer()
-                        Text(DurationFormat.shortDuration(scrobbleDelaySeconds)).foregroundStyle(.secondary)
+                        Text(DurationFormat.shortDuration(scrobbleDelaySeconds)).foregroundStyle(.m3OnSurfaceVariant)
                     }
                 }
                 .disabled(!scrobblingEnabled)

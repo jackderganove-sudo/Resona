@@ -78,9 +78,9 @@ struct AsyncImageView: View {
         Image(systemName: "music.note")
             .resizable()
             .scaledToFit()
-            .foregroundColor(.secondary)
+            .foregroundStyle(.m3OnSurfaceVariant)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemGray6))
+            .background(.m3SurfaceContainerHigh)
     }
 }
 

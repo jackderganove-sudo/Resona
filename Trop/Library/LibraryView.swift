@@ -444,7 +444,7 @@ struct LibraryView: View {
             if let subtitle = info.subtitle {
                 Text(LocalizedStringKey(subtitle))
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.m3OnSurfaceVariant)
             }
         }
     }
@@ -466,7 +466,7 @@ struct LibraryView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             Text(title).lineLimit(1).font(.callout)
             if let subtitle {
-                Text(subtitle).font(.caption).foregroundColor(.secondary)
+                Text(subtitle).font(.caption).foregroundStyle(.m3OnSurfaceVariant)
             }
         }
     }
@@ -603,7 +603,7 @@ struct CreatePlaylistDialog: View {
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color(.systemGray6))
+                        .fill(.m3SurfaceContainerHigh)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -621,7 +621,7 @@ struct CreatePlaylistDialog: View {
                         .fontWeight(.medium)
                     Text("Syncs with your YouTube Music account. This cannot be changed later.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.m3OnSurfaceVariant)
                         .fixedSize(horizontal: false, vertical: true)
                         .lineLimit(2)
                 }
@@ -654,12 +654,12 @@ struct CreatePlaylistDialog: View {
                                 Button(action: { isPresented = false }, label: {
                     Text("Cancel")
                         .font(.body.weight(.medium))
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.m3OnSurface)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color(.systemGray6))
+                                .fill(.m3SurfaceContainerHigh)
                         )
                 })
                 .buttonStyle(.plain)
@@ -705,7 +705,7 @@ struct CreatePlaylistDialog: View {
         .frame(width: 320)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.systemBackground))
+                .fill(.m3Surface)
         )
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: .black.opacity(0.15), radius: 30, y: 10)

@@ -86,16 +86,18 @@ struct M3CorePalettes: Sendable {
         switch M3PaletteStyle.forSeed(chroma: lch.c) {
         case .tonalSpot:
             primary = TonalPalette(hue: hue, chroma: 0.086)
-            secondary = TonalPalette(hue: hue, chroma: 0.038)
+            secondary = TonalPalette(hue: hue, chroma: 0.050)
             tertiary = TonalPalette(hue: (hue + 60).truncatingRemainder(dividingBy: 360), chroma: 0.057)
-            neutral = TonalPalette(hue: hue, chroma: 0.0100)
-            neutralVariant = TonalPalette(hue: hue + 8, chroma: 0.0125)
+            // Surfaces visibly carry the cover hue app-wide (chips, bars,
+            // cards, menus, settings) — "vibrant" rather than near-grey.
+            neutral = TonalPalette(hue: hue, chroma: 0.0210)
+            neutralVariant = TonalPalette(hue: hue + 8, chroma: 0.0250)
         case .neutral:
             primary = TonalPalette(hue: hue, chroma: 0.030)
             secondary = TonalPalette(hue: hue, chroma: 0.020)
             tertiary = TonalPalette(hue: (hue + 60).truncatingRemainder(dividingBy: 360), chroma: 0.038)
-            neutral = TonalPalette(hue: hue, chroma: 0.0040)
-            neutralVariant = TonalPalette(hue: hue, chroma: 0.0050)
+            neutral = TonalPalette(hue: hue, chroma: 0.0080)
+            neutralVariant = TonalPalette(hue: hue, chroma: 0.0100)
         case .monochrome:
             primary = TonalPalette(hue: hue, chroma: 0)
             secondary = TonalPalette(hue: hue, chroma: 0)

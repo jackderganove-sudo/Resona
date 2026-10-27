@@ -16,7 +16,7 @@ struct AboutSettingsView: View {
                         Label("Version", systemImage: "info.circle")
                         Spacer()
                         Text(version)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.m3OnSurfaceVariant)
                     }
                 }
             }

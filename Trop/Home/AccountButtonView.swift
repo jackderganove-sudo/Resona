@@ -27,7 +27,7 @@ struct AccountButtonView: View {
 
     private var fallback: some View {
         Circle()
-            .fill(Color(.systemGray4))
+            .fill(.m3SurfaceContainerHighest)
             .frame(width: 28, height: 28)
             .overlay(
                 Text("T")
