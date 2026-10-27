@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.2",
+          "buildVersion": "53",
+          "date": "2026-10-27T22:40:49Z",
+          "localizedDescription": "- Settings: same header on every page, 'Wiedergabe' everywhere\n- Crossfade: explicit self in the ramp log closure\n- Crossfade: verified tail with the main player's options, detailed logs",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.2/Resona.ipa",
+          "size": 27931915,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.1",
           "buildVersion": "50",
           "date": "2026-10-27T21:50:24Z",
@@ -28,11 +37,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.1",
-      "versionDate": "2026-10-27T21:50:24Z",
-      "versionDescription": "- Lyrics: plain text instead of fake [00:00.00] timing, sync it yourself\n- Settings: hide the lyrics developer switches behind 7 taps on the version\n- Appearance: player style (large cover / small cover + lyrics), blur strength\n- Songtext settings: animation style, translation, romanization\n- Storage settings: delete all downloads, clear caches with sizes\n- iPad: queue, player menu and lyrics options as a side panel\n- Artists: chevron instead of play on cards, 'Play mix' on the artist page\n- Downloads: keep downloaded playlists up to date\n- Rename the player AirPlay button (clashed with Trop's AirPlayButton)\n- Lyrics: fix timing for slowed/sped-up versions, per-song tempo and offset\n- Playback: crossfade between songs (off / 1-12 s)\n- Lock screen / Control Center: like, shuffle, repeat, AirPlay, safer pauses\n- Auto releases on every main build, ESign/AltStore app source, update check\n- iPad: lyrics full screen with cover, controls and rest mode",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.1/Resona.ipa",
-      "size": 27921376,
+      "version": "0.8.2",
+      "versionDate": "2026-10-27T22:40:49Z",
+      "versionDescription": "- Settings: same header on every page, 'Wiedergabe' everywhere\n- Crossfade: explicit self in the ramp log closure\n- Crossfade: verified tail with the main player's options, detailed logs",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.2/Resona.ipa",
+      "size": 27931915,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
