@@ -39,6 +39,7 @@ struct ContentView: View {
                         NavigationRail(selection: $selectedTab, onReselect: popToRoot)
                         ZStack(alignment: .bottom) {
                             tabContent
+                            bottomScrim
                             bottomChrome(height: height, bottomInset: geo.safeAreaInsets.bottom)
                                 .frame(maxWidth: 640)
                                 .padding(.horizontal, 16)
@@ -46,6 +47,7 @@ struct ContentView: View {
                     }
                 } else {
                     tabContent
+                    bottomScrim
                     bottomChrome(height: height, bottomInset: geo.safeAreaInsets.bottom)
                         .padding(.horizontal, M3Metrics.navigationBarHorizontalPadding)
                 }
@@ -144,6 +146,27 @@ struct ContentView: View {
     }
 
     // MARK: Bottom chrome (mini player + bar)
+
+    /// Central counterpart of the bottom safe-area inset: scrolling content
+    /// fades into the surface before it reaches the floating mini player /
+    /// navigation bar instead of visibly running underneath them. (The inset
+    /// on every tab still guarantees the last row ends above the chrome.)
+    private var bottomScrim: some View {
+        LinearGradient(
+            stops: [
+                .init(color: m3.surface.opacity(0), location: 0),
+                .init(color: m3.surface.opacity(0.85), location: 0.45),
+                .init(color: m3.surface, location: 1)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(height: bottomContentInset + 24)
+        .ignoresSafeArea(edges: .bottom)
+        .allowsHitTesting(false)
+        .opacity(1 - min(1, expansion * 2.5))
+        .animation(M3Motion.navigationBar, value: miniPlayerVisible)
+    }
 
     private func bottomChrome(height: CGFloat, bottomInset: CGFloat) -> some View {
         VStack(spacing: 8) {
