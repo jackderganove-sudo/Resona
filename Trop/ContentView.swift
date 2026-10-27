@@ -39,7 +39,6 @@ struct ContentView: View {
                         NavigationRail(selection: $selectedTab, onReselect: popToRoot)
                         ZStack(alignment: .bottom) {
                             tabContent
-                            bottomScrim
                             bottomChrome(height: height, bottomInset: geo.safeAreaInsets.bottom)
                                 .frame(maxWidth: 640)
                                 .padding(.horizontal, 16)
@@ -47,7 +46,6 @@ struct ContentView: View {
                     }
                 } else {
                     tabContent
-                    bottomScrim
                     bottomChrome(height: height, bottomInset: geo.safeAreaInsets.bottom)
                         .padding(.horizontal, M3Metrics.navigationBarHorizontalPadding)
                 }
@@ -146,30 +144,6 @@ struct ContentView: View {
     }
 
     // MARK: Bottom chrome (mini player + bar)
-
-    /// Soft edge right at the top of the floating chrome (mini player, or
-    /// the navigation bar without one): content fades over a short band —
-    /// from ~20 pt above the top edge to ~28 pt below it — and then keeps
-    /// scrolling visibly behind the frosted glass. Nothing else is darkened;
-    /// the per-tab safe-area inset still lets the last row end above it.
-    private var bottomScrim: some View {
-        let chromeTop = bottomContentInset - 16
-        let above: CGFloat = 20, below: CGFloat = 28
-        return LinearGradient(
-            stops: [
-                .init(color: m3.surface.opacity(0), location: 0),
-                .init(color: m3.surface.opacity(0.55), location: above / (above + below)),
-                .init(color: m3.surface.opacity(0), location: 1)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .frame(height: above + below)
-        .padding(.bottom, max(0, chromeTop - below))
-        .allowsHitTesting(false)
-        .opacity(1 - min(1, expansion * 2.5))
-        .animation(M3Motion.navigationBar, value: miniPlayerVisible)
-    }
 
     private func bottomChrome(height: CGFloat, bottomInset: CGFloat) -> some View {
         VStack(spacing: 8) {
