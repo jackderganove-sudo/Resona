@@ -21,6 +21,17 @@ struct LyricsView<ProgressSlider: View>: View {
     @ViewBuilder var progressSlider: () -> ProgressSlider
 
     @State private var lines: [LyricLine] = []
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    /// iPad landscape split layout (own, larger lyrics size).
+    @State private var isSplit = false
+    @State private var chromeResting = false
+    @State private var chromeWakeToken = 0
+    /// Cover morph with the player (matchedGeometryEffect).
+    var coverNamespace: Namespace.ID?
+
+    private var lyricsFontSize: Double {
+        settings.lyricsFontSize * (isSplit ? 1.35 : 1)
+    }
     @State private var loadedVideoId: String?
     /// Index of the line being sung; -1 before the first line (intro).
     @State private var activeIndex: Int = -1
@@ -49,23 +60,27 @@ struct LyricsView<ProgressSlider: View>: View {
     private var isSynced: Bool { lines.contains { $0.startTime != nil } }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-                .padding(8)
-                .background {
-                    ResonaGlassBackground(shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+        GeometryReader { geo in
+            // iPad landscape: cover + controls left, big lyrics right.
+            let split = sizeClass == .regular && geo.size.width > geo.size.height && geo.size.width > 700
+            Group {
+                if split {
+                    splitLayout(size: geo.size)
+                } else {
+                    stackLayout
                 }
-                .padding(.horizontal, 12)
-                .padding(.top, 8)
-
-            lyricsBody
-                .layoutPriority(1)
-
-            controls
-                .padding(.horizontal, 28)
-                .padding(.bottom, 8)
+            }
+            .onChange(of: split, initial: true) { _, value in
+                isSplit = value
+                // The iPad can stand on a desk showing the lyrics.
+                UIApplication.shared.isIdleTimerDisabled = value
+                wakeChrome()
+            }
         }
         .simultaneousGesture(swipeBackGesture)
+        .simultaneousGesture(TapGesture().onEnded { wakeChrome() }, including: .all)
+        .task(id: chromeWakeToken) { await scheduleRest() }
+        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
         .sheet(isPresented: $showLyricsMenu) { LyricsMenuSheet() }
         .sheet(isPresented: $showManualSearch) {
             SearchLyricsSheet(
@@ -86,6 +101,100 @@ struct LyricsView<ProgressSlider: View>: View {
         .onChange(of: LyricsState.shared.refreshToken) { _, _ in
             Task { await loadLyrics() }
         }
+    }
+
+    // MARK: - Layouts
+
+    /// iPhone / portrait: header, lyrics, transport.
+    private var stackLayout: some View {
+        VStack(spacing: 0) {
+            header
+                .padding(8)
+                .background {
+                    ResonaGlassBackground(shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+
+            lyricsBody
+                .layoutPriority(1)
+
+            controls
+                .padding(.horizontal, 28)
+                .padding(.bottom, 8)
+        }
+    }
+
+    /// iPad landscape: large cover with title, progress and transport on the
+    /// left, lyrics in a larger size on the right. In "rest mode" (5 s
+    /// without touch) only cover and lyrics stay; a tap brings it all back.
+    private func splitLayout(size: CGSize) -> some View {
+        let column = min(size.width * 0.38, 520)
+        let cover = min(column - 16, size.height * 0.52)
+        return HStack(alignment: .center, spacing: 44) {
+            VStack(spacing: 22) {
+                Group {
+                    if let image = np.thumbnailUIImage {
+                        Image(uiImage: image).resizable().scaledToFill()
+                    } else {
+                        Color.white.opacity(0.12)
+                    }
+                }
+                .frame(width: cover, height: cover)
+                .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+                .shadow(color: .black.opacity(0.3), radius: 22, y: 10)
+                .modifier(CoverMatch(namespace: coverNamespace))
+
+                VStack(spacing: 4) {
+                    MarqueeText(text: np.title, font: .poppins(24, weight: .semibold), frameHeight: 34, textColor: .white)
+                    Text(np.displayArtist)
+                        .font(.poppins(18))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
+                }
+                .frame(width: cover)
+
+                controls
+                    .frame(width: cover)
+                    .opacity(chromeResting ? 0 : 1)
+                    .allowsHitTesting(!chromeResting)
+            }
+            .frame(width: column)
+
+            VStack(spacing: 0) {
+                HStack(spacing: 10) {
+                    Spacer()
+                    M3IconButton(systemName: "ellipsis", kind: .onDark, size: 44, iconSize: 16, accessibility: "Lyrics options") {
+                        showLyricsMenu = true
+                    }
+                    M3IconButton(systemName: "xmark", kind: .onDark, size: 44, iconSize: 16, accessibility: "Close lyrics") {
+                        withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
+                    }
+                }
+                .opacity(chromeResting ? 0 : 1)
+                .allowsHitTesting(!chromeResting)
+                lyricsBody
+                    .frame(maxHeight: .infinity)
+            }
+        }
+        .padding(.horizontal, 40)
+        .padding(.vertical, 24)
+        .animation(.easeInOut(duration: 0.6), value: chromeResting)
+    }
+
+    private func wakeChrome() {
+        if chromeResting {
+            withAnimation(.easeInOut(duration: 0.35)) { chromeResting = false }
+        }
+        chromeWakeToken &+= 1
+    }
+
+    /// Rest mode after 5 s without touch (split layout only).
+    private func scheduleRest() async {
+        guard isSplit else { return }
+        try? await Task.sleep(for: .seconds(5))
+        guard !Task.isCancelled, isSplit, !showLyricsMenu else { return }
+        chromeResting = true
     }
 
     // MARK: - Header
@@ -181,7 +290,7 @@ struct LyricsView<ProgressSlider: View>: View {
                     activeIndex: activeIndex,
                     scrollIndex: scrollIndex,
                     romanized: { romanization(for: $0) },
-                    fontSize: settings.lyricsFontSize,
+                    fontSize: lyricsFontSize,
                     alignment: settings.lyricsAlignment,
                     onSeek: { seek(to: $0) }
                 ) { _ in
@@ -192,7 +301,7 @@ struct LyricsView<ProgressSlider: View>: View {
         } else {
             // Unsynced lyrics: readable text, "Not synced" note, follows
             // the song slowly; no highlight that could run wrong.
-            UnsyncedLyricsView(lines: lines, fontSize: settings.lyricsFontSize, alignment: settings.lyricsAlignment) {
+            UnsyncedLyricsView(lines: lines, fontSize: lyricsFontSize, alignment: settings.lyricsAlignment) {
                 if let provider = LyricsState.shared.providerName {
                     providerLabel(provider)
                 }
@@ -538,5 +647,18 @@ private struct IntervalIndicatorView: View {
 extension Array {
     subscript(safe index: Int) -> Element? {
         indices.contains(index) ? self[index] : nil
+    }
+}
+
+/// matchedGeometryEffect for the cover when a namespace is provided.
+private struct CoverMatch: ViewModifier {
+    let namespace: Namespace.ID?
+
+    func body(content: Content) -> some View {
+        if let namespace {
+            content.matchedGeometryEffect(id: "player-cover", in: namespace)
+        } else {
+            content
+        }
     }
 }

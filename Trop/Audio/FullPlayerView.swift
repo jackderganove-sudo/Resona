@@ -26,6 +26,8 @@ struct FullPlayerView: View {
     @State private var editingProgress: Double = 0
     @State private var isEditingSlider = false
     @State private var showLyrics = false
+    /// Cover morph into the iPad lyrics split view.
+    @Namespace private var coverSpace
     @State private var showQueue = false
     @State private var showSongMenu = false
     @State private var showSleepTimer = false
@@ -54,7 +56,8 @@ struct FullPlayerView: View {
                     LyricsView(
                         showLyrics: $showLyrics,
                         pendingRoute: $pendingRoute,
-                        progressSlider: { progressSlider(compact: true) }
+                        progressSlider: { progressSlider(compact: true) },
+                        coverNamespace: coverSpace
                     )
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
                 } else if np.isVideoMode && np.hasVideo {
@@ -287,6 +290,7 @@ struct FullPlayerView: View {
             )
         }
         .clipShape(RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous))
+        .matchedGeometryEffect(id: "player-cover", in: coverSpace)
         .shadow(color: .black.opacity(0.28), radius: 18, y: 8)
         .scaleEffect(np.isPlaying ? 1 : 0.94)
         .animation(M3Motion.slowSpatial, value: np.isPlaying)
