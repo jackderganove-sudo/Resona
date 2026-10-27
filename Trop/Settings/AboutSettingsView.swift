@@ -10,6 +10,9 @@ import SwiftUI
 struct AboutSettingsView: View {
     @Environment(\.m3) private var m3
     @Bindable private var updates = UpdateChecker.shared
+    @AppStorage("resona.developerMode") private var developerMode = false
+    @State private var versionTaps = 0
+    @State private var developerNote: String?
 
     var body: some View {
         M3Form {
@@ -19,6 +22,13 @@ struct AboutSettingsView: View {
                     Spacer()
                     Text(verbatim: versionText)
                         .foregroundStyle(m3.onSurfaceVariant)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { countVersionTap() }
+                if let developerNote {
+                    Text(developerNote)
+                        .font(.m3(.bodyMedium))
+                        .foregroundStyle(m3.primary)
                 }
             }
 
@@ -65,6 +75,18 @@ struct AboutSettingsView: View {
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
+    }
+
+    /// 7 taps on the version toggle the hidden developer switches
+    /// (Songtext settings → Developer).
+    private func countVersionTap() {
+        versionTaps += 1
+        guard versionTaps >= 7 else { return }
+        versionTaps = 0
+        developerMode.toggle()
+        developerNote = developerMode
+            ? String(localized: "Developer options enabled (Settings → Lyrics).")
+            : String(localized: "Developer options hidden.")
     }
 
     private var versionText: String {

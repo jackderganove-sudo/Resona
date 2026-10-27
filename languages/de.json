@@ -148,6 +148,8 @@
   "Details": "Details",
   "Details Template": "Vorlage für Details",
   "Developer (testing)": "Entwickler (Test)",
+  "Developer options enabled (Settings → Lyrics).": "Entwickleroptionen aktiviert (Einstellungen → Songtext).",
+  "Developer options hidden.": "Entwickleroptionen ausgeblendet.",
   "Did you mean:": "Meintest du:",
   "Disabled providers are skipped when fetching lyrics.": "Deaktivierte Anbieter werden beim Laden von Songtexten übersprungen.",
   "Dismiss": "Schließen",

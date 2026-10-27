@@ -13,6 +13,8 @@ struct LyricsSettingsView: View {
     @Environment(\.m3) private var m3
     @AppStorage(PaxsenixProvider.apiKeyDefaultsKey) private var paxsenixKey = ""
     @Bindable private var debug = LyricsDebugOptions.shared
+    /// Unlocked by tapping the version 7× in Settings → About.
+    @AppStorage("resona.developerMode") private var developerMode = false
 
     var body: some View {
         @Bindable var settings = settings
@@ -128,6 +130,7 @@ struct LyricsSettingsView: View {
                 Text("Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.")
             }
 
+            if developerMode {
             M3Section {
                 SettingsToggleRow("Blur off", icon: "drop", isOn: $debug.blurOff)
                 SettingsToggleRow("Glow off", icon: "sun.max", isOn: $debug.glowOff)
@@ -138,6 +141,7 @@ struct LyricsSettingsView: View {
                 Text("Developer (testing)")
             } footer: {
                 Text("Switches single lyrics effects off to find what causes a visual problem. The overlay shows the scroll offset, its target and retargets per second.")
+            }
             }
 
             M3Section {
