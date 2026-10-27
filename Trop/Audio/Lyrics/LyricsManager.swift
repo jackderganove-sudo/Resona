@@ -35,19 +35,28 @@ final class LyricsSettings {
 /// Registry of all available providers.
 enum LyricsProviderRegistry {
     static let all: [LyricsProvider] = [
+        BetterLyricsProvider(),
+        YouLyPlusProvider(),
         LRCLIBProvider(),
         MusixmatchProvider(),
+        PaxsenixProvider(),
         NeteaseProvider(),
         KugouProvider(),
-        GeniusProvider()
+        GeniusProvider(),
+        YouTubeMusicLyricsProvider()
     ]
 
+    /// Word-synced sources first, YouTube Music's plain text last.
     static let defaultOrder: [String] = [
+        "betterlyrics",
+        "youlyplus",
         "lrclib",
         "musixmatch",
+        "paxsenix",
         "netease",
         "kugou",
-        "genius"
+        "genius",
+        "youtube"
     ]
 
     static func provider(for id: String) -> LyricsProvider? {

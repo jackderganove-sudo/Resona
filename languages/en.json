@@ -522,5 +522,12 @@
   "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.": "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.",
   "Background brightness": "Background brightness",
   "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on. Text contrast is kept readable automatically at any brightness.": "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on. Text contrast is kept readable automatically at any brightness.",
-  "Show audio details": "Show audio details"
+  "Show audio details": "Show audio details",
+  "Word-synced, incl. background vocals": "Word-synced, incl. background vocals",
+  "Requires Spotify sign-in": "Requires Spotify sign-in",
+  "Requires an API key (below)": "Requires an API key (below)",
+  "Plain text only (fallback)": "Plain text only (fallback)",
+  "API key": "API key",
+  "Optional": "Optional",
+  "Paxsenix only answers requests with your own API key. Without a key it is skipped.": "Paxsenix only answers requests with your own API key. Without a key it is skipped."
 }

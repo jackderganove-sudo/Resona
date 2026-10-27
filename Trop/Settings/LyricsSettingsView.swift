@@ -9,6 +9,8 @@ import SwiftUI
 
 struct LyricsSettingsView: View {
     @Environment(\.settingsStore) private var settings
+    @Environment(\.m3) private var m3
+    @AppStorage(PaxsenixProvider.apiKeyDefaultsKey) private var paxsenixKey = ""
 
     var body: some View {
         @Bindable var settings = settings
@@ -28,13 +30,39 @@ struct LyricsSettingsView: View {
                             settings.disabledLyricsProviders = disabled
                         }
                     )) {
-                        Label(provider.name, systemImage: "music.note")
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(provider.name)
+                                if let note = Self.note(for: provider.id) {
+                                    Text(note)
+                                        .font(.m3(.bodySmall))
+                                        .foregroundStyle(m3.onSurfaceVariant)
+                                }
+                            }
+                        } icon: {
+                            Image(systemName: Self.icon(for: provider.id))
+                        }
                     }
                 }
             } header: {
                 Text("Providers")
             } footer: {
                 Text("Disabled providers are skipped when fetching lyrics.")
+            }
+
+            M3Section {
+                HStack(spacing: 12) {
+                    Label("API key", systemImage: "key")
+                    SecureField(String(localized: "Optional"), text: $paxsenixKey)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .multilineTextAlignment(.trailing)
+                        .foregroundStyle(m3.onSurface)
+                }
+            } header: {
+                Text(verbatim: "Paxsenix")
+            } footer: {
+                Text("Paxsenix only answers requests with your own API key. Without a key it is skipped.")
             }
 
             M3Section {
@@ -64,5 +92,26 @@ struct LyricsSettingsView: View {
         .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
+    }
+
+    /// Short hint under a provider's name.
+    static func note(for id: String) -> LocalizedStringKey? {
+        switch id {
+        case "betterlyrics", "youlyplus": "Word-synced, incl. background vocals"
+        case "spotify": "Requires Spotify sign-in"
+        case "paxsenix": "Requires an API key (below)"
+        case "youtube": "Plain text only (fallback)"
+        default: nil
+        }
+    }
+
+    static func icon(for id: String) -> String {
+        switch id {
+        case "betterlyrics", "youlyplus": "text.word.spacing"
+        case "spotify": "dot.radiowaves.left.and.right"
+        case "youtube": "play.rectangle"
+        case "paxsenix": "key"
+        default: "music.note"
+        }
     }
 }
