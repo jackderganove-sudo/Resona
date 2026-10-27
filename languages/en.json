@@ -562,5 +562,7 @@
   "Show update": "Show update",
   "Updates": "Updates",
   "New builds are published on GitHub and in the ESign app source: %@": "New builds are published on GitHub and in the ESign app source: %@",
-  "Trop (base project)": "Trop (base project)"
+  "Trop (base project)": "Trop (base project)",
+  "Crossfade": "Crossfade",
+  "Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on.": "Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on."
 }

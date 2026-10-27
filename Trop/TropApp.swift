@@ -19,6 +19,7 @@ struct TropApp: App {
         ensureDirectories()
         Log.wireSwiftyTube()
         PlayerController.registerRemoteControlSupport()
+        Task { @MainActor in CrossfadeEngine.shared.start() }
         observePlaybackSettings()
         Task { await InnerTubeClient.tropShared.syncTropLocale() }
         Task { @MainActor in DiscordIntegration.shared.start() }

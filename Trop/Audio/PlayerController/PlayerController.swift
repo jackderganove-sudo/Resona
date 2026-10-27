@@ -42,6 +42,8 @@ final class PlayerController {
     var currentLoudnessDb: Double?
     var pendingURL: String?
     nonisolated(unsafe) var desiredPlaying = false
+    /// Extra volume factor while a crossfade runs (CrossfadeEngine).
+    nonisolated(unsafe) var crossfadeGain: Double = 1
     private var wasPlayingBeforeInterruption = false
 
     /// Video-mode state. Reads happen on the event loop thread from event handlers;
@@ -89,6 +91,22 @@ final class PlayerController {
             mpv_get_property(mpv, "time-pos", MPV_FORMAT_DOUBLE, &val)
             return val
         } ?? 0
+    }
+
+    /// What mpv is playing right now (resolved stream URL or local file)
+    /// and its audio filter chain — the crossfade tail reuses both.
+    var currentSource: (path: String, audioFilter: String)? {
+        withMpv { mpv -> (path: String, audioFilter: String)? in
+            guard let raw = mpv_get_property_string(mpv, "path") else { return nil }
+            let path = String(cString: raw)
+            mpv_free(raw)
+            var filter = ""
+            if let af = mpv_get_property_string(mpv, "af") {
+                filter = String(cString: af)
+                mpv_free(af)
+            }
+            return (path, filter)
+        } ?? nil
     }
 
     var duration: TimeInterval {
@@ -261,6 +279,7 @@ extension PlayerController {
     }
 
     func setPaused(_ paused: Bool) {
+        if paused { CrossfadeEngine.shared.cancel() }
         desiredPlaying = !paused
         let currentlyPaused = playState.value != .playing
         guard currentlyPaused != paused else {
@@ -285,8 +304,9 @@ extension PlayerController {
 
     func applyPlayerVolume() {
         let vol = SettingsStore.shared.playerVolume
+        let gain = crossfadeGain
         withMpvAsync { mpv in
-            var val = Double(vol * 100)
+            var val = Double(vol * 100) * gain
             mpv_set_property(mpv, "volume", MPV_FORMAT_DOUBLE, &val)
         }
     }

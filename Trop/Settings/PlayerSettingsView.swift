@@ -28,8 +28,18 @@ struct PlayerSettingsView: View {
                 SettingsPickerRow("Audio Quality", icon: "waveform", selection: $settings.audioQuality)
                 SettingsToggleRow("Audio Normalization", icon: "speaker.wave.2", isOn: $settings.audioNormalization)
                 SettingsToggleRow("Gapless Playback", icon: "arrow.right.arrow.left", isOn: $settings.gaplessPlayback)
+                M3SliderRow(
+                    value: $settings.crossfadeSeconds,
+                    range: 0...12,
+                    step: 1,
+                    format: { $0 < 1 ? String(localized: "Off") : "\(Int($0)) s" }
+                ) {
+                    Label("Crossfade", systemImage: "waveform.path")
+                }
             } header: {
                 Text("Audio")
+            } footer: {
+                Text("Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on.")
             }
 
             M3Section {

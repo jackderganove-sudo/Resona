@@ -231,6 +231,11 @@ final class SettingsStore {
         didSet { Self.defaults.set(showAudioDetails, forKey: Keys.showAudioDetails) }
     }
 
+    /// Crossfade length between songs in seconds (0 = off).
+    var crossfadeSeconds: Double {
+        didSet { Self.defaults.set(crossfadeSeconds, forKey: Keys.crossfadeSeconds) }
+    }
+
     /// Slowly flowing mesh gradient behind the player.
     var animatedPlayerBackground: Bool {
         didSet { Self.defaults.set(animatedPlayerBackground, forKey: Keys.animatedPlayerBackground) }
@@ -377,6 +382,7 @@ final class SettingsStore {
         static let lyricsLineChangeAdjustMs = "resona.lyricsLineChangeAdjustMs"
         static let playerBackgroundBrightness = "resona.playerBackgroundBrightness"
         static let showAudioDetails = "resona.showAudioDetails"
+        static let crossfadeSeconds = "resona.crossfadeSeconds"
         static let autoplaySimilar = "settings.autoplaySimilar"
         static let persistQueue = "settings.persistQueue"
         static let lastRadioStyle = "settings.lastRadioStyle"
@@ -445,6 +451,7 @@ final class SettingsStore {
         lyricsLineChangeAdjustMs = Self.load(Keys.lyricsLineChangeAdjustMs, default: 0.0)
         playerBackgroundBrightness = Self.load(Keys.playerBackgroundBrightness, default: 1.0)
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)
+        crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)
         autoplaySimilar = Self.load(Keys.autoplaySimilar, default: true)
         persistQueue = Self.load(Keys.persistQueue, default: false)
         lastRadioStyle = Self.loadEnum(Keys.lastRadioStyle, default: .similar)

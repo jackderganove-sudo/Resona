@@ -200,7 +200,11 @@ final class NowPlaying {
     func playNext(automatic: Bool = false) {
         guard hasNext else { return }
         guard !isResolvingNext else { return }
-        if !automatic { lastManualSkipTime = Date() }
+        if !automatic {
+            lastManualSkipTime = Date()
+        CrossfadeEngine.shared.cancel()
+            CrossfadeEngine.shared.cancel()
+        }
         queueIndex += 1
         playCurrentSong(logContext: "playNext")
     }
