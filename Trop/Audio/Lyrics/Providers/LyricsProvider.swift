@@ -15,6 +15,9 @@ struct LyricsQuery: Sendable {
     let duration: TimeInterval
     /// YouTube video id (YouTube Music's own lyrics tab).
     var videoId: String? = nil
+    /// Slowed / sped-up / nightcore upload: lyrics come from the original
+    /// and their timestamps are scaled to this version's length.
+    var isSpeedVariant: Bool = false
 
     var durationSeconds: Int { Int(duration) }
 }

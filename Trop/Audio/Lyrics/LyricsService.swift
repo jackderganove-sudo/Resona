@@ -167,7 +167,7 @@ actor LyricsService {
             throw LyricsError.notFound
         }
         let flight = Task<FetchResult, Error> {
-            let (lines, providerName) = try await LyricsManager.shared.fetchLyricsReturningProvider(query: query)
+            let (lines, providerName) = try await Self.fetchFromProviders(query)
             return FetchResult(lines: lines, providerName: providerName)
         }
         inFlight[videoId] = flight
@@ -247,7 +247,7 @@ actor LyricsService {
             Task { await MainActor.run { LyricsState.shared.refreshToken += 1 } }
         }
         guard let query = await resolveQuery(videoId: videoId),
-              let (fetchedLines, fetchedProvider) = try? await LyricsManager.shared.fetchLyricsReturningProvider(query: query),
+              let (fetchedLines, fetchedProvider) = try? await Self.fetchFromProviders(query),
               !fetchedLines.isEmpty else {
             await updateAvailability(videoId: videoId, available: false)
             signalReload()
@@ -338,8 +338,61 @@ actor LyricsService {
             artist: cleaned.artist,
             album: cleaned.album,
             duration: duration > 0 ? duration : 0,
-            videoId: videoId
+            videoId: videoId,
+            isSpeedVariant: Self.isSpeedVariant(title)
         )
+    }
+
+    // MARK: Slowed / sped-up variants
+
+    static func isSpeedVariant(_ title: String) -> Bool {
+        title.range(of: #"\b((super|ultra)\s+)?(slowed|sped\s*up|speed\s*up|nightcore|daycore)\b"#,
+                    options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    /// Normal lookup, or for a speed variant: lyrics of the original
+    /// (searched with the original's length) with every timestamp scaled
+    /// by variant length / original length. If the original's length is
+    /// unknown the text is shown unsynced rather than wrongly timed.
+    private static func fetchFromProviders(_ query: LyricsQuery) async throws -> ([LyricLine], providerName: String?) {
+        guard query.isSpeedVariant, query.duration > 0 else {
+            return try await LyricsManager.shared.fetchLyricsReturningProvider(query: query)
+        }
+        let original = await originalDuration(title: query.title, artist: query.artist)
+        let lookup = LyricsQuery(
+            title: query.title,
+            artist: query.artist,
+            album: nil,
+            duration: original ?? 0,
+            videoId: query.videoId
+        )
+        let (lines, provider) = try await LyricsManager.shared.fetchLyricsReturningProvider(query: lookup)
+        if let original, original > 0 {
+            let factor = query.duration / original
+            if (0.5...2.0).contains(factor) {
+                return (LyricLine.scaled(lines, by: factor), provider)
+            }
+        }
+        return (lines.map { LyricLine(text: $0.text, startTime: nil, backgroundText: $0.backgroundText) }, provider)
+    }
+
+    /// Length of the original recording (LRCLIB search, prefers entries
+    /// with synced lyrics and a matching title).
+    private static func originalDuration(title: String, artist: String) async -> TimeInterval? {
+        var components = URLComponents(string: "https://lrclib.net/api/search")
+        components?.queryItems = [
+            URLQueryItem(name: "track_name", value: title),
+            URLQueryItem(name: "artist_name", value: artist)
+        ]
+        guard let url = components?.url,
+              let data = await LyricsRequest.get(url, timeout: 4),
+              let items = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return nil }
+        func norm(_ s: String) -> String { s.lowercased().filter { $0.isLetter || $0.isNumber } }
+        let wanted = norm(title)
+        let matching = items.filter { norm($0["trackName"] as? String ?? "") == wanted }
+        let pick = matching.first { ($0["syncedLyrics"] as? String)?.isEmpty == false } ?? matching.first ?? items.first
+        guard let seconds = (pick?["duration"] as? NSNumber)?.doubleValue, seconds > 0 else { return nil }
+        return seconds
     }
 
     private struct CleanedQuery {
@@ -388,6 +441,15 @@ actor LyricsService {
         s = s.replacingOccurrences(of: #"『[^』]*』"#, with: "", options: .regularExpression)
         s = s.replacingOccurrences(of: #"\[[^\]]*\]"#, with: "", options: .regularExpression)
         s = s.replacingOccurrences(of: #"\([^)]*\)"#, with: "", options: .regularExpression)
+        // "feat./ft." credits outside brackets, "- Slowed + Reverb",
+        // "| Official Video" style suffixes and video/audio labels.
+        s = s.replacingOccurrences(of: #"\s+(feat\.?|ft\.?|featuring)\s+.*$"#, with: "", options: [.regularExpression, .caseInsensitive])
+        s = s.replacingOccurrences(
+            of: #"\s*[-–—|]\s*(((super|ultra)\s+)?slowed|sped\s*up|speed\s*up|nightcore|daycore|reverb|8d|official|lyrics?|audio|video|visuali[sz]er|remaster(ed)?)\b.*$"#,
+            with: "", options: [.regularExpression, .caseInsensitive])
+        s = s.replacingOccurrences(
+            of: #"\b(official\s+(music\s+)?(video|audio|lyric\s+video|visuali[sz]er)|lyric\s+video|music\s+video|(super\s+)?slowed(\s*\+\s*reverb)?|sped\s*up)\b"#,
+            with: "", options: [.regularExpression, .caseInsensitive])
         for marker in ["|", "♪", "mv", "lyrics", "歌词", "動態", "动态", "official", "官方"] {
             if let r = s.range(of: marker, options: .caseInsensitive) {
                 s = String(s[..<r.lowerBound])
@@ -413,7 +475,13 @@ actor LyricsService {
                 return p.trimmingCharacters(in: .whitespacesAndNewlines)
             }
             .filter { !$0.isEmpty }
-        return parts.joined(separator: ", ")
+        // Main artist only: "A, B", "A & B", "A x B", "A feat. B" → "A".
+        guard let first = parts.first else { return raw }
+        let main = first.replacingOccurrences(
+            of: #"\s+(&|x|×|and|with|feat\.?|ft\.?|featuring|vs\.?)\s+.*$|\s*/.*$"#,
+            with: "", options: [.regularExpression, .caseInsensitive])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return main.isEmpty ? first : main
     }
 
     private static func cleanAlbum(_ raw: String) -> String {
