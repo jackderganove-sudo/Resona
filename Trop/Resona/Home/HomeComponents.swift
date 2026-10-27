@@ -126,7 +126,8 @@ struct HeroCarousel: View {
 
 // MARK: - Keep listening card
 
-/// Wide tonal card: artwork, title, subtitle and a round primary play button.
+/// Wide tonal card: artwork, title, subtitle and a round primary play button
+/// (artists: a chevron instead — the card opens the artist page).
 struct KeepListeningCard: View {
     @Environment(\.m3) private var m3
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -155,12 +156,21 @@ struct KeepListeningCard: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Image(systemName: "play.fill")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(m3.onPrimary)
-                    .frame(width: 48, height: 48)
-                    .background(m3.primary, in: Circle())
-                    .padding(.trailing, 4)
+                if item.isArtistItem {
+                    // An artist can't be "played" — the card opens the page.
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(m3.onSurfaceVariant)
+                        .frame(width: 32, height: 48)
+                        .padding(.trailing, 4)
+                } else {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(m3.onPrimary)
+                        .frame(width: 48, height: 48)
+                        .background(m3.primary, in: Circle())
+                        .padding(.trailing, 4)
+                }
             }
             .padding(12)
             .frame(width: horizontalSizeClass == .regular ? 400 : 330)

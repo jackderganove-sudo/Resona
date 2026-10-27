@@ -228,7 +228,16 @@ struct LibraryCard<MenuContent: View>: View {
                 .accessibilityLabel(Text("Play"))
             }
 
-            menu()
+            if case .round = artwork, onPlay == nil {
+                // Artists: no play button; the card opens the artist page.
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(m3.onSurfaceVariant)
+                    .frame(width: 36, height: 44)
+                    .padding(.trailing, 8)
+            } else {
+                menu()
+            }
         }
         .padding(.leading, 14)
         .padding(.trailing, 6)

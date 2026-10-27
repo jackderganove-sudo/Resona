@@ -535,6 +535,20 @@ struct ArtistDetailView: View {
                             .lineLimit(1)
                     }
 
+                    if let top = artist.songs.first {
+                        // Artist mix (radio around the artist's top song).
+                        Button(action: { PlaybackQueue.startRadio(for: top) }, label: {
+                            Label("Play mix", systemImage: "dot.radiowaves.left.and.right")
+                                .labelStyle(.titleAndIcon)
+                                .font(.m3(.titleSmall, weight: .medium))
+                                .foregroundStyle(ThemeStore.shared.dark.onPrimary)
+                                .padding(.horizontal, 18)
+                                .frame(height: 56)
+                                .background(Capsule().fill(ThemeStore.shared.dark.primary))
+                        })
+                        .buttonStyle(.expressive(scale: 0.92))
+                    }
+
                     Button(action: { shufflePlay(artist) }, label: {
                         Image(systemName: "shuffle")
                             .font(.system(size: 20, weight: .bold))
