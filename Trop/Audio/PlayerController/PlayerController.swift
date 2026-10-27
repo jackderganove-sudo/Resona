@@ -29,6 +29,11 @@ final class PlayerController {
     static let shared = PlayerController()
 
     nonisolated(unsafe) private var _mpv: OpaquePointer?
+    /// Second, equivalent mpv instance for crossfades (A/B): created on
+    /// demand, swapped with `_mpv` when the next song starts on it, while the
+    /// old song fades out on the previous handle. Only the active handle's
+    /// events drive the app.
+    nonisolated(unsafe) private var _spare: OpaquePointer?
     /// Serial queue for all mpv property read/write calls
     let mpvAccessQueue = DispatchQueue(label: "com.686udjie.PlayerController.mpvAccess")
 
@@ -268,6 +273,7 @@ extension PlayerController {
     }
 
     func seek(to time: TimeInterval) {
+        CrossfadeEngine.shared.cancel()
         pendingSeek = (time, Date().addingTimeInterval(1.5))
         NowPlaying.shared.currentTime = time
         PlaybackClock.shared.didSeek(to: time)
@@ -355,28 +361,8 @@ extension PlayerController {
     fileprivate func startMpv() {
         mpvAccessQueue.async { [weak self] in
             guard let self else { return }
-            guard let mpv = mpv_create() else {
-                Log.player.error("mpv_create failed")
-                return
-            }
-
             _ = setenv("MVK_CONFIG_LOG_LEVEL", "1", 1)
-
-            mpv_request_log_messages(mpv, "warn")
-            Self.applyMpvStartupOptions(mpv)
-
-            Log.player.info("mpv initializing...")
-            let initResult = mpv_initialize(mpv)
-            guard initResult >= 0 else {
-                let errStr = String(cString: mpv_error_string(initResult))
-                Log.player.error("mpv_initialize failed: \(initResult) (\(errStr))")
-                mpv_destroy(mpv)
-                return
-            }
-            Log.player.info("mpv initialized successfully")
-
-            Self.applyPostInitProperties(mpv)
-            Self.applyObservedProperties(mpv)
+            guard let mpv = Self.createConfiguredHandle() else { return }
 
             self._mpv = mpv
             Log.player.info("mpv handle published — event loop starting")
@@ -403,6 +389,30 @@ extension PlayerController {
             thread.name = "com.686udjie.PlayerController.eventLoop"
             thread.start()
         }
+    }
+
+    /// Creates a fully configured mpv instance (startup options, init,
+    /// post-init properties, observed properties) — used for the main
+    /// handle and for the crossfade spare, so both are identical.
+    nonisolated static func createConfiguredHandle() -> OpaquePointer? {
+        guard let mpv = mpv_create() else {
+            Log.player.error("mpv_create failed")
+            return nil
+        }
+        mpv_request_log_messages(mpv, "warn")
+        applyMpvStartupOptions(mpv)
+        Log.player.info("mpv initializing...")
+        let initResult = mpv_initialize(mpv)
+        guard initResult >= 0 else {
+            let errStr = String(cString: mpv_error_string(initResult))
+            Log.player.error("mpv_initialize failed: \(initResult) (\(errStr))")
+            mpv_destroy(mpv)
+            return nil
+        }
+        Log.player.info("mpv initialized successfully")
+        applyPostInitProperties(mpv)
+        applyObservedProperties(mpv)
+        return mpv
     }
 
     /// Shared with the crossfade tail so both instances use identical
@@ -451,6 +461,14 @@ extension PlayerController {
     nonisolated fileprivate func eventLoop(_ mpv: OpaquePointer) {
         while isRunning {
             guard let event = mpv_wait_event(mpv, 0.2) else { continue }
+            // Crossfade A/B: the fading (inactive) instance must never drive
+            // NowPlaying — its END_FILE would look like the new song ending.
+            if mpv != _mpv {
+                if event.pointee.event_id == MPV_EVENT_END_FILE {
+                    Log.player.info("CROSSFADE inactive instance END_FILE (ignored)")
+                }
+                continue
+            }
             switch event.pointee.event_id {
             case MPV_EVENT_NONE:
                 break
@@ -472,7 +490,10 @@ extension PlayerController {
                 break
             }
         }
-        mpvAccessQueue.sync { self._mpv = nil }
+        mpvAccessQueue.sync {
+            if self._mpv == mpv { self._mpv = nil }
+            if self._spare == mpv { self._spare = nil }
+        }
         mpv_destroy(mpv)
     }
 
@@ -1298,6 +1319,63 @@ extension Array where Element == String {
         var ptrs = cstrings.map { UnsafePointer($0) } + [nil]
         return ptrs.withUnsafeMutableBufferPointer { buf in
             body(buf.baseAddress)
+        }
+    }
+}
+
+// MARK: - Crossfade A/B instances
+
+extension PlayerController {
+    var hasSpareInstance: Bool { mpvAccessQueue.sync { _spare != nil } }
+
+    /// Creates the second instance (same configuration, own event loop).
+    func ensureSpareInstance() {
+        mpvAccessQueue.async { [weak self] in
+            guard let self, self._spare == nil, self._mpv != nil else { return }
+            guard let spare = Self.createConfiguredHandle() else { return }
+            var zero = Double(0)
+            mpv_set_property(spare, "volume", MPV_FORMAT_DOUBLE, &zero)
+            self._spare = spare
+            Log.player.info("CROSSFADE spare instance ready")
+            let thread = Thread { [weak self] in self?.eventLoop(spare) }
+            thread.name = "com.686udjie.PlayerController.eventLoop.spare"
+            thread.start()
+        }
+    }
+
+    /// Makes the spare the active instance; returns the previously active
+    /// one (still playing the old song) for fading out.
+    func swapToSpareInstance() -> OpaquePointer? {
+        mpvAccessQueue.sync {
+            guard let spare = _spare, let current = _mpv else { return nil }
+            _mpv = spare
+            _spare = current
+            Log.player.info("CROSSFADE swapped active instance")
+            return current
+        }
+    }
+
+    func setVolume(_ value: Double, onInstance handle: OpaquePointer) {
+        mpvAccessQueue.async {
+            var v = max(0, value)
+            mpv_set_property(handle, "volume", MPV_FORMAT_DOUBLE, &v)
+        }
+    }
+
+    func stopInstance(_ handle: OpaquePointer) {
+        mpvAccessQueue.async {
+            _ = ["stop"].withUnsafeCArg { mpv_command(handle, $0) }
+            var zero = Double(0)
+            mpv_set_property(handle, "volume", MPV_FORMAT_DOUBLE, &zero)
+        }
+    }
+
+    func playbackTimes(ofInstance handle: OpaquePointer) -> (position: Double, duration: Double) {
+        mpvAccessQueue.sync {
+            var pos = Double(0), dur = Double(0)
+            mpv_get_property(handle, "time-pos", MPV_FORMAT_DOUBLE, &pos)
+            mpv_get_property(handle, "duration", MPV_FORMAT_DOUBLE, &dur)
+            return (pos, dur)
         }
     }
 }

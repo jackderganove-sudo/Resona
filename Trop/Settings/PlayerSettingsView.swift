@@ -34,7 +34,7 @@ struct PlayerSettingsView: View {
                     step: 1,
                     format: { $0 < 1 ? String(localized: "Off") : "\(Int($0)) s" }
                 ) {
-                    Label("Crossfade", systemImage: "waveform.path")
+                    Label("Crossfade (experimental)", systemImage: "waveform.path")
                 }
             } header: {
                 Text("Audio")

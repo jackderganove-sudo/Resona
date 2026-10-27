@@ -128,6 +128,7 @@
   "Create one below to start collecting songs.": "Erstelle unten eine, um Songs zu sammeln.",
   "Create playlist": "Playlist erstellen",
   "Crossfade": "Überblenden",
+  "Crossfade (experimental)": "Überblenden (experimentell)",
   "Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on.": "Überblenden lässt das Ende eines Songs in den nächsten übergehen. Es entfällt beim manuellen Überspringen, bei „Einen wiederholen“, beim Sleep-Timer „Songende“ und zwischen Songs desselben Albums, solange lückenlose Wiedergabe an ist.",
   "Custom order": "Individuelle Reihenfolge",
   "Customize Radio": "Radio anpassen",
