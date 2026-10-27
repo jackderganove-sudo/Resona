@@ -64,6 +64,17 @@ final class SearchViewModel {
 
     private(set) var results: [SearchSection] = []
 
+    // MARK: - Live suggestions
+
+    /// Text suggestions for the current input (already typo-corrected).
+    private(set) var suggestionTexts: [String] = []
+    /// Direct hits (songs, artists, albums) for the current input.
+    private(set) var suggestionItems: [YTItem] = []
+    /// "Did you mean …" correction of the last submitted search.
+    private(set) var didYouMean: String?
+    private var suggestTask: Task<Void, Never>?
+    private static let suggestDebounce: Duration = .milliseconds(200)
+
     // MARK: - Local matches (populated per submission, for Library filter)
 
     var localSongs: [SongEntity] = []
@@ -281,6 +292,10 @@ final class SearchViewModel {
 
         updateHistory(query: query)
         cancelTasks()
+        suggestTask?.cancel()
+        suggestionTexts = []
+        suggestionItems = []
+        didYouMean = nil
 
         fetchTask = Task { [weak self] in
             await self?.fetchResults(for: query)
@@ -301,6 +316,8 @@ final class SearchViewModel {
             }
 
             results = SearchParser.parseSearchResults(from: searchRaw)
+            let corrected = SearchSuggestions.correction(in: searchRaw)
+            didYouMean = corrected.flatMap { $0.caseInsensitiveCompare(query) == .orderedSame ? nil : $0 }
             selectedSectionFilter = nil
             isShowingLibrary = false
             extractHero()
@@ -355,6 +372,29 @@ final class SearchViewModel {
             return
         }
         resetToIdle()
+        scheduleSuggestions()
+    }
+
+    /// Debounced live suggestions; every keystroke cancels the request in
+    /// flight, results only land if they still match the field.
+    private func scheduleSuggestions() {
+        suggestTask?.cancel()
+        let query = fieldText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else {
+            suggestionTexts = []
+            suggestionItems = []
+            return
+        }
+        suggestTask = Task { [weak self] in
+            try? await Task.sleep(for: Self.suggestDebounce)
+            guard !Task.isCancelled else { return }
+            let result = await SearchSuggestions.fetch(query)
+            guard !Task.isCancelled, let self,
+                  self.phase == .idle,
+                  self.fieldText.trimmingCharacters(in: .whitespacesAndNewlines) == query else { return }
+            self.suggestionTexts = result.texts
+            self.suggestionItems = result.items
+        }
     }
 
     /// Clears any shown results and returns to the recent-searches state.

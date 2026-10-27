@@ -103,7 +103,15 @@ struct SearchView: View {
     private var content: some View {
         switch viewModel.phase {
         case .idle:
-            searchHome
+            let typed = !viewModel.fieldText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            if typed {
+                suggestionsView
+            } else if fieldFocused {
+                // Empty field while typing: recent searches (deletable).
+                if viewModel.searchHistory.isEmpty { noRecentSearchesView } else { searchHistoryView }
+            } else {
+                searchHome
+            }
         case .loading:
             loadingView
         case .results:
@@ -254,6 +262,9 @@ struct SearchView: View {
     private var searchResultsList: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
+                if let fix = viewModel.didYouMean {
+                    didYouMeanBanner(fix)
+                }
                 if !viewModel.availableFilters.isEmpty {
                     filterChips
                 }
@@ -438,11 +449,149 @@ struct SearchView: View {
     }
 
     private var noResultsView: some View {
-        ContentUnavailableView(
-            "No Results",
-            systemImage: "magnifyingglass",
-            description: Text("No results found for \"\(viewModel.submittedQuery)\"")
-        )
+        VStack(spacing: 0) {
+            if let fix = viewModel.didYouMean {
+                didYouMeanBanner(fix)
+            }
+            ContentUnavailableView(
+                "No Results",
+                systemImage: "magnifyingglass",
+                description: Text("No results found for \"\(viewModel.submittedQuery)\"")
+            )
+        }
+    }
+
+    /// "Did you mean: …" from YouTube's correction; tap searches for it.
+    private func didYouMeanBanner(_ fix: String) -> some View {
+        Button {
+            submit(fix)
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "wand.and.stars")
+                    .foregroundStyle(m3.primary)
+                Text("Did you mean:")
+                    .foregroundStyle(m3.onSurfaceVariant)
+                Text(fix)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(m3.primary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+            .font(.m3(.bodyLarge))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Live suggestions
+
+    /// While typing: direct hits with artwork first (tap plays/opens),
+    /// then text suggestions (tap searches; the arrow only fills the field).
+    private var suggestionsView: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                ForEach(viewModel.suggestionItems, id: \.id) { item in
+                    Button {
+                        fieldFocused = false
+                        handleItemTap(item)
+                    } label: {
+                        HStack(spacing: 14) {
+                            AsyncImageView(url: item.thumbnailUrl)
+                                .frame(width: 48, height: 48)
+                                .clipShape(suggestionShape(for: item))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(item.title)
+                                    .font(.m3(.bodyLarge, weight: .medium))
+                                    .foregroundStyle(m3.onSurface)
+                                    .lineLimit(1)
+                                Text(LocalizedStringKey(Self.kindLabel(item)))
+                                    .font(.m3(.bodyMedium))
+                                    .foregroundStyle(m3.onSurfaceVariant)
+                                    .lineLimit(1)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: Self.kindIcon(item))
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(m3.onSurfaceVariant)
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 6)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(M3RowPressStyle())
+                }
+
+                if !viewModel.suggestionItems.isEmpty && !viewModel.suggestionTexts.isEmpty {
+                    Rectangle().fill(m3.outlineVariant.opacity(0.5)).frame(height: 1)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 6)
+                }
+
+                ForEach(viewModel.suggestionTexts, id: \.self) { text in
+                    HStack(spacing: 18) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 17))
+                            .foregroundStyle(m3.onSurfaceVariant)
+                        Text(text)
+                            .font(.m3(.bodyLarge))
+                            .foregroundStyle(m3.onSurface)
+                            .lineLimit(1)
+                        Spacer()
+                        Button {
+                            viewModel.fieldText = text
+                            fieldFocused = true
+                        } label: {
+                            Image(systemName: "arrow.up.left")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(m3.onSurfaceVariant)
+                                .frame(width: 40, height: 40)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Use suggestion"))
+                    }
+                    .padding(.leading, 18)
+                    .padding(.trailing, 8)
+                    .frame(minHeight: 50)
+                    .contentShape(Rectangle())
+                    .onTapGesture { submit(text) }
+                }
+            }
+            .padding(.vertical, 6)
+            .animation(M3Motion.defaultEffects, value: viewModel.suggestionTexts)
+        }
+        .scrollIndicators(.automatic)
+        .scrollDismissesKeyboard(.immediately)
+        .miniPlayerTracksScroll()
+    }
+
+    private func suggestionShape(for item: YTItem) -> AnyShape {
+        if case .artist = item { return AnyShape(Circle()) }
+        return AnyShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    static func kindLabel(_ item: YTItem) -> String {
+        switch item {
+        case .song(let song):
+            let artist = artistDisplayString(from: song.artists)
+            return artist.isEmpty ? "Song" : artist
+        case .album(let album): return album.artists.isEmpty ? "Album" : "Album • " + album.artists.map(\.name).joined(separator: ", ")
+        case .artist: return "Artist"
+        case .playlist: return "Playlist"
+        case .podcast: return "Podcast"
+        case .episode: return "Episode"
+        }
+    }
+
+    static func kindIcon(_ item: YTItem) -> String {
+        switch item {
+        case .song, .episode: "play.circle"
+        case .album: "square.stack"
+        case .artist: "person"
+        case .playlist: "music.note.list"
+        case .podcast: "mic"
+        }
     }
 
     private var noRecentSearchesView: some View {

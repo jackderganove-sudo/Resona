@@ -545,5 +545,9 @@
   "Scroll animation off (jump)": "Scroll animation off (jump)",
   "Debug overlay": "Debug overlay",
   "Developer (testing)": "Developer (testing)",
-  "Switches single lyrics effects off to find what causes a visual problem. The overlay shows the scroll offset, its target and retargets per second.": "Switches single lyrics effects off to find what causes a visual problem. The overlay shows the scroll offset, its target and retargets per second."
+  "Switches single lyrics effects off to find what causes a visual problem. The overlay shows the scroll offset, its target and retargets per second.": "Switches single lyrics effects off to find what causes a visual problem. The overlay shows the scroll offset, its target and retargets per second.",
+  "Did you mean:": "Did you mean:",
+  "Use suggestion": "Use suggestion",
+  "Song": "Song",
+  "Episode": "Episode"
 }
