@@ -64,15 +64,19 @@ struct ResonaGlassBackground<S: Shape>: View {
         // menus, sheets and dialogs land around tone 25-30 instead of
         // 10-15; text (onSurface, tone 90) stays far above 4.5:1.
         let tint = m3.surfaceContainerHighest.mix(with: palette.main.color, by: ResonaGlass.coverMix)
+        // User setting: blur strength (tint density + material thickness).
+        let strength = MainActor.assumeIsolated { SettingsStore.shared.glassStrength }
+        let material: Material = strength >= 1.25 ? .thinMaterial : (strength <= 0.7 ? .ultraThinMaterial : ResonaGlass.material)
+        let tintOpacity = min(0.95, max(0.2, ResonaGlass.tintOpacity * strength))
         ZStack {
-            shape.fill(ResonaGlass.material)
+            shape.fill(material)
                 .saturation(ResonaGlass.saturation)
             if let artworkURL {
                 BlurredArtwork(url: artworkURL, radius: ResonaGlass.artworkBlurRadius)
                     .opacity(ResonaGlass.artworkOpacity)
                     .clipShape(shape)
             }
-            shape.fill(tint.opacity(ResonaGlass.tintOpacity))
+            shape.fill(tint.opacity(tintOpacity))
             if artworkURL != nil {
                 // Keeps white text legible on very bright covers.
                 LinearGradient(colors: [.clear, .black.opacity(0.18)], startPoint: .top, endPoint: .bottom)

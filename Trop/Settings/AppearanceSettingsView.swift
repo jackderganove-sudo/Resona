@@ -38,6 +38,14 @@ struct AppearanceSettingsView: View {
                 )) {
                     Label("Pure black", systemImage: "circle.lefthalf.filled")
                 }
+                M3SliderRow(
+                    value: $settings.glassStrength,
+                    range: 0.5...1.5,
+                    step: 0.05,
+                    format: { "\(Int(($0 * 100).rounded())) %" }
+                ) {
+                    Label("Blur strength", systemImage: "drop.halffull")
+                }
             } header: {
                 Text("Dynamic color")
             } footer: {
@@ -45,6 +53,7 @@ struct AppearanceSettingsView: View {
             }
 
             M3Section {
+                SettingsPickerRow("Player Style", icon: "rectangle.portrait.on.rectangle.portrait", selection: $settings.playerLayoutStyle)
                 SettingsPickerRow("Player Background", icon: "photo", selection: $settings.playerBackgroundStyle)
                 SettingsToggleRow("Show audio details", icon: "waveform.badge.magnifyingglass", isOn: $settings.showAudioDetails)
                 if settings.playerBackgroundStyle == .dynamic {

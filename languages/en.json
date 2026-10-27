@@ -588,5 +588,10 @@
   "Show translation": "Show translation",
   "Show romanization": "Show romanization",
   "Display": "Display",
-  "Translations appear when the lyrics source provides them (e.g. Better Lyrics, YouLyPlus).": "Translations appear when the lyrics source provides them (e.g. Better Lyrics, YouLyPlus)."
+  "Translations appear when the lyrics source provides them (e.g. Better Lyrics, YouLyPlus).": "Translations appear when the lyrics source provides them (e.g. Better Lyrics, YouLyPlus).",
+  "Large cover": "Large cover",
+  "Small cover + lyrics": "Small cover + lyrics",
+  "Player Style": "Player Style",
+  "Blur strength": "Blur strength",
+  "No synced lyrics": "No synced lyrics"
 }

@@ -189,7 +189,11 @@ struct FullPlayerView: View {
     private func portraitLayout(size: CGSize) -> some View {
         let padding: CGFloat = size.width < 380 ? 24 : M3Metrics.playerHorizontalPadding
         let compact = size.height < 700
-        let artworkSide = min(size.width - padding * 2, size.height * (compact ? 0.4 : 0.46))
+        let controlSide = min(size.width - padding * 2, size.height * (compact ? 0.4 : 0.46))
+        let withLyrics = settings.playerLayoutStyle == .smallCoverLyrics
+        // "Small cover + lyrics": smaller cover with a live lyrics preview.
+        let coverSide = withLyrics ? controlSide * 0.62 : controlSide
+        let artworkSide = controlSide
 
         return VStack(spacing: 0) {
             header
@@ -198,7 +202,15 @@ struct FullPlayerView: View {
             Spacer(minLength: compact ? 8 : 16)
 
             artwork
-                .frame(width: artworkSide, height: artworkSide)
+                .frame(width: coverSide, height: coverSide)
+
+            if withLyrics {
+                PlayerLyricsPreview {
+                    withAnimation(M3Motion.defaultSpatial) { showLyrics = true }
+                }
+                .frame(width: artworkSide, height: compact ? 96 : 120)
+                .padding(.top, 12)
+            }
 
             titleRow
                 .padding(.top, compact ? 10 : 14)

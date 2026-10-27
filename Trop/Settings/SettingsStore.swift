@@ -41,6 +41,21 @@ enum PlayerBackgroundStyle: String, CaseIterable, Identifiable, SettingsOption {
     }
 }
 
+/// Full player layout in portrait.
+enum PlayerLayoutStyle: String, CaseIterable, Identifiable, SettingsOption {
+    case largeCover
+    case smallCoverLyrics
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .largeCover: return "Large cover"
+        case .smallCoverLyrics: return "Small cover + lyrics"
+        }
+    }
+}
+
 /// How the current lyric line is animated.
 enum LyricsAnimationStyle: String, CaseIterable, Identifiable, SettingsOption {
     case karaoke
@@ -266,6 +281,15 @@ final class SettingsStore {
         didSet { Self.defaults.set(lyricsAnimationStyle.rawValue, forKey: Keys.lyricsAnimationStyle) }
     }
 
+    var playerLayoutStyle: PlayerLayoutStyle {
+        didSet { Self.defaults.set(playerLayoutStyle.rawValue, forKey: Keys.playerLayoutStyle) }
+    }
+
+    /// Strength of the frosted glass (0.5 = see-through, 1.5 = dense).
+    var glassStrength: Double {
+        didSet { Self.defaults.set(glassStrength, forKey: Keys.glassStrength) }
+    }
+
     /// Show the provider's translation under each line.
     var showLyricsTranslation: Bool {
         didSet { Self.defaults.set(showLyricsTranslation, forKey: Keys.showLyricsTranslation) }
@@ -425,6 +449,8 @@ final class SettingsStore {
         static let crossfadeSeconds = "resona.crossfadeSeconds"
         static let removeDeletedPlaylistSongs = "resona.removeDeletedPlaylistSongs"
         static let lyricsAnimationStyle = "resona.lyricsAnimationStyle"
+        static let playerLayoutStyle = "resona.playerLayoutStyle"
+        static let glassStrength = "resona.glassStrength"
         static let showLyricsTranslation = "resona.showLyricsTranslation"
         static let autoplaySimilar = "settings.autoplaySimilar"
         static let persistQueue = "settings.persistQueue"
@@ -497,6 +523,8 @@ final class SettingsStore {
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)
         removeDeletedPlaylistSongs = Self.load(Keys.removeDeletedPlaylistSongs, default: false)
         lyricsAnimationStyle = Self.loadEnum(Keys.lyricsAnimationStyle, default: LyricsAnimationStyle.karaoke)
+        playerLayoutStyle = Self.loadEnum(Keys.playerLayoutStyle, default: PlayerLayoutStyle.largeCover)
+        glassStrength = Self.load(Keys.glassStrength, default: 1.0)
         showLyricsTranslation = Self.load(Keys.showLyricsTranslation, default: true)
         autoplaySimilar = Self.load(Keys.autoplaySimilar, default: true)
         persistQueue = Self.load(Keys.persistQueue, default: false)
