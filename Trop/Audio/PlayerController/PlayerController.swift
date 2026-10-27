@@ -1000,8 +1000,12 @@ extension PlayerController {
               let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else { return }
 
         Log.player.info("ROUTE_CHANGE reason=\(reason.rawValue)")
-        if reason == .oldDeviceUnavailable, playState.value == .playing {
-            Task { @MainActor in togglePlayPause() }
+        // Headphones / Bluetooth disconnected: always PAUSE (a toggle could
+        // start playback if the state was stale).
+        if reason == .oldDeviceUnavailable {
+            Task { @MainActor in
+                if self.playState.value == .playing || self.desiredPlaying { self.setPaused(true) }
+            }
         }
     }
 }
@@ -1030,7 +1034,7 @@ extension PlayerController {
         let elapsed = livePos > 0 ? livePos : np.currentTime
 
         nowPlayingInfo[MPMediaItemPropertyTitle] = np.title
-        nowPlayingInfo[MPMediaItemPropertyArtist] = np.artist
+        nowPlayingInfo[MPMediaItemPropertyArtist] = np.displayArtist
         nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = np.albumTitle
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = np.isPlaying ? 1 : 0
         nowPlayingInfo[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
@@ -1040,10 +1044,11 @@ extension PlayerController {
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackQueueIndex] = np.queueIndex
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackQueueCount] = np.queueSongs.count
         if let image = np.thumbnailUIImage {
-            nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = Self.artwork(image)
         }
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
         MPNowPlayingInfoCenter.default().playbackState = np.isPlaying ? .playing : .paused
+        syncRemoteCommandState()
         Log.player.info(
             "NOW_PLAYING_PUBLISH title='\(np.title)' artist='\(np.artist)' " +
             "duration=\(duration) rate=\(nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] ?? 0) " +
@@ -1054,9 +1059,32 @@ extension PlayerController {
     func updateNowPlayingArtwork() {
         let np = NowPlaying.shared
         if let image = np.thumbnailUIImage {
-            nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = Self.artwork(image)
         }
+        // The artist may only be known now (resolved uploader).
+        nowPlayingInfo[MPMediaItemPropertyArtist] = np.displayArtist
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+
+    /// Full-resolution cover, scaled to whatever size the system asks for
+    /// (lock screen, Control Center, CarPlay, AirPlay receivers).
+    nonisolated static func artwork(_ image: UIImage) -> MPMediaItemArtwork {
+        MPMediaItemArtwork(boundsSize: image.size) { requested in
+            guard requested.width > 0, requested.height > 0,
+                  requested.width < image.size.width || requested.height < image.size.height else { return image }
+            return image.preparingThumbnail(of: requested) ?? image
+        }
+    }
+
+    /// Like / shuffle / repeat state shown by the system controls.
+    func syncRemoteCommandState() {
+        let np = NowPlaying.shared
+        let center = MPRemoteCommandCenter.shared()
+        if let id = np.videoId {
+            center.likeCommand.isActive = LikeStore.shared.isLiked(videoId: id)
+        }
+        center.changeShuffleModeCommand.currentShuffleType = np.isShuffleOn ? .items : .off
+        center.changeRepeatModeCommand.currentRepeatType = np.isRepeatOn ? .one : .off
     }
 
     func updateNowPlayingProgress() {
@@ -1089,6 +1117,7 @@ extension PlayerController {
         nowPlayingInfo = info
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
         MPNowPlayingInfoCenter.default().playbackState = np.isPlaying ? .playing : .paused
+        syncRemoteCommandState()
     }
 }
 
@@ -1111,6 +1140,9 @@ extension PlayerController {
         center.nextTrackCommand.removeTarget(nil)
         center.previousTrackCommand.removeTarget(nil)
         center.changePlaybackPositionCommand.removeTarget(nil)
+        center.likeCommand.removeTarget(nil)
+        center.changeShuffleModeCommand.removeTarget(nil)
+        center.changeRepeatModeCommand.removeTarget(nil)
 
         center.playCommand.isEnabled = true
         center.playCommand.addTarget { [weak self] _ in
@@ -1155,6 +1187,44 @@ extension PlayerController {
             Task { @MainActor [weak self] in
                 self?.seek(to: position)
                 self?.updateNowPlayingProgress()
+            }
+            return .success
+        }
+
+        // "Like" (lock screen / Control Center long-press menu).
+        center.likeCommand.isEnabled = true
+        center.likeCommand.localizedTitle = String(localized: "Like")
+        center.likeCommand.localizedShortTitle = String(localized: "Like")
+        center.likeCommand.addTarget { _ in
+            Task { @MainActor in
+                let np = NowPlaying.shared
+                guard np.queueSongs.indices.contains(np.queueIndex) else { return }
+                await LikeStore.shared.toggle(song: np.queueSongs[np.queueIndex])
+                PlayerController.shared.syncRemoteCommandState()
+            }
+            return .success
+        }
+
+        center.changeShuffleModeCommand.isEnabled = true
+        center.changeShuffleModeCommand.addTarget { event in
+            guard let event = event as? MPChangeShuffleModeCommandEvent else { return .commandFailed }
+            Task { @MainActor in
+                let np = NowPlaying.shared
+                let on = event.shuffleType != .off
+                guard on != np.isShuffleOn else { return }
+                np.isShuffleOn = on
+                if on { np.shuffleQueue() } else { np.disableShuffle() }
+                PlayerController.shared.syncRemoteCommandState()
+            }
+            return .success
+        }
+
+        center.changeRepeatModeCommand.isEnabled = true
+        center.changeRepeatModeCommand.addTarget { event in
+            guard let event = event as? MPChangeRepeatModeCommandEvent else { return .commandFailed }
+            Task { @MainActor in
+                NowPlaying.shared.isRepeatOn = event.repeatType != .off
+                PlayerController.shared.syncRemoteCommandState()
             }
             return .success
         }

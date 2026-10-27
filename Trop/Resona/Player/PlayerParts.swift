@@ -7,6 +7,7 @@
 //  stream info line and the bottom action row.
 //
 
+import AVKit
 import SwiftUI
 
 // MARK: - Background
@@ -367,5 +368,37 @@ struct PlayerAccent: Equatable {
 extension M3Scheme {
     var playerAccent: PlayerAccent {
         PlayerAccent(container: primaryContainer, on: onPrimaryContainer)
+    }
+}
+
+// MARK: - AirPlay
+
+/// AirPlay / output picker (AVRoutePickerView) in the round player style;
+/// the glyph lights up in the cover accent while a route is active.
+struct AirPlayButton: View {
+    @Environment(\.playerAccent) private var playerAccent
+
+    var body: some View {
+        RoutePicker(activeTint: UIColor(playerAccent.on))
+            .frame(width: 48, height: 48)
+            .background(.white.opacity(0.1), in: Circle())
+            .accessibilityLabel(Text("AirPlay"))
+    }
+
+    private struct RoutePicker: UIViewRepresentable {
+        let activeTint: UIColor
+
+        func makeUIView(context: Context) -> AVRoutePickerView {
+            let view = AVRoutePickerView()
+            view.tintColor = UIColor.white.withAlphaComponent(0.85)
+            view.activeTintColor = activeTint
+            view.prioritizesVideoDevices = false
+            view.backgroundColor = .clear
+            return view
+        }
+
+        func updateUIView(_ view: AVRoutePickerView, context: Context) {
+            view.activeTintColor = activeTint
+        }
     }
 }
