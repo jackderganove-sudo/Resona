@@ -249,6 +249,7 @@ final class NowPlaying {
         self.title = title
         self.artists = artists
         self.artist = cleanArtistDisplay(artist ?? "")
+        if artists.isEmpty { ArtistNameResolver.shared.remember(artist, for: videoId) }
         self.albumTitle = album ?? ""
         self.currentTime = 0
         self.duration = 0
@@ -307,7 +308,9 @@ final class NowPlaying {
     var displayArtist: String {
         let fromArray = artistDisplayString(from: artists)
         if !fromArray.isEmpty { return fromArray }
-        return artist
+        if !artist.isEmpty { return artist }
+        // No credits and no author from the stream: resolved fallback.
+        return videoId.map { ArtistNameResolver.shared.artist(forVideoId: $0) } ?? ""
     }
 
     func stopped(videoId: String?, isEof: Bool = true) {

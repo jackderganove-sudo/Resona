@@ -299,7 +299,10 @@ extension DownloadManager {
             return
         }
         lastReportedProgress.removeValue(forKey: videoId)
-        let artist = song.artists.map(\.name).joined(separator: ", ")
+        let credited = song.artists.map(\.name).joined(separator: ", ")
+        // Embed a resolved uploader when the song has no credits, so offline
+        // playback still shows an artist.
+        let artist = credited.isEmpty ? (ArtistNameResolver.shared.cached(videoId) ?? "") : credited
         let downloadStart = CFAbsoluteTimeGetCurrent()
         Log.downloadManager.debug("Starting download: \(artist) - \(song.title) (\(videoId))")
 

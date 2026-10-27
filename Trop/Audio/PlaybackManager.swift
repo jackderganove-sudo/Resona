@@ -26,10 +26,12 @@ actor PlaybackManager {
         if let localPath = await DownloadManager.shared.localURL(for: videoId) {
             let song = await MainActor.run { NowPlaying.shared.queueSongs.first { $0.videoId == videoId } }
             let artists = song?.artists ?? []
+            let resolvedArtist = await MainActor.run { ArtistNameResolver.shared.cached(videoId) }
+            let creditedArtist = song?.artists.map(\.name).joined(separator: ", ") ?? ""
             await PlayerController.shared.play(
                 url: localPath.absoluteString,
                 title: song?.title,
-                artist: song?.artists.map(\.name).joined(separator: ", "),
+                artist: creditedArtist.isEmpty ? resolvedArtist : creditedArtist,
                 videoId: videoId,
                 duration: song.map { TimeInterval($0.duration) },
                 artists: artists,
