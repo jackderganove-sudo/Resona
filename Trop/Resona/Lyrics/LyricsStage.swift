@@ -194,6 +194,14 @@ struct LyricsStage<Accessory: View>: View {
                     .foregroundStyle(.white.opacity(isActive ? 0.8 : 0.6))
                     .multilineTextAlignment(alignment.multilineTextAlignment)
             }
+            if let background = line.backgroundText, !background.isEmpty {
+                // Background vocals (TTML x-bg): small, softer, italic.
+                Text(background)
+                    .font(.system(size: max(13, fontSize * 0.6), weight: .semibold))
+                    .italic()
+                    .foregroundStyle(.white.opacity(isActive ? 0.7 : 0.5))
+                    .multilineTextAlignment(alignment.multilineTextAlignment)
+            }
             accessory(index)
             if let pause = gap(after: index) {
                 // Space is always reserved so rows never shift when the
