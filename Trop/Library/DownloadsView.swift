@@ -31,6 +31,11 @@ struct DownloadsView: View {
         .background(.m3Surface)
         .navigationTitle("Downloads")
         .navigationBarTitleDisplayMode(.inline)
+        // The header already shows the big "Downloads" title — keep the
+        // title for the back stack but don't repeat it in the bar.
+        .toolbar {
+            ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
+        }
         .refreshable { await downloadManager.reload() }
         .task {
             if !downloadManager.isLoaded {
@@ -120,10 +125,6 @@ struct DownloadsView: View {
                     onNavigate: { pendingRoute = $0 }
                 )
 
-                if index < songs.count - 1 {
-                    Divider()
-                        .padding(.leading, 76)
-                }
             }
         }
     }

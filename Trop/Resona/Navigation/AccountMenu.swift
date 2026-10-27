@@ -126,8 +126,8 @@ struct AccountMenuOverlay: View {
                 .frame(height: 1)
                 .padding(.horizontal, 16)
 
-            item(icon: "clock.fill", title: "History") { open(.history) }
-            item(icon: "arrow.down.circle.fill", title: "Downloads") { open(.downloads) }
+            item(icon: "clock.arrow.circlepath", title: "History") { open(.history) }
+            item(icon: "arrow.down.circle", title: "Downloads") { open(.downloads) }
             item(icon: "gearshape", title: "Settings") { open(.settings) }
                 .padding(.bottom, 8)
         }
@@ -141,18 +141,17 @@ struct AccountMenuOverlay: View {
 
     private func item(icon: String, title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 18) {
-                Image(systemName: icon)
-                    .font(.system(size: 20))
-                    .foregroundStyle(m3.onSurface)
-                    .frame(width: 28)
+            HStack(spacing: 16) {
+                // Same style as every settings row: outline symbol in a
+                // tonal circle.
+                M3IconCircle(size: 40) { Image(systemName: icon) }
                 Text(title)
                     .font(.m3(.titleMedium, weight: .regular))
                     .foregroundStyle(m3.onSurface)
                 Spacer()
             }
-            .padding(.horizontal, 20)
-            .frame(height: 56)
+            .padding(.horizontal, 16)
+            .frame(height: 60)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -4,7 +4,7 @@
 //
 //  Settings home in the reference style (screenshots 07–09): large title,
 //  grouped tonal cards (large outer radius, small radius between rows), each
-//  row with a filled primary circle icon, title and one-line description.
+//  row with an outline icon in a tonal circle, title and one-line description.
 //
 
 import SwiftUI
@@ -136,7 +136,7 @@ struct SettingsEntry {
     }
 }
 
-/// One row of a settings group: filled primary circle icon, title and a
+/// One row of a settings group: outline icon in a tonal circle, title and a
 /// single-line subtitle on a tonal surface with segmented corners.
 struct SettingsCardRow: View {
     @Environment(\.m3) private var m3
@@ -167,11 +167,7 @@ struct SettingsCardRow: View {
 
     private var label: some View {
         HStack(spacing: 20) {
-            Image(systemName: entry.icon)
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(m3.onPrimary)
-                .frame(width: 52, height: 52)
-                .background(m3.primary, in: Circle())
+            M3IconCircle(size: 52) { Image(systemName: entry.icon) }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title)
