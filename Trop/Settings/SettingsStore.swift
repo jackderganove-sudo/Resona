@@ -216,6 +216,11 @@ final class SettingsStore {
         didSet { Self.defaults.set(audioNormalization, forKey: Keys.audioNormalization) }
     }
 
+    /// Slowly flowing mesh gradient behind the player.
+    var animatedPlayerBackground: Bool {
+        didSet { Self.defaults.set(animatedPlayerBackground, forKey: Keys.animatedPlayerBackground) }
+    }
+
     var gaplessPlayback: Bool {
         didSet { Self.defaults.set(gaplessPlayback, forKey: Keys.gaplessPlayback) }
     }
@@ -353,6 +358,7 @@ final class SettingsStore {
         static let audioQuality = "settings.audioQuality"
         static let audioNormalization = "settings.audioNormalization"
         static let gaplessPlayback = "settings.gaplessPlayback"
+        static let animatedPlayerBackground = "resona.animatedPlayerBackground"
         static let autoplaySimilar = "settings.autoplaySimilar"
         static let persistQueue = "settings.persistQueue"
         static let lastRadioStyle = "settings.lastRadioStyle"
@@ -417,6 +423,7 @@ final class SettingsStore {
         audioQuality = Self.loadEnum(Keys.audioQuality, default: .auto)
         audioNormalization = Self.load(Keys.audioNormalization, default: false)
         gaplessPlayback = Self.load(Keys.gaplessPlayback, default: true)
+        animatedPlayerBackground = Self.load(Keys.animatedPlayerBackground, default: true)
         autoplaySimilar = Self.load(Keys.autoplaySimilar, default: true)
         persistQueue = Self.load(Keys.persistQueue, default: false)
         lastRadioStyle = Self.loadEnum(Keys.lastRadioStyle, default: .similar)

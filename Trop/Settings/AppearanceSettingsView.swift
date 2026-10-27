@@ -46,8 +46,13 @@ struct AppearanceSettingsView: View {
 
             M3Section {
                 SettingsPickerRow("Player Background", icon: "photo", selection: $settings.playerBackgroundStyle)
+                if settings.playerBackgroundStyle == .dynamic {
+                    SettingsToggleRow("Animated", icon: "wind", isOn: $settings.animatedPlayerBackground)
+                }
             } header: {
                 Text("Player")
+            } footer: {
+                Text("Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on.")
             }
 
             M3Section {

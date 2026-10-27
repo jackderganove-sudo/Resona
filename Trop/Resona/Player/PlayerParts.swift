@@ -11,60 +11,111 @@ import SwiftUI
 
 // MARK: - Background
 
-/// Soft gradient from the artwork colours with a heavily blurred copy of the
-/// cover glowing through (reference: player background).
+/// Vibrant, slowly flowing mesh gradient from 4 cover colours (Apple Music /
+/// Android 17 style). Saturation ~25 % above the cover, brightness capped so
+/// white text stays readable. Control points drift on incommensurate sine
+/// waves (17–23 s), colours cross-fade in 0.9 s on song change. Static with
+/// Reduce Motion, when the setting is off or when the app is not active;
+/// the player only exists while it is open, so nothing runs otherwise.
 struct PlayerBackground: View {
     @Environment(\.artworkColors) private var colors
-    var image: UIImage?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(SettingsStore.self) private var settings
     var dimmed: Bool = false
 
+    @State private var from: [RGB] = []
+    @State private var to: [RGB] = []
+    @State private var changedAt = Date.distantPast
+
+    private static let fadeDuration = 0.9
+
     var body: some View {
-        let tuned = colors.gradient.map { ArtworkColorExtractor.comfortable($0, minV: 0.2, maxV: 0.62, minS: colors.isGreyscale ? 0 : 0.35) }
-        let first = tuned.first ?? RGB(hex: 0x2C5D62)
-        let second = tuned.count > 1 ? tuned[1] : first
-        let third = tuned.count > 2 ? tuned[2] : second
-
+        let animate = settings.animatedPlayerBackground && !reduceMotion && scenePhase == .active
         ZStack {
-            LinearGradient(
-                stops: [
-                    .init(color: ArtworkColorExtractor.darken(first, 0.72).color, location: 0),
-                    .init(color: first.color, location: 0.42),
-                    .init(color: second.mix(third, 0.5).color, location: 0.78),
-                    .init(color: ArtworkColorExtractor.darken(second, 0.8).color, location: 1)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-
-            if let image {
-                // Pre-blurred once (Core Image, cached) instead of a live
-                // 90 pt blur that was re-rendered every animation frame.
-                GeometryReader { geo in
-                    BlurredArtwork(image: image, radius: 10)
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .opacity(0.5)
-                        .clipped()
+            if animate {
+                TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+                    let date = context.date
+                    mesh(colors: blended(at: date), time: date.timeIntervalSinceReferenceDate)
                 }
-                .transition(.opacity)
-                .id(ObjectIdentifier(image))
+            } else {
+                mesh(colors: target, time: 0)
+                    .animation(.easeInOut(duration: Self.fadeDuration), value: target)
             }
 
-            // Top glow + bottom vignette keep white text readable.
-            RadialGradient(
-                colors: [first.color.opacity(0.55), .clear],
-                center: .init(x: 0.5, y: 0.25),
-                startRadius: 10,
-                endRadius: 420
-            )
-            .blendMode(.screen)
-            LinearGradient(colors: [.black.opacity(0.18), .clear, .black.opacity(0.28)], startPoint: .top, endPoint: .bottom)
+            // Bottom vignette keeps controls and white text readable.
+            LinearGradient(colors: [.black.opacity(0.12), .clear, .black.opacity(0.32)], startPoint: .top, endPoint: .bottom)
 
             if dimmed {
                 Color.black.opacity(0.35)
             }
         }
         .ignoresSafeArea()
-        .animation(M3Motion.colorChange, value: colors)
+        .onAppear {
+            to = target
+            from = target
+        }
+        .onChange(of: target) { _, new in
+            let now = Date()
+            from = blended(at: now)
+            to = new
+            changedAt = now
+        }
+    }
+
+    private var target: [RGB] { Self.vibrantPalette(colors) }
+
+    /// Cross-fade between the previous and the new palette.
+    private func blended(at date: Date) -> [RGB] {
+        guard from.count == to.count, !to.isEmpty else { return to.isEmpty ? target : to }
+        let raw = min(1, max(0, date.timeIntervalSince(changedAt) / Self.fadeDuration))
+        let f = raw * raw * (3 - 2 * raw)
+        guard f < 1 else { return to }
+        return zip(from, to).map { $0.mix($1, f) }
+    }
+
+    private func mesh(colors palette: [RGB], time t: Double) -> some View {
+        let c = palette.count == 4 ? palette : Self.vibrantPalette(.fallback)
+        func w(_ period: Double, _ phase: Double) -> Float {
+            Float(sin(t * 2 * .pi / period + phase))
+        }
+        func shade(_ rgb: RGB, _ factor: Double, _ period: Double, _ phase: Double) -> Color {
+            // Blobs breathe slightly in brightness as they move.
+            let hsv = rgb.hsv
+            let pulse = 1 + 0.07 * Double(w(period, phase))
+            return RGB(h: hsv.h, s: hsv.s, v: min(0.7, hsv.v * factor * pulse)).color
+        }
+        let points: [SIMD2<Float>] = [
+            [0, 0], [0.5 + 0.2 * w(19, 0), 0], [1, 0],
+            [0, 0.45 + 0.2 * w(23, 1.1)], [0.5 + 0.22 * w(17, 2.3), 0.5 + 0.2 * w(21, 0.4)], [1, 0.5 + 0.2 * w(18, 3.0)],
+            [0, 1], [0.5 + 0.2 * w(22, 4.2), 1], [1, 1]
+        ]
+        let meshColors: [Color] = [
+            shade(c[1], 0.7, 20, 0), shade(c[0], 1, 17, 1), shade(c[2], 0.75, 23, 2),
+            shade(c[2], 1, 19, 3), shade(c[0], 1.1, 21, 4), shade(c[3], 1, 18, 5),
+            shade(c[3], 0.6, 22, 6), shade(c[1], 0.85, 16, 7), shade(c[0], 0.55, 24, 8)
+        ]
+        return MeshGradient(width: 3, height: 3, points: points, colors: meshColors, smoothsColors: true)
+    }
+
+    /// Four background colours from the cover: saturation boosted ~25 %
+    /// (vibrant, not muted), brightness kept between 0.26 and 0.6.
+    static func vibrantPalette(_ colors: ArtworkColors) -> [RGB] {
+        var base = Array(colors.gradient.prefix(4))
+        if base.isEmpty { base = [colors.seed] }
+        while base.count < 4 {
+            // Neighbouring hues of the main colour fill missing slots.
+            let hsv = base[0].hsv
+            let shift = base.count.isMultiple(of: 2) ? 18.0 : -18.0
+            base.append(RGB(h: (hsv.h + shift * Double(base.count) + 360).truncatingRemainder(dividingBy: 360), s: hsv.s, v: hsv.v * 0.85))
+        }
+        return base.map { rgb in
+            let hsv = rgb.hsv
+            if colors.isGreyscale || hsv.s < 0.06 {
+                return RGB(h: hsv.h, s: hsv.s, v: min(max(hsv.v, 0.22), 0.45))
+            }
+            return RGB(h: hsv.h, s: min(1, max(0.5, hsv.s * 1.25)), v: min(max(hsv.v * 1.1, 0.26), 0.6))
+        }
     }
 }
 

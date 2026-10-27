@@ -112,7 +112,7 @@ struct FullPlayerView: View {
         if np.isVideoMode && np.hasVideo || settings.playerBackgroundStyle == .solid {
             Color.black.ignoresSafeArea()
         } else {
-            PlayerBackground(image: np.thumbnailUIImage, dimmed: showSleepTimer)
+            PlayerBackground(dimmed: showSleepTimer)
         }
     }
 
