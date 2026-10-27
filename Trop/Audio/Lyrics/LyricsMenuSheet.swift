@@ -27,6 +27,8 @@ struct LyricsMenuSheet: View {
                 MenuCard {
                         offsetRow
                         Divider()
+                        tempoRow
+                        Divider()
                         Toggle(isOn: $settings.showIntervalIndicator) {
                             HStack(spacing: 14) {
                                 Image(systemName: "text.quote")
@@ -137,6 +139,51 @@ struct LyricsMenuSheet: View {
     }
 
     // MARK: - Offset Row
+
+    /// Per-song tempo: scales every timestamp (slowed / sped-up uploads
+    /// whose lyrics follow the original). "Auto" = automatic detection.
+    private var tempoRow: some View {
+        let id = np.videoId
+        let adjustments = LyricsSongAdjustments.shared
+        let manual = adjustments.tempo(for: id)
+        let auto = id.flatMap { LyricsState.shared.autoTempo[$0] } ?? 1
+        let current = manual ?? auto
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 14) {
+                Image(systemName: "metronome")
+                    .font(.system(size: 18))
+                    .foregroundStyle(settings.accentColor)
+                    .frame(width: 26)
+                Text("Tempo")
+                    .font(.body)
+                    .foregroundStyle(.m3OnSurface)
+                Spacer()
+                Text(manual == nil ? String(format: String(localized: "Auto (%@)"), String(format: "%.2f×", auto)) : String(format: "%.2f×", current))
+                    .font(.footnote.monospacedDigit())
+                    .foregroundStyle(.m3OnSurfaceVariant)
+                if manual != nil {
+                    Button("Auto") { adjustments.setTempo(nil, for: id) }
+                        .font(.footnote.weight(.semibold))
+                        .buttonStyle(.plain)
+                        .foregroundStyle(settings.accentColor)
+                }
+            }
+            ExpressiveSlider(
+                value: Binding(
+                    get: { current },
+                    set: { adjustments.setTempo(($0 * 100).rounded() / 100, for: id) }
+                ),
+                range: 0.6...1.5,
+                trackHeight: 10,
+                handleHeight: 28,
+                activeColor: settings.accentColor,
+                inactiveColor: Color.white.opacity(0.15)
+            )
+            .frame(height: 30)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
 
     private var offsetRow: some View {
         Button {

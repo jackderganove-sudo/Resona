@@ -101,6 +101,9 @@ struct LyricsView<ProgressSlider: View>: View {
         .onChange(of: LyricsState.shared.refreshToken) { _, _ in
             Task { await loadLyrics() }
         }
+        .onChange(of: LyricsSongAdjustments.shared.tempo(for: np.videoId)) { _, _ in
+            Task { await loadLyrics() }
+        }
     }
 
     // MARK: - Layouts
@@ -310,12 +313,31 @@ struct LyricsView<ProgressSlider: View>: View {
     }
 
     private func providerLabel(_ provider: String) -> some View {
-        Text("Lyrics from \(provider)")
-            .font(.poppins(12, weight: .medium))
-            .foregroundStyle(.white.opacity(0.5))
-            .frame(maxWidth: .infinity, alignment: settings.lyricsAlignment.textAlignment)
-            .padding(.horizontal, 28)
-            .padding(.top, 8)
+        VStack(alignment: settings.lyricsAlignment.textAlignment.horizontal, spacing: 2) {
+            Text("Lyrics from \(provider)")
+            if let note = tempoNote {
+                Text(note)
+            }
+        }
+        .font(.poppins(12, weight: .medium))
+        .foregroundStyle(.white.opacity(0.5))
+        .frame(maxWidth: .infinity, alignment: settings.lyricsAlignment.textAlignment)
+        .padding(.horizontal, 28)
+        .padding(.top, 8)
+    }
+
+    /// "Adjusted to slowed version (0.84×)" when timestamps were scaled.
+    private var tempoNote: String? {
+        let id = np.videoId
+        let factor = LyricsSongAdjustments.shared.tempo(for: id) ?? id.flatMap { LyricsState.shared.autoTempo[$0] }
+        guard let factor, abs(factor - 1) > 0.005 else { return nil }
+        let value = String(format: "%.2f×", factor)
+        if LyricsSongAdjustments.shared.tempo(for: id) != nil {
+            return String(format: String(localized: "Tempo set manually (%@)"), value)
+        }
+        return factor < 1
+            ? String(format: String(localized: "Adjusted to slowed version (%@)"), value)
+            : String(format: String(localized: "Adjusted to sped-up version (%@)"), value)
     }
 
     @ViewBuilder
@@ -526,6 +548,9 @@ struct LyricsView<ProgressSlider: View>: View {
         // A reload for the same song (refresh signal, view re-appearing)
         // keeps the existing rows; only a different song clears them.
         if loadedVideoId != videoId {
+            // Per-song offset.
+            let storedOffset = LyricsSongAdjustments.shared.offset(for: videoId)
+            if settings.lyricsOffsetSeconds != storedOffset { settings.lyricsOffsetSeconds = storedOffset }
             lines = []
             instrumentalGaps = []
             activeIndex = -1
@@ -540,7 +565,12 @@ struct LyricsView<ProgressSlider: View>: View {
             let result = try await LyricsService.shared.fetchLyrics(videoId: videoId)
             guard !result.isEmpty else { return }
             let withoutMarkers = result.filter { !Self.isInstrumentalMarker($0) }
-            let fresh = LyricLine.stable(withoutMarkers.isEmpty ? result : withoutMarkers)
+            // Manual tempo (lyrics menu) on top of the automatic factor.
+            let manual = LyricsSongAdjustments.shared.tempo(for: videoId)
+            let auto = LyricsState.shared.autoTempo[videoId] ?? 1
+            let base = withoutMarkers.isEmpty ? result : withoutMarkers
+            let timed = manual.map { LyricLine.scaled(base, by: $0 / auto) } ?? base
+            let fresh = LyricLine.stable(timed)
             let unchanged = fresh.count == lines.count && zip(fresh, lines).allSatisfy { $0.sameContent(as: $1) }
             if !unchanged {
                 withAnimation(M3Motion.defaultEffects) { lines = fresh }

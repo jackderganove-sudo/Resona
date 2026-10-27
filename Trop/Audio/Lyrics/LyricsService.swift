@@ -79,11 +79,14 @@ enum LyricsDiskCache {
     private struct Entry: Codable {
         let provider: String?
         let lines: [LyricLine]
+        var tempo: Double?
     }
 
     private static var directory: URL? {
         guard let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
-        let dir = base.appendingPathComponent("lyrics", isDirectory: true)
+        // v2: results are tempo-checked; older, possibly unscaled entries
+        // for slowed / sped-up uploads are discarded.
+        let dir = base.appendingPathComponent("lyrics-v2", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
@@ -93,17 +96,17 @@ enum LyricsDiskCache {
         return directory?.appendingPathComponent("\(safe).json")
     }
 
-    static func load(_ videoId: String) -> (lines: [LyricLine], provider: String?)? {
+    static func load(_ videoId: String) -> (lines: [LyricLine], provider: String?, tempo: Double?)? {
         guard let url = file(videoId),
               let data = try? Data(contentsOf: url),
               let entry = try? JSONDecoder().decode(Entry.self, from: data),
               !entry.lines.isEmpty else { return nil }
-        return (entry.lines, entry.provider)
+        return (entry.lines, entry.provider, entry.tempo)
     }
 
-    static func save(_ lines: [LyricLine], provider: String?, for videoId: String) {
+    static func save(_ lines: [LyricLine], provider: String?, tempo: Double?, for videoId: String) {
         guard let url = file(videoId),
-              let data = try? JSONEncoder().encode(Entry(provider: provider, lines: lines)) else { return }
+              let data = try? JSONEncoder().encode(Entry(provider: provider, lines: lines, tempo: tempo)) else { return }
         try? data.write(to: url, options: .atomic)
     }
 
@@ -122,6 +125,9 @@ final class LyricsState {
     var availableVideoIds: Set<String> = []
     var providerName: String?
     var refreshToken: Int = 0
+    /// Factor the lyrics timestamps were scaled by automatically
+    /// (slowed / sped-up versions), per video id.
+    var autoTempo: [String: Double] = [:]
 
     private init() {}
 }
@@ -142,6 +148,7 @@ actor LyricsService {
     private struct FetchResult: Sendable {
         let lines: [LyricLine]
         let providerName: String?
+        let tempo: Double?
     }
 
     func fetchLyrics(videoId: String) async throws -> [LyricLine] {
@@ -156,6 +163,7 @@ actor LyricsService {
         if let stored = LyricsDiskCache.load(videoId) {
             cache[videoId] = stored.lines
             providerNames[videoId] = stored.provider
+            await publishTempo(stored.tempo, for: videoId)
             await updateAvailability(videoId: videoId, available: true, providerName: stored.provider)
             return stored.lines
         }
@@ -167,8 +175,8 @@ actor LyricsService {
             throw LyricsError.notFound
         }
         let flight = Task<FetchResult, Error> {
-            let (lines, providerName) = try await Self.fetchFromProviders(query)
-            return FetchResult(lines: lines, providerName: providerName)
+            let (lines, providerName, tempo) = try await Self.fetchFromProviders(query)
+            return FetchResult(lines: lines, providerName: providerName, tempo: tempo)
         }
         inFlight[videoId] = flight
         do {
@@ -179,8 +187,9 @@ actor LyricsService {
             if !result.lines.isEmpty {
                 cache[videoId] = result.lines
                 providerNames[videoId] = result.providerName
-                LyricsDiskCache.save(result.lines, provider: result.providerName, for: videoId)
+                LyricsDiskCache.save(result.lines, provider: result.providerName, tempo: result.tempo, for: videoId)
             }
+            await publishTempo(result.tempo, for: videoId)
             await updateAvailability(videoId: videoId, available: !result.lines.isEmpty, providerName: result.providerName)
             return result.lines
         } catch {
@@ -247,13 +256,14 @@ actor LyricsService {
             Task { await MainActor.run { LyricsState.shared.refreshToken += 1 } }
         }
         guard let query = await resolveQuery(videoId: videoId),
-              let (fetchedLines, fetchedProvider) = try? await Self.fetchFromProviders(query),
+              let (fetchedLines, fetchedProvider, fetchedTempo) = try? await Self.fetchFromProviders(query),
               !fetchedLines.isEmpty else {
             await updateAvailability(videoId: videoId, available: false)
             signalReload()
             return
         }
         cache[videoId] = fetchedLines
+        await publishTempo(fetchedTempo, for: videoId)
         let raw = LyricsParsing.serializeLines(fetchedLines)
         let provider = fetchedProvider ?? "Manual"
         customs[videoId] = (fetchedLines, provider)
@@ -279,6 +289,10 @@ actor LyricsService {
         for id in upcoming where cache[id] == nil && customEntry(for: id) == nil {
             _ = try? await fetchLyrics(videoId: id)
         }
+    }
+
+    private func publishTempo(_ tempo: Double?, for videoId: String) async {
+        await MainActor.run { LyricsState.shared.autoTempo[videoId] = tempo }
     }
 
     private func updateAvailability(videoId: String, available: Bool, providerName: String? = nil) async {
@@ -346,38 +360,51 @@ actor LyricsService {
     // MARK: Slowed / sped-up variants
 
     static func isSpeedVariant(_ title: String) -> Bool {
-        title.range(of: #"\b((super|ultra)\s+)?(slowed|sped\s*up|speed\s*up|nightcore|daycore)\b"#,
+        title.range(of: #"\b((super|ultra)\s+)?(slowed|sped\s*up|speed\s*up|nightcore|daycore|reverb)\b"#,
                     options: [.regularExpression, .caseInsensitive]) != nil
     }
 
-    /// Normal lookup, or for a speed variant: lyrics of the original
-    /// (searched with the original's length) with every timestamp scaled
-    /// by variant length / original length. If the original's length is
-    /// unknown the text is shown unsynced rather than wrongly timed.
-    private static func fetchFromProviders(_ query: LyricsQuery) async throws -> ([LyricLine], providerName: String?) {
-        guard query.isSpeedVariant, query.duration > 0 else {
-            return try await LyricsManager.shared.fetchLyricsReturningProvider(query: query)
+    /// Lookup plus tempo check of EVERY result: some providers return lyrics
+    /// for a "(Slowed)" title directly, but with the ORIGINAL's timestamps.
+    /// When the title is a variant or the last timestamp doesn't fit this
+    /// song's length, the original's length is determined and all line and
+    /// word times are scaled by variant / original (only 0.6-1.5×).
+    /// Returns the factor applied (nil = untouched).
+    private static func fetchFromProviders(_ query: LyricsQuery) async throws -> ([LyricLine], providerName: String?, tempo: Double?) {
+        let played = query.duration
+        var original: TimeInterval?
+        var lookup = query
+        if query.isSpeedVariant, played > 0 {
+            original = await originalDuration(title: query.title, artist: query.artist)
+            // Search with the original's length (or none) so length-checked
+            // providers match the original recording.
+            lookup = LyricsQuery(title: query.title, artist: query.artist, album: nil, duration: original ?? 0, videoId: query.videoId)
         }
-        let original = await originalDuration(title: query.title, artist: query.artist)
-        let lookup = LyricsQuery(
-            title: query.title,
-            artist: query.artist,
-            album: nil,
-            duration: original ?? 0,
-            videoId: query.videoId
-        )
         let (lines, provider) = try await LyricsManager.shared.fetchLyricsReturningProvider(query: lookup)
-        if let original, original > 0 {
-            let factor = query.duration / original
-            if (0.5...2.0).contains(factor) {
-                return (LyricLine.scaled(lines, by: factor), provider)
-            }
+        guard played > 0, let last = lines.compactMap(\.startTime).max() else { return (lines, provider, nil) }
+
+        let mismatch = last > played + 3
+        guard query.isSpeedVariant || mismatch else { return (lines, provider, nil) }
+        if original == nil {
+            original = await originalDuration(title: query.title, artist: query.artist)
         }
-        return (lines.map { LyricLine(text: $0.text, startTime: nil, backgroundText: $0.backgroundText) }, provider)
+        if let original, original > 0 {
+            let factor = played / original
+            if (0.6...1.5).contains(factor), abs(factor - 1) > 0.02 {
+                return (LyricLine.scaled(lines, by: factor), provider, factor)
+            }
+            if abs(factor - 1) <= 0.02 { return (lines, provider, nil) }
+        }
+        // Can't tell how to scale: show the text without wrong timing.
+        if mismatch {
+            return (lines.map { LyricLine(text: $0.text, startTime: nil, backgroundText: $0.backgroundText) }, provider, nil)
+        }
+        return (lines, provider, nil)
     }
 
-    /// Length of the original recording (LRCLIB search, prefers entries
-    /// with synced lyrics and a matching title).
+    /// Length of the ORIGINAL recording via LRCLIB search: entries whose
+    /// title equals the cleaned title, by the same main artist, and that are
+    /// not themselves slowed/sped-up uploads; synced ones preferred.
     private static func originalDuration(title: String, artist: String) async -> TimeInterval? {
         var components = URLComponents(string: "https://lrclib.net/api/search")
         components?.queryItems = [
@@ -388,9 +415,16 @@ actor LyricsService {
               let data = await LyricsRequest.get(url, timeout: 4),
               let items = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return nil }
         func norm(_ s: String) -> String { s.lowercased().filter { $0.isLetter || $0.isNumber } }
-        let wanted = norm(title)
-        let matching = items.filter { norm($0["trackName"] as? String ?? "") == wanted }
-        let pick = matching.first { ($0["syncedLyrics"] as? String)?.isEmpty == false } ?? matching.first ?? items.first
+        let wantedTitle = norm(title)
+        let wantedArtist = norm(artist)
+        let candidates = items.filter { item in
+            let name = item["trackName"] as? String ?? ""
+            let by = norm(item["artistName"] as? String ?? "")
+            return norm(name) == wantedTitle
+                && !isSpeedVariant(name)
+                && (wantedArtist.isEmpty || by.contains(wantedArtist) || wantedArtist.contains(by))
+        }
+        let pick = candidates.first { ($0["syncedLyrics"] as? String)?.isEmpty == false } ?? candidates.first
         guard let seconds = (pick?["duration"] as? NSNumber)?.doubleValue, seconds > 0 else { return nil }
         return seconds
     }

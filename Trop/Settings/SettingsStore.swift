@@ -178,8 +178,16 @@ final class SettingsStore {
     }
 
     /// Shifts lyric timing by this many seconds (positive = later, negative = earlier).
+    /// Lyrics offset of the CURRENT song (saved per song; LyricsView loads
+    /// the stored value whenever the song changes).
     var lyricsOffsetSeconds: Double {
-        didSet { Self.defaults.set(lyricsOffsetSeconds, forKey: Keys.lyricsOffsetSeconds) }
+        didSet {
+            Self.defaults.set(lyricsOffsetSeconds, forKey: Keys.lyricsOffsetSeconds)
+            let value = lyricsOffsetSeconds
+            MainActor.assumeIsolated {
+                LyricsSongAdjustments.shared.setOffset(value, for: NowPlaying.shared.videoId)
+            }
+        }
     }
 
     /// Shows a progress ring during long instrumental gaps in synced lyrics.
