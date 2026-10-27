@@ -362,8 +362,7 @@ private struct InterludeDots: View {
     @Environment(SettingsStore.self) private var settings
 
     var body: some View {
-        // Inactive rows: paused timeline, renderer without words = plain.
-        TimelineView(.animation(paused: !isActive || !np.isPlaying)) { _ in
+        TimelineView(.animation(paused: !np.isPlaying)) { _ in
             let t = PlaybackClock.shared.now() + settings.lyricsOffsetSeconds
             let visible = t >= gap.start - 0.1 && t < gap.end
             let duration = max(0.5, gap.end - gap.start)
@@ -432,7 +431,8 @@ private struct KaraokeLine: View {
         let text = words.enumerated().reduce(Text(verbatim: "")) { partial, item in
             partial + Text(verbatim: item.element.text).customAttribute(WordIndexAttribute(index: item.offset))
         }
-        TimelineView(.animation(paused: !np.isPlaying)) { _ in
+        // Inactive rows: paused timeline, renderer without words = plain.
+        TimelineView(.animation(paused: !isActive || !np.isPlaying)) { _ in
             text
                 .font(.system(size: fontSize, weight: .bold))
                 .tracking(-0.4)
