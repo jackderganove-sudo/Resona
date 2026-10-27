@@ -74,13 +74,13 @@ final class AppRouter: ObservableObject {
         focusSearchToken += 1
     }
 
-    func showLyrics() {
+    @MainActor func showLyrics() {
         guard NowPlaying.shared.videoId != nil else { return }
         pendingLyrics = true
         expandPlayer()
     }
 
-    func showQueue() {
+    @MainActor func showQueue() {
         guard NowPlaying.shared.videoId != nil else { return }
         pendingQueue = true
         expandPlayer()
