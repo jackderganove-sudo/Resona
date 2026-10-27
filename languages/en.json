@@ -538,5 +538,12 @@
   "Search manually": "Search manually",
   "Get API key": "Get API key",
   "Paste": "Paste",
-  "Paxsenix only answers requests with your own API key; without one it is skipped. Get a key for free: sign in with GitHub on the Paxsenix website (free Starter plan, 1,000 requests a day), create a key in the dashboard, copy it and tap Paste.": "Paxsenix only answers requests with your own API key; without one it is skipped. Get a key for free: sign in with GitHub on the Paxsenix website (free Starter plan, 1,000 requests a day), create a key in the dashboard, copy it and tap Paste."
+  "Paxsenix only answers requests with your own API key; without one it is skipped. Get a key for free: sign in with GitHub on the Paxsenix website (free Starter plan, 1,000 requests a day), create a key in the dashboard, copy it and tap Paste.": "Paxsenix only answers requests with your own API key; without one it is skipped. Get a key for free: sign in with GitHub on the Paxsenix website (free Starter plan, 1,000 requests a day), create a key in the dashboard, copy it and tap Paste.",
+  "Blur off": "Blur off",
+  "Glow off": "Glow off",
+  "Word growth off": "Word growth off",
+  "Scroll animation off (jump)": "Scroll animation off (jump)",
+  "Debug overlay": "Debug overlay",
+  "Developer (testing)": "Developer (testing)",
+  "Switches single lyrics effects off to find what causes a visual problem. The overlay shows the scroll offset, its target and retargets per second.": "Switches single lyrics effects off to find what causes a visual problem. The overlay shows the scroll offset, its target and retargets per second."
 }

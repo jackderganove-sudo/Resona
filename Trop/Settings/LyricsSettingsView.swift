@@ -12,6 +12,7 @@ struct LyricsSettingsView: View {
     @Environment(\.settingsStore) private var settings
     @Environment(\.m3) private var m3
     @AppStorage(PaxsenixProvider.apiKeyDefaultsKey) private var paxsenixKey = ""
+    @Bindable private var debug = LyricsDebugOptions.shared
 
     var body: some View {
         @Bindable var settings = settings
@@ -115,6 +116,18 @@ struct LyricsSettingsView: View {
                 Text("Timing")
             } footer: {
                 Text("Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.")
+            }
+
+            M3Section {
+                SettingsToggleRow("Blur off", icon: "drop", isOn: $debug.blurOff)
+                SettingsToggleRow("Glow off", icon: "sun.max", isOn: $debug.glowOff)
+                SettingsToggleRow("Word growth off", icon: "textformat.size.larger", isOn: $debug.growthOff)
+                SettingsToggleRow("Scroll animation off (jump)", icon: "arrow.down.to.line", isOn: $debug.scrollAnimationOff)
+                SettingsToggleRow("Debug overlay", icon: "ladybug", isOn: $debug.overlay)
+            } header: {
+                Text("Developer (testing)")
+            } footer: {
+                Text("Switches single lyrics effects off to find what causes a visual problem. The overlay shows the scroll offset, its target and retargets per second.")
             }
 
             M3Section {

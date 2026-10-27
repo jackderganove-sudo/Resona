@@ -50,11 +50,13 @@ struct LyricsStage<Accessory: View>: View {
 
     /// Natural top of every row inside the list (independent of scrolling).
     @State private var lineTops: [Int: CGFloat] = [:]
-    @State private var scrollY: CGFloat = 0
+    /// The single source of the list offset (own spring, pixel-rounded).
+    @State private var scroller = LyricsScroller()
     @State private var stageHeight: CGFloat = 0
     @State private var hasPositioned = false
-    @State private var manualOffset: CGFloat = 0
     @State private var dragStart: CGFloat?
+    @Environment(\.displayScale) private var displayScale
+    private let debug = LyricsDebugOptions.shared
     @State private var isManual = false
     @GestureState private var isTouching = false
     @State private var resumeTask: Task<Void, Never>?
@@ -81,9 +83,7 @@ struct LyricsStage<Accessory: View>: View {
             // Measured BEFORE the offset: positions stay natural.
             .coordinateSpace(.named(Self.space))
             .frame(width: geo.size.width, alignment: Alignment(horizontal: horizontalAlignment, vertical: .top))
-            .offset(y: -scrollY)
-            .animation(LyricsTiming.scrollAnimation, value: scrollY)
-            .offset(y: manualOffset)
+            .modifier(LyricsScrollerOffset(scroller: scroller))
             .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
             .contentShape(Rectangle())
             .gesture(dragGesture)
@@ -104,15 +104,24 @@ struct LyricsStage<Accessory: View>: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .onAppear { stageHeight = geo.size.height }
-            .onChange(of: geo.size.height) { _, h in stageHeight = h }
+            .overlay(alignment: .topTrailing) {
+                if debug.overlay { debugOverlay }
+            }
+            .onAppear {
+                scroller.displayScale = displayScale
+                stageHeight = geo.size.height
+            }
+            .onChange(of: geo.size.height) { _, h in
+                // Ignore sub-point jitter of the container height.
+                if abs(h - stageHeight) > 1 { stageHeight = h }
+            }
         }
         .clipped()
         .mask(edgeFade)
         .animation(M3Motion.fastSpatial, value: isManual)
-        .onChange(of: scrollIndex) { _, _ in updateScrollTarget() }
-        .onChange(of: lineTops) { _, _ in updateScrollTarget() }
-        .onChange(of: stageHeight) { _, _ in updateScrollTarget() }
+        .onChange(of: scrollIndex) { _, _ in updateScrollTarget(.lineChange) }
+        .onChange(of: lineTops) { _, _ in updateScrollTarget(.lineTops) }
+        .onChange(of: stageHeight) { _, _ in updateScrollTarget(.height) }
         .onChange(of: lines.map(\.id)) { _, _ in hasPositioned = false }
         .onDisappear { resumeTask?.cancel() }
     }
@@ -124,28 +133,42 @@ struct LyricsStage<Accessory: View>: View {
         return introGap != nil ? -1 : 0
     }
 
-    /// One offset change per line change (animated by the single
-    /// `.animation` on the list). The first placement — opening the lyrics
-    /// mid-song — is instant.
-    private func updateScrollTarget() {
-        guard !isManual else { return }
-        guard let top = lineTops[targetKey], stageHeight > 0 else { return }
-        let target = max(0, top - stageHeight * anchorFraction)
-        if !hasPositioned {
-            var t = Transaction()
-            t.disablesAnimations = true
-            withTransaction(t) { scrollY = target }
-            hasPositioned = true
-            return
-        }
-        guard abs(target - scrollY) > 0.5 else { return }
-        // The offset may only change on a real line change (or layout
-        // change); the log makes any per-frame swing visible.
-        Self.log.debug("scroll \(scrollY, format: .fixed(precision: 1)) → \(target, format: .fixed(precision: 1)) key=\(targetKey) manual=\(isManual)")
-        scrollY = target
+    /// Target for the current scroll line; only real changes reach the
+    /// scroller (it ignores retargets within 0.5 pt). The first placement —
+    /// opening the lyrics mid-song — is instant.
+    private var autoTarget: CGFloat? {
+        guard let top = lineTops[targetKey], stageHeight > 0 else { return nil }
+        let raw = max(0, top - stageHeight * anchorFraction)
+        let scale = max(1, displayScale)
+        return (raw * scale).rounded() / scale
     }
 
-    private static var log: Logger { Logger(subsystem: "dev.jackderganove.resona", category: "LyricsStage") }
+    private func updateScrollTarget(_ reason: LyricsScroller.Reason) {
+        guard !isManual, let target = autoTarget else { return }
+        if !hasPositioned {
+            scroller.jump(to: target, reason: .initial)
+            hasPositioned = true
+        } else if debug.scrollAnimationOff {
+            if abs(target - scroller.target) > 0.5 { scroller.jump(to: target, reason: reason) }
+        } else {
+            scroller.animate(to: target, reason: reason)
+        }
+    }
+
+    private var debugOverlay: some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            Text(verbatim: String(format: "scrollY %.1f", scroller.y))
+            Text(verbatim: String(format: "target %.1f", scroller.target))
+            Text(verbatim: "retargets/s \(scroller.retargetsPerSecond)")
+            Text(verbatim: "line \(activeIndex) scroll \(scrollIndex) \(isManual ? "manual" : "auto")")
+        }
+        .font(.system(size: 11, weight: .medium, design: .monospaced))
+        .foregroundStyle(.white)
+        .padding(8)
+        .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 8))
+        .padding(8)
+        .allowsHitTesting(false)
+    }
 
     // MARK: Interludes
 
@@ -224,7 +247,7 @@ struct LyricsStage<Accessory: View>: View {
         .animation(.easeOut(duration: isActive ? 0.18 : 0.42)) { content in
             content
                 .opacity(isActive ? 1 : opacity(distance: distance))
-                .blur(radius: isActive || isManual || distance > 10 ? 0 : blur(rel: rel))
+                .blur(radius: isActive || isManual || debug.blurOff || distance > 10 ? 0 : blur(rel: rel))
         }
         .contentShape(Rectangle())
         .onTapGesture { onSeek(line); resume() }
@@ -261,34 +284,31 @@ struct LyricsStage<Accessory: View>: View {
 
     // MARK: Manual scrolling
 
+    /// Furthest the list may be dragged (last line at the anchor).
+    private var maxScroll: CGFloat {
+        max(0, (lineTops[lines.count - 1] ?? 0) - stageHeight * anchorFraction)
+    }
+
     private var dragGesture: some Gesture {
         DragGesture(minimumDistance: 6)
             .updating($isTouching) { _, touching, _ in touching = true }
             .onChanged { value in
                 if dragStart == nil {
-                    dragStart = manualOffset
+                    dragStart = scroller.y
                     isManual = true
                 }
-                var t = Transaction()
-                t.disablesAnimations = true
-                withTransaction(t) {
-                    manualOffset = (dragStart ?? 0) + value.translation.height
-                }
+                // Manual mode: the finger is the only input; auto is blocked
+                // (updateScrollTarget returns while isManual).
+                scroller.drag(to: (dragStart ?? 0) - value.translation.height)
                 // Also scheduled here: if another gesture cancels this one,
                 // onEnded never runs — the stage must still snap back.
                 scheduleResume()
             }
             .onEnded { value in
-                let base = dragStart ?? 0
+                let base = dragStart ?? scroller.y
                 dragStart = nil
-                let current = lineTops[targetKey] ?? 0
-                let maxUp = current
-                let maxDown = max(0, (lineTops[lines.count - 1] ?? 0) - current)
-                let projected = base + value.predictedEndTranslation.height
-                let clamped = min(max(projected, -maxDown), maxUp)
-                withAnimation(.interpolatingSpring(mass: 1, stiffness: 140, damping: 24, initialVelocity: 0)) {
-                    manualOffset = clamped
-                }
+                let projected = base - value.predictedEndTranslation.height
+                scroller.animate(to: min(max(projected, 0), maxScroll), reason: .fling, response: 0.6, dampingFraction: 1)
                 scheduleResume()
             }
     }
@@ -306,17 +326,18 @@ struct LyricsStage<Accessory: View>: View {
         }
     }
 
+    /// Manual → auto: one glide from wherever the list is to the current line.
     private func resume() {
         resumeTask?.cancel()
         dragStart = nil
-        guard isManual || manualOffset != 0 else { return }
+        guard isManual else { return }
         isManual = false
-        // Back to the current line as one glide: release the manual offset
-        // and catch up with the scroll target in the same animation.
-        withAnimation(LyricsTiming.scrollAnimation) {
-            manualOffset = 0
+        guard let target = autoTarget else { return }
+        if debug.scrollAnimationOff {
+            scroller.jump(to: target, reason: .resume)
+        } else {
+            scroller.animate(to: target, reason: .resume)
         }
-        updateScrollTarget()
     }
 
     private var edgeFade: some View {
@@ -345,6 +366,8 @@ private struct RowMeasure: ViewModifier {
         content.onGeometryChange(for: CGFloat.self) { proxy in
             proxy.frame(in: .named("lyricsStage")).minY
         } action: { top in
+            // Sub-point measurement noise must not retarget the scroll.
+            if let old = lineTops[index], abs(old - top) <= 1 { return }
             lineTops[index] = top
         }
     }
@@ -448,7 +471,9 @@ private struct KaraokeLine: View {
                 .foregroundStyle(.white)
                 .textRenderer(KaraokeRenderer(
                     time: isActive ? PlaybackClock.shared.now() + settings.lyricsOffsetSeconds : 0,
-                    words: isActive ? words : []
+                    words: isActive ? words : [],
+                    glowEnabled: !LyricsDebugOptions.shared.glowOff,
+                    growthEnabled: !LyricsDebugOptions.shared.growthOff
                 ))
         }
     }
@@ -466,6 +491,9 @@ private struct KaraokeRenderer: TextRenderer {
     var time: TimeInterval
     var words: [LyricWord]
     var dimOpacity: Double = 0.4
+    /// Developer switches (Songtext settings → Developer).
+    var glowEnabled = true
+    var growthEnabled = true
 
     var displayPadding: EdgeInsets { EdgeInsets(top: 40, leading: 40, bottom: 40, trailing: 40) }
 
@@ -508,7 +536,7 @@ private struct KaraokeRenderer: TextRenderer {
                 }
 
                 var c = ctx
-                if growth > 0.001 {
+                if growthEnabled, growth > 0.001 {
                     let scale = 1 + (0.02 + 0.03 * hold) * growth
                     let lift = (0.5 + 1.0 * hold) * growth
                     c.translateBy(x: rect.midX, y: rect.midY - lift)
@@ -554,7 +582,7 @@ private struct KaraokeRenderer: TextRenderer {
                 }
                 // …then the glow is derived from that layer (unclipped):
                 // three stacked shadows for a tight core and a wide halo.
-                if emphasis > 0.01 {
+                if glowEnabled, emphasis > 0.01 {
                     for (radius, alpha) in [(4.0, 0.9), (12.0, 0.6), (24.0, 0.35)] {
                         var glow = c
                         // .shadowOnly: the default shadow filter draws the
