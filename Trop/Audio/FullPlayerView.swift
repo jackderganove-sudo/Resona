@@ -156,8 +156,10 @@ struct FullPlayerView: View {
 
             Spacer(minLength: 8)
 
-            StreamInfoLine(videoId: np.videoId)
-                .padding(.bottom, 10)
+            if settings.showAudioDetails {
+                StreamInfoLine(videoId: np.videoId)
+                    .padding(.bottom, 10)
+            }
 
             bottomRow
                 .padding(.horizontal, padding - 12)
@@ -193,10 +195,12 @@ struct FullPlayerView: View {
                 .padding(.top, 16)
                 toggleRow
                     .padding(.top, 14)
-                StreamInfoLine(videoId: np.videoId)
-                    .padding(.top, 20)
+                if settings.showAudioDetails {
+                    StreamInfoLine(videoId: np.videoId)
+                        .padding(.top, 20)
+                }
                 bottomRow
-                    .padding(.top, 10)
+                    .padding(.top, settings.showAudioDetails ? 10 : 24)
             }
             .frame(width: column)
         }

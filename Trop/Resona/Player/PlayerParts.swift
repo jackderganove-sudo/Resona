@@ -313,7 +313,8 @@ struct StreamInfoLine: View {
 
     var body: some View {
         Text(text.isEmpty ? " " : text)
-            .font(.system(size: 13, weight: .regular, design: .monospaced))
+            // Same type as the rest of the player (Poppins, small, dimmed).
+            .font(.poppins(12))
             .foregroundStyle(.white.opacity(0.55))
             .lineLimit(1)
             .task(id: videoId) { await load() }

@@ -46,6 +46,7 @@ struct AppearanceSettingsView: View {
 
             M3Section {
                 SettingsPickerRow("Player Background", icon: "photo", selection: $settings.playerBackgroundStyle)
+                SettingsToggleRow("Show audio details", icon: "waveform.badge.magnifyingglass", isOn: $settings.showAudioDetails)
                 if settings.playerBackgroundStyle == .dynamic {
                     SettingsToggleRow("Animated", icon: "wind", isOn: $settings.animatedPlayerBackground)
                     M3SliderRow(
