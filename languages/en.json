@@ -519,5 +519,8 @@
   "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on.": "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on.",
   "Line change earlier/later": "Line change earlier/later",
   "Timing": "Timing",
-  "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.": "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps."
+  "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.": "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.",
+  "Background brightness": "Background brightness",
+  "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on. Text contrast is kept readable automatically at any brightness.": "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on. Text contrast is kept readable automatically at any brightness.",
+  "Show audio details": "Show audio details"
 }

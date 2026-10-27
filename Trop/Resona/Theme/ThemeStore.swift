@@ -19,6 +19,8 @@ final class ThemeStore {
     private(set) var dark: M3Scheme = .fallbackDark
     private(set) var light: M3Scheme = .generate(seed: M3Scheme.defaultSeed, dark: false)
     private(set) var artwork: ArtworkColors = .fallback
+    /// One cover palette for player background + glass tint.
+    private(set) var palette: CoverPalette = .fallback
 
     /// Follow the artwork (true) or stay on the default blue seed.
     var dynamicColor: Bool {
@@ -115,8 +117,10 @@ final class ThemeStore {
 
     private func apply(_ colors: ArtworkColors, animated: Bool, prebuilt: (M3Scheme, M3Scheme)? = nil) {
         currentSeed = colors.seed
+        let palette = CoverPalette.make(from: colors)
         let update = {
             self.artwork = colors
+            self.palette = palette
             if let prebuilt, !self.pureBlack {
                 self.dark = prebuilt.0
                 self.light = prebuilt.1
@@ -186,6 +190,7 @@ struct M3ThemeProvider: ViewModifier {
         content
             .environment(\.m3, scheme)
             .environment(\.artworkColors, theme.artwork)
+            .environment(\.coverPalette, theme.palette)
             .environment(\.playerAccent, theme.dark.playerAccent)
             .tint(scheme.primary)
     }

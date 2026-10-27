@@ -17,6 +17,9 @@ struct ArtworkColors: Equatable, Sendable {
     /// 1–6 colours ordered by visual weight, already tuned for backgrounds.
     var gradient: [RGB]
     var isGreyscale: Bool
+    /// Colourful cover tones ranked by chroma × frequency (near-black,
+    /// near-white and grey pixels ignored), distinct hues, max 3.
+    var vivid: [RGB] = []
 
     static let fallback = ArtworkColors(
         seed: M3Scheme.defaultSeed,
@@ -74,8 +77,31 @@ enum ArtworkColorExtractor {
         // MARK: Gradient colours
 
         let ranked = buckets.sorted { weight($0) > weight($1) }
-        let weightedSaturation = buckets.reduce(0.0) { $0 + $1.rgb.hsv.s * Double($1.count) } / total
-        let isGreyscale = weightedSaturation < 0.22 || isNearGray(ranked.first?.rgb ?? dominant)
+
+        // Colourful tones by chroma × frequency. Dark covers with bright
+        // red/blue lines (MONTAGEM, DIA DELÍCIA) are dominated by black and
+        // grey pixels; ranking by frequency alone picked those.
+        let colourful = buckets.filter { b in
+            let hsv = b.rgb.hsv
+            return hsv.v > 0.16 && hsv.s > 0.28 && b.lch.l < 0.95 && b.lch.c > 0.04
+        }
+        let colourfulShare = Double(colourful.reduce(0) { $0 + $1.count }) / total
+        var vivid: [RGB] = []
+        let byScore = colourful.sorted { Double($0.count) * $0.lch.c > Double($1.count) * $1.lch.c }
+        let topScore = byScore.first.map { Double($0.count) * $0.lch.c } ?? 0
+        for b in byScore where vivid.count < 3 {
+            // Secondary tones only when they matter on the cover (a few
+            // cyan pixels must not paint a blob into a red background).
+            guard vivid.isEmpty || Double(b.count) * b.lch.c >= topScore * 0.2 else { break }
+            let hue = b.lch.h
+            let distinct = vivid.allSatisfy { other in
+                let d = abs(ColorMath.oklch(other).h - hue)
+                return min(d, 360 - d) > 25
+            }
+            if distinct { vivid.append(b.rgb) }
+        }
+        // Greyscale only when (almost) nothing on the cover is colourful.
+        let isGreyscale = colourfulShare < 0.025 || vivid.isEmpty
 
         var colors: [RGB] = []
         if isGreyscale {
@@ -105,7 +131,12 @@ enum ArtworkColorExtractor {
             }
         }
 
-        return ArtworkColors(seed: seed, gradient: colors.isEmpty ? ArtworkColors.fallback.gradient : colors, isGreyscale: isGreyscale)
+        return ArtworkColors(
+            seed: isGreyscale ? seed : (bestSeed ?? vivid.first ?? seed),
+            gradient: colors.isEmpty ? ArtworkColors.fallback.gradient : colors,
+            isGreyscale: isGreyscale,
+            vivid: vivid
+        )
     }
 
     // MARK: Helpers

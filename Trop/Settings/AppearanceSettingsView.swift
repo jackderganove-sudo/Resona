@@ -48,11 +48,19 @@ struct AppearanceSettingsView: View {
                 SettingsPickerRow("Player Background", icon: "photo", selection: $settings.playerBackgroundStyle)
                 if settings.playerBackgroundStyle == .dynamic {
                     SettingsToggleRow("Animated", icon: "wind", isOn: $settings.animatedPlayerBackground)
+                    M3SliderRow(
+                        value: $settings.playerBackgroundBrightness,
+                        range: 0.7...1.3,
+                        step: 0.05,
+                        format: { "\(Int(($0 * 100).rounded())) %" }
+                    ) {
+                        Label("Background brightness", systemImage: "sun.max")
+                    }
                 }
             } header: {
                 Text("Player")
             } footer: {
-                Text("Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on.")
+                Text("Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on. Text contrast is kept readable automatically at any brightness.")
             }
 
             M3Section {

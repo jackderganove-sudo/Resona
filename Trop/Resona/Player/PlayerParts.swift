@@ -11,14 +11,17 @@ import SwiftUI
 
 // MARK: - Background
 
-/// Vibrant, slowly flowing mesh gradient from 4 cover colours (Apple Music /
-/// Android 17 style). Saturation ~25 % above the cover, brightness capped so
-/// white text stays readable. Control points drift on incommensurate sine
-/// waves (17–23 s), colours cross-fade in 0.9 s on song change. Static with
-/// Reduce Motion, when the setting is off or when the app is not active;
-/// the player only exists while it is open, so nothing runs otherwise.
+/// Vibrant, slowly flowing mesh gradient from the shared CoverPalette (seed
+/// hue + vivid cover tones — the same colour the mini player's glass is
+/// tinted with). Control points drift on incommensurate sine waves
+/// (17–23 s), colours cross-fade in 0.9 s on song change. Static with Reduce
+/// Motion, when the setting is off or when the app is not active; the
+/// player only exists while open, so nothing runs otherwise.
+///
+/// Brightness follows the user setting; if the brightest colour would drop
+/// white text below WCAG AA (4.5:1), a uniform dark layer brings it back.
 struct PlayerBackground: View {
-    @Environment(\.artworkColors) private var colors
+    @Environment(\.coverPalette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @Environment(SettingsStore.self) private var settings
@@ -29,6 +32,8 @@ struct PlayerBackground: View {
     @State private var changedAt = Date.distantPast
 
     private static let fadeDuration = 0.9
+    /// Brightest pulse of a mesh blob (see `shade`).
+    private static let pulse = 1.07
 
     var body: some View {
         let animate = settings.animatedPlayerBackground && !reduceMotion && scenePhase == .active
@@ -43,8 +48,12 @@ struct PlayerBackground: View {
                     .animation(.easeInOut(duration: Self.fadeDuration), value: target)
             }
 
-            // Bottom vignette keeps controls and white text readable.
-            LinearGradient(colors: [.black.opacity(0.12), .clear, .black.opacity(0.32)], startPoint: .top, endPoint: .bottom)
+            // WCAG AA guard for white text (uniform, only when needed).
+            Color.black.opacity(contrastDimming)
+                .animation(.easeInOut(duration: Self.fadeDuration), value: contrastDimming)
+
+            // Slightly darker behind title, times and controls (lower part).
+            LinearGradient(colors: [.black.opacity(0.08), .clear, .black.opacity(0.3)], startPoint: .top, endPoint: .bottom)
 
             if dimmed {
                 Color.black.opacity(0.35)
@@ -63,7 +72,26 @@ struct PlayerBackground: View {
         }
     }
 
-    private var target: [RGB] { Self.vibrantPalette(colors) }
+    /// Palette with the user's brightness applied.
+    private var target: [RGB] {
+        let factor = settings.playerBackgroundBrightness
+        return palette.colors.map { rgb in
+            let hsv = rgb.hsv
+            return RGB(h: hsv.h, s: hsv.s, v: min(0.95, hsv.v * factor))
+        }
+    }
+
+    /// Black overlay needed so white text keeps ≥ 4.5:1 on the brightest
+    /// colour: L(white)=1 → background luminance must stay ≤ 0.1833.
+    private var contrastDimming: Double {
+        let brightest = target.map { rgb -> Double in
+            let hsv = rgb.hsv
+            return RGB(h: hsv.h, s: hsv.s, v: min(1, hsv.v * Self.pulse)).relativeLuminance
+        }.max() ?? 0
+        let limit = 1.05 / 4.5 - 0.05
+        guard brightest > limit else { return 0 }
+        return min(0.6, 1 - limit / brightest)
+    }
 
     /// Cross-fade between the previous and the new palette.
     private func blended(at date: Date) -> [RGB] {
@@ -75,15 +103,15 @@ struct PlayerBackground: View {
     }
 
     private func mesh(colors palette: [RGB], time t: Double) -> some View {
-        let c = palette.count == 4 ? palette : Self.vibrantPalette(.fallback)
+        let c = palette.count == 4 ? palette : CoverPalette.fallback.colors
         func w(_ period: Double, _ phase: Double) -> Float {
             Float(sin(t * 2 * .pi / period + phase))
         }
         func shade(_ rgb: RGB, _ factor: Double, _ period: Double, _ phase: Double) -> Color {
             // Blobs breathe slightly in brightness as they move.
             let hsv = rgb.hsv
-            let pulse = 1 + 0.07 * Double(w(period, phase))
-            return RGB(h: hsv.h, s: hsv.s, v: min(0.7, hsv.v * factor * pulse)).color
+            let breathe = 1 + (Self.pulse - 1) * Double(w(period, phase))
+            return RGB(h: hsv.h, s: hsv.s, v: min(0.95, hsv.v * factor * breathe)).color
         }
         let points: [SIMD2<Float>] = [
             [0, 0], [0.5 + 0.2 * w(19, 0), 0], [1, 0],
@@ -91,31 +119,11 @@ struct PlayerBackground: View {
             [0, 1], [0.5 + 0.2 * w(22, 4.2), 1], [1, 1]
         ]
         let meshColors: [Color] = [
-            shade(c[1], 0.7, 20, 0), shade(c[0], 1, 17, 1), shade(c[2], 0.75, 23, 2),
-            shade(c[2], 1, 19, 3), shade(c[0], 1.1, 21, 4), shade(c[3], 1, 18, 5),
-            shade(c[3], 0.6, 22, 6), shade(c[1], 0.85, 16, 7), shade(c[0], 0.55, 24, 8)
+            shade(c[1], 0.85, 20, 0), shade(c[0], 1, 17, 1), shade(c[2], 0.9, 23, 2),
+            shade(c[2], 1, 19, 3), shade(c[0], 1, 21, 4), shade(c[1], 1, 18, 5),
+            shade(c[3], 0.9, 22, 6), shade(c[0], 0.8, 16, 7), shade(c[3], 0.8, 24, 8)
         ]
         return MeshGradient(width: 3, height: 3, points: points, colors: meshColors, smoothsColors: true)
-    }
-
-    /// Four background colours from the cover: saturation boosted ~25 %
-    /// (vibrant, not muted), brightness kept between 0.26 and 0.6.
-    static func vibrantPalette(_ colors: ArtworkColors) -> [RGB] {
-        var base = Array(colors.gradient.prefix(4))
-        if base.isEmpty { base = [colors.seed] }
-        while base.count < 4 {
-            // Neighbouring hues of the main colour fill missing slots.
-            let hsv = base[0].hsv
-            let shift = base.count.isMultiple(of: 2) ? 18.0 : -18.0
-            base.append(RGB(h: (hsv.h + shift * Double(base.count) + 360).truncatingRemainder(dividingBy: 360), s: hsv.s, v: hsv.v * 0.85))
-        }
-        return base.map { rgb in
-            let hsv = rgb.hsv
-            if colors.isGreyscale || hsv.s < 0.06 {
-                return RGB(h: hsv.h, s: hsv.s, v: min(max(hsv.v, 0.22), 0.45))
-            }
-            return RGB(h: hsv.h, s: min(1, max(0.5, hsv.s * 1.25)), v: min(max(hsv.v * 1.1, 0.26), 0.6))
-        }
     }
 }
 
