@@ -42,7 +42,7 @@ struct CanvasSettingsView: View {
                         Button("Logout", role: .destructive, action: logout)
                             .buttonStyle(.m3Tonal)
                             .controlSize(.small)
-                            .tint(.m3Error)
+                            .tint(M3RoleStyle.m3Error)
                     }
                     .padding(.vertical, 4)
 

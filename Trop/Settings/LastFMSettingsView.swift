@@ -52,7 +52,7 @@ struct LastFMSettingsView: View {
                         }
                         .buttonStyle(.m3Tonal)
                         .controlSize(.small)
-                        .tint(.m3Error)
+                        .tint(M3RoleStyle.m3Error)
                     }
                     .padding(.vertical, 4)
 
