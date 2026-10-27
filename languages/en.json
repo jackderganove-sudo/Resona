@@ -549,5 +549,18 @@
   "Did you mean:": "Did you mean:",
   "Use suggestion": "Use suggestion",
   "Song": "Song",
-  "Episode": "Episode"
+  "Episode": "Episode",
+  "Could not check for updates.": "Could not check for updates.",
+  "Version %@ is available.": "Version %@ is available.",
+  "Resona is up to date.": "Resona is up to date.",
+  "Update available": "Update available",
+  "Changelog": "Changelog",
+  "Later": "Later",
+  "Open in ESign": "Open in ESign",
+  "Automatically check for updates": "Automatically check for updates",
+  "Check for updates": "Check for updates",
+  "Show update": "Show update",
+  "Updates": "Updates",
+  "New builds are published on GitHub and in the ESign app source: %@": "New builds are published on GitHub and in the ESign app source: %@",
+  "Trop (base project)": "Trop (base project)"
 }

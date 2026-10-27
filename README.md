@@ -20,12 +20,25 @@ inspired by the Android app ArchiveTune (GPLv3) and re-implemented in SwiftUI.
 
 ## Install
 
-Requires iOS / iPadOS 18 or later. Grab the unsigned `Resona.ipa`:
+Requires iOS / iPadOS 18 or later.
 
-- latest build: **Actions** tab → newest *Build IPA* run → artifact `Resona-<n>`
-  (GitHub delivers artifacts as a `.zip`; unzip it to get `Resona.ipa`)
-- releases: push a tag, e.g. `git tag v0.1.0 && git push origin v0.1.0`; the
-  workflow builds it with that version and attaches `Resona.ipa` to a release
+### ESign / AltStore source (recommended)
+
+Add this source in ESign (*Sources → +*), AltStore, SideStore or Feather:
+
+```
+https://raw.githubusercontent.com/jackderganove-sudo/Resona/app-source/apps.json
+```
+
+Every green build on `main` is published automatically as a GitHub release
+(`v0.x.<n+1>`, `Resona.ipa` attached directly, notes from the commits) and
+the source is updated with version, date, size, changelog and download URL.
+Resona itself checks for new releases once a day (Settings → About).
+
+### Direct download
+
+- latest release: **Releases** → `Resona.ipa`
+- any build: **Actions** tab → *Build IPA* run → artifact `Resona-<n>` (zip)
 
 Sideload it with ESign, Feather, AltStore or SideStore (they re-sign it).
 Sign in to YouTube Music under *Settings → Account*.

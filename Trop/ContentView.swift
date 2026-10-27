@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var selectedTab = ResonaTab(index: SettingsStore.shared.defaultTab)
     @State private var scrollState = MiniPlayerScrollState()
     private let accountMenu = AccountMenuState.shared
+    private let updates = UpdateChecker.shared
 
     /// 0 = collapsed (mini player), 1 = full player.
     @State private var expansion: CGFloat = 0
@@ -75,11 +76,25 @@ struct ContentView: View {
                     AccountMenuOverlay()
                         .zIndex(30)
                 }
+
+                if let update = updates.available, !updates.bannerDismissed, !isExpanded {
+                    VStack {
+                        UpdateBanner(update: update)
+                            .padding(.top, 8)
+                        Spacer()
+                    }
+                    .zIndex(25)
+                }
             }
             .ignoresSafeArea(.keyboard)
         }
         .environment(scrollState)
-        .onAppear { AppRouter.shared.selectedTabIndex = selectedTab.rawValue }
+        .onAppear {
+            AppRouter.shared.selectedTabIndex = selectedTab.rawValue
+            updates.checkIfDue()
+        }
+        .animation(M3Motion.defaultSpatial, value: updates.available)
+        .animation(M3Motion.defaultSpatial, value: updates.bannerDismissed)
         .onChange(of: selectedTab) { _, newValue in
             AppRouter.shared.selectedTabIndex = newValue.rawValue
         }
