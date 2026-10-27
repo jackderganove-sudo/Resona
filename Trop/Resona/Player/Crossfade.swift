@@ -36,6 +36,11 @@ final class CrossfadeEngine {
     private var run: Task<Void, Never>?
     private var runningFor: String?
     private let tail = CrossfadeTail()
+    private let log = Log.player
+
+    private func fmt(_ value: Double, _ digits: Int) -> String {
+        String(format: "%.\(digits)f", value)
+    }
 
     private init() {}
 
@@ -90,28 +95,65 @@ final class CrossfadeEngine {
             np.videoId == videoId && np.isPlaying && np.lastManualSkipTime == skipMark
         }
 
-        guard let source = player.currentSource else { return }
+        guard let source = player.currentSource else {
+            log.info("CROSSFADE skip: no current source")
+            return
+        }
         let base = SettingsStore.shared.playerVolume * 100
         let tailStart = handover - 1.2
+        let isLocal = source.path.hasPrefix("/") || source.path.hasPrefix("file:")
+        log.info("CROSSFADE prepare id=\(videoId) length=\(length)s handover=\(fmt(handover, 2)) local=\(isLocal) af='\(source.audioFilter)'")
 
-        // 1) Same source, a bit ahead, silent and paused.
+        // 1) Same source + options as the main player, a bit ahead, silent.
         await tail.prepare(source: source.path, audioFilter: source.audioFilter, start: tailStart)
 
-        // 2) Start silently when the main player gets there, then align.
-        guard await waitUntil({ player.currentTime >= tailStart - 0.03 }, while: stillValid, timeout: 5) else { return abort() }
+        // 2) Start silently when the main player gets there …
+        guard await waitUntil({ player.currentTime >= tailStart - 0.03 }, while: stillValid, timeout: 5) else {
+            log.info("CROSSFADE abort before start (skip/pause/timeout)")
+            return abort()
+        }
         tail.setVolume(0)
         tail.resume()
-        for _ in 0..<5 {
-            try? await Task.sleep(for: .milliseconds(180))
+
+        // … and VERIFY it really plays: file loaded, no error, audio output
+        // active, not idle, time-pos moving. Otherwise no handover at all —
+        // the song simply plays to its end on the main player.
+        let verifyStart = tail.status()
+        var verified = false
+        for attempt in 0..<10 {
+            try? await Task.sleep(for: .milliseconds(150))
             guard stillValid() else { return abort() }
-            guard let tailPos = tail.position else { continue }
+            let st = tail.status()
+            let moved = (st.timePos ?? 0) - (verifyStart.timePos ?? tailStart)
+            log.info("CROSSFADE verify#\(attempt) loaded=\(st.loaded) failed=\(st.failed) idle=\(st.idleActive) coreIdle=\(st.coreIdle) ao='\(st.audioOutput)' pos=\(fmt(st.timePos ?? -1, 3)) moved=\(fmt(moved, 3))")
+            if st.failed { break }
+            if st.loaded, !st.idleActive, !st.coreIdle, !st.audioOutput.isEmpty, moved > 0.2 {
+                verified = true
+                break
+            }
+        }
+        guard verified else {
+            log.error("CROSSFADE tail not playing → no handover, normal song change")
+            return abort()
+        }
+
+        // Align positions while the tail is still muted.
+        for round in 0..<5 {
+            try? await Task.sleep(for: .milliseconds(160))
+            guard stillValid() else { return abort() }
+            guard let tailPos = tail.status().timePos else { continue }
             let drift = player.currentTime - tailPos
+            log.info("CROSSFADE align#\(round) main=\(fmt(player.currentTime, 3)) tail=\(fmt(tailPos, 3)) drift=\(fmt(drift, 3))")
             if abs(drift) <= 0.02 { break }
             tail.seek(by: drift)
         }
 
-        // 3) Micro crossfade main → tail at the handover point.
+        // 3) Micro crossfade main → tail at the handover (both: old song).
         guard await waitUntil({ player.currentTime >= handover }, while: stillValid, timeout: 4) else { return abort() }
+        guard tail.status().isPlaying else {
+            log.error("CROSSFADE tail stopped before handover → normal song change")
+            return abort()
+        }
         await ramp(duration: 0.15, while: stillValid) { t in
             player.crossfadeGain = cos(t * .pi / 2)
             self.tail.setVolume(base * sin(t * .pi / 2))
@@ -119,21 +161,33 @@ final class CrossfadeEngine {
         guard stillValid() else { return abort() }
         player.crossfadeGain = 0
         player.applyPlayerVolume()
+        log.info("CROSSFADE handover done → next song on main (gain 0)")
 
         // 4) Next song on the main player (silent until its audio runs).
         np.playNext(automatic: true)
         let nextId = np.videoId
-        _ = await waitUntil({ np.videoId != videoId && player.currentTime > 0.05 }, while: {
+        let started = await waitUntil({ np.videoId != videoId && player.currentTime > 0.05 }, while: {
             np.videoId == nextId && np.lastManualSkipTime == skipMark
         }, timeout: 6)
         guard np.videoId == nextId, np.lastManualSkipTime == skipMark else { return abort() }
+        log.info("CROSSFADE next song audio=\(started) after handover; tail pos=\(fmt(self.tail.status().timePos ?? -1, 2))")
 
-        let remaining = max(0.3, (tail.duration ?? 0) - (tail.position ?? 0) - 0.05)
+        let status = tail.status()
+        let remaining = max(0.3, (status.duration ?? 0) - (status.timePos ?? 0) - 0.05)
         let fade = min(length, remaining)
+        var lastLog = CACurrentMediaTime()
         await ramp(duration: fade, while: { np.videoId == nextId && np.isPlaying && np.lastManualSkipTime == skipMark }) { t in
-            player.crossfadeGain = sin(t * .pi / 2)
-            self.tail.setVolume(base * cos(t * .pi / 2))
+            let mainGain = sin(t * .pi / 2)
+            let tailVolume = base * cos(t * .pi / 2)
+            player.crossfadeGain = mainGain
+            self.tail.setVolume(tailVolume)
+            if CACurrentMediaTime() - lastLog > 0.5 {
+                lastLog = CACurrentMediaTime()
+                let st = self.tail.status()
+                self.log.info("CROSSFADE ramp t=\(fmt(t, 2)) main=\(fmt(base * mainGain, 1)) tail=\(fmt(tailVolume, 1)) tailPlaying=\(st.isPlaying) tailPos=\(fmt(st.timePos ?? -1, 2))")
+            }
         }
+        log.info("CROSSFADE finished")
         finish()
     }
 
@@ -182,55 +236,95 @@ final class CrossfadeEngine {
 
 // MARK: - Tail player
 
-/// Minimal second mpv instance: audio only, no observers, no event loop
-/// (events are drained on every call).
+/// Second mpv instance created with EXACTLY the main player's options
+/// (same functions: user agent, TLS, cache, demuxer, audio-exclusive — the
+/// latter only decides whether the app-wide audio session mixes with other
+/// apps, so both instances must match or lock-screen controls break).
+/// Its events are processed and logged, not thrown away.
 final class CrossfadeTail: @unchecked Sendable {
+    struct Status {
+        var loaded = false
+        var failed = false
+        var idleActive = true
+        var coreIdle = true
+        var audioOutput = ""
+        var timePos: Double?
+        var duration: Double?
+        var isPlaying: Bool { loaded && !failed && !idleActive && !coreIdle }
+    }
+
     private var mpv: OpaquePointer?
     private let queue = DispatchQueue(label: "dev.resona.crossfade.tail")
+    private var loaded = false
+    private var failed = false
 
     private func handle() -> OpaquePointer? {
         if let mpv { return mpv }
-        guard let created = mpv_create() else { return nil }
-        mpv_set_option_string(created, "vo", "null")
-        mpv_set_option_string(created, "vid", "no")
-        mpv_set_option_string(created, "audio-display", "no")
-        mpv_set_option_string(created, "msg-level", "all=error")
-        mpv_set_option_string(created, "cache", "yes")
-        mpv_set_option_string(created, "hr-seek", "yes")
+        guard let created = mpv_create() else {
+            Log.player.error("CROSSFADE tail mpv_create failed")
+            return nil
+        }
+        mpv_request_log_messages(created, "warn")
+        PlayerController.applyMpvStartupOptions(created)
         mpv_set_option_string(created, "keep-open", "yes")
-        #if targetEnvironment(simulator)
-        mpv_set_option_string(created, "audio-exclusive", "no")
-        #else
-        mpv_set_option_string(created, "audio-exclusive", "yes")
-        #endif
+        mpv_set_option_string(created, "hr-seek", "yes")
         guard mpv_initialize(created) >= 0 else {
+            Log.player.error("CROSSFADE tail mpv_initialize failed")
             mpv_destroy(created)
             return nil
         }
-        if let caPath = Bundle.main.path(forResource: "cacert", ofType: "pem") {
-            mpv_set_property_string(created, "tls-ca-file", caPath)
-        }
-        mpv_set_property_string(created, "user-agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15" +
-            " (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1")
+        PlayerController.applyPostInitProperties(created)
         mpv = created
         return created
     }
 
-    private func drain(_ mpv: OpaquePointer) {
-        while let event = mpv_wait_event(mpv, 0), event.pointee.event_id != MPV_EVENT_NONE {}
+    /// Processes pending events: tracks load/end-file errors, logs warnings.
+    private func pump(_ mpv: OpaquePointer) {
+        while let event = mpv_wait_event(mpv, 0), event.pointee.event_id != MPV_EVENT_NONE {
+            switch event.pointee.event_id {
+            case MPV_EVENT_FILE_LOADED:
+                loaded = true
+                Log.player.info("CROSSFADE tail FILE_LOADED")
+            case MPV_EVENT_END_FILE:
+                if let data = event.pointee.data?.assumingMemoryBound(to: mpv_event_end_file.self).pointee {
+                    let reason = data.reason
+                    if reason == MPV_END_FILE_REASON_ERROR {
+                        failed = true
+                        Log.player.error("CROSSFADE tail END_FILE error=\(String(cString: mpv_error_string(data.error)))")
+                    } else {
+                        Log.player.info("CROSSFADE tail END_FILE reason=\(reason.rawValue)")
+                    }
+                }
+                loaded = false
+            case MPV_EVENT_LOG_MESSAGE:
+                if let msg = event.pointee.data?.assumingMemoryBound(to: mpv_event_log_message.self).pointee {
+                    let prefix = msg.prefix.map { String(cString: $0) } ?? ""
+                    let text = msg.text.map { String(cString: $0) } ?? ""
+                    Log.player.info("CROSSFADE tail mpv[\(prefix)] \(text.trimmingCharacters(in: .whitespacesAndNewlines))")
+                }
+            default:
+                break
+            }
+        }
     }
 
     func prepare(source path: String, audioFilter: String, start: TimeInterval) async {
         await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
             queue.async { [self] in
                 guard let mpv = handle() else { return done.resume() }
-                drain(mpv)
+                pump(mpv)
+                loaded = false
+                failed = false
                 var zero = Double(0)
                 mpv_set_property(mpv, "volume", MPV_FORMAT_DOUBLE, &zero)
                 mpv_set_property_string(mpv, "pause", "yes")
                 mpv_set_property_string(mpv, "af", audioFilter)
                 let args = ["loadfile", path, "replace", "-1", "start=\(String(format: "%.3f", start))"]
-                _ = args.withUnsafeCArg { mpv_command(mpv, $0) }
+                let result = args.withUnsafeCArg { mpv_command(mpv, $0) }
+                if result < 0 {
+                    failed = true
+                    Log.player.error("CROSSFADE tail loadfile failed: \(String(cString: mpv_error_string(result)))")
+                }
                 done.resume()
             }
         }
@@ -242,7 +336,7 @@ final class CrossfadeTail: @unchecked Sendable {
         queue.async { [self] in
             guard let mpv else { return }
             _ = ["stop"].withUnsafeCArg { mpv_command(mpv, $0) }
-            drain(mpv)
+            pump(mpv)
         }
     }
 
@@ -258,18 +352,36 @@ final class CrossfadeTail: @unchecked Sendable {
         queue.async { [self] in
             guard let mpv else { return }
             _ = ["seek", String(format: "%.3f", seconds), "relative+exact"].withUnsafeCArg { mpv_command(mpv, $0) }
-            drain(mpv)
+            pump(mpv)
         }
     }
 
-    var position: TimeInterval? { double("time-pos") }
-    var duration: TimeInterval? { double("duration") }
-
-    private func double(_ name: String) -> Double? {
+    func status() -> Status {
         queue.sync {
-            guard let mpv else { return nil }
-            var value = Double(0)
-            return mpv_get_property(mpv, name, MPV_FORMAT_DOUBLE, &value) >= 0 ? value : nil
+            guard let mpv else { return Status() }
+            pump(mpv)
+            func flag(_ name: String) -> Bool {
+                var value: Int32 = 1
+                return mpv_get_property(mpv, name, MPV_FORMAT_FLAG, &value) >= 0 ? value != 0 : true
+            }
+            func double(_ name: String) -> Double? {
+                var value = Double(0)
+                return mpv_get_property(mpv, name, MPV_FORMAT_DOUBLE, &value) >= 0 ? value : nil
+            }
+            var ao = ""
+            if let raw = mpv_get_property_string(mpv, "current-ao") {
+                ao = String(cString: raw)
+                mpv_free(raw)
+            }
+            return Status(
+                loaded: loaded,
+                failed: failed,
+                idleActive: flag("idle-active"),
+                coreIdle: flag("core-idle"),
+                audioOutput: ao,
+                timePos: double("time-pos"),
+                duration: double("duration")
+            )
         }
     }
 

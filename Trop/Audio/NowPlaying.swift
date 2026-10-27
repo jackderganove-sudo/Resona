@@ -202,7 +202,6 @@ final class NowPlaying {
         guard !isResolvingNext else { return }
         if !automatic {
             lastManualSkipTime = Date()
-        CrossfadeEngine.shared.cancel()
             CrossfadeEngine.shared.cancel()
         }
         queueIndex += 1
@@ -213,6 +212,7 @@ final class NowPlaying {
         guard hasPrevious else { return }
         guard !isResolvingNext else { return }
         lastManualSkipTime = Date()
+        CrossfadeEngine.shared.cancel()
         queueIndex -= 1
         playCurrentSong(logContext: "playPrevious")
     }

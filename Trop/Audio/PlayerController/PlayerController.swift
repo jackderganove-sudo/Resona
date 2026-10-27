@@ -405,7 +405,9 @@ extension PlayerController {
         }
     }
 
-    nonisolated private static func applyMpvStartupOptions(_ mpv: OpaquePointer) {
+    /// Shared with the crossfade tail so both instances use identical
+    /// network/cache/audio-session options.
+    nonisolated static func applyMpvStartupOptions(_ mpv: OpaquePointer) {
         mpv_set_option_string(mpv, "vo", "null")
         mpv_set_option_string(mpv, "vid", "no")
         mpv_set_option_string(mpv, "force-window", "no")
@@ -426,7 +428,7 @@ extension PlayerController {
         mpv_set_option_string(mpv, "gapless-audio", "yes")
     }
 
-    nonisolated private static func applyPostInitProperties(_ mpv: OpaquePointer) {
+    nonisolated static func applyPostInitProperties(_ mpv: OpaquePointer) {
         if let caPath = Bundle.main.path(forResource: "cacert", ofType: "pem") {
             mpv_set_property_string(mpv, "tls-ca-file", caPath)
             Log.player.info("mpv tls-ca-file set: \(caPath)")
