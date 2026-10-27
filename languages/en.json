@@ -608,5 +608,14 @@
   "Start over": "Start over",
   "Sync yourself": "Sync yourself",
   "Crossfade (experimental)": "Crossfade (experimental)",
-  "Sleep timer fade-out": "Sleep timer fade-out"
+  "Sleep timer fade-out": "Sleep timer fade-out",
+  "Play / Pause": "Play / Pause",
+  "Back 10 Seconds": "Back 10 Seconds",
+  "Forward 10 Seconds": "Forward 10 Seconds",
+  "Previous Song": "Previous Song",
+  "Next Song": "Next Song",
+  "Volume Up": "Volume Up",
+  "Volume Down": "Volume Down",
+  "Go": "Go",
+  "Search Tab": "Search Tab"
 }

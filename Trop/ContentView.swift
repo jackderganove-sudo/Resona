@@ -119,6 +119,15 @@ struct ContentView: View {
         .onReceive(AppRouter.shared.$goHomeToken.dropFirst()) { _ in
             goHome()
         }
+        .onReceive(AppRouter.shared.$escapeToken.dropFirst()) { _ in
+            // Esc: close sheets / account menu, then the player.
+            Self.dismissPresentedSheets()
+            if accountMenu.isPresented {
+                withAnimation(M3Motion.defaultSpatial) { accountMenu.isPresented = false }
+            } else {
+                collapse()
+            }
+        }
         .onChange(of: nowPlaying.isBarPresented) { _, presented in
             if !presented { collapse() }
         }

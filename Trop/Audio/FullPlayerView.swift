@@ -119,6 +119,16 @@ struct FullPlayerView: View {
             preloadLyrics()
         }
         .onChange(of: np.queueIndex) { _, _ in np.preloadNeighborArtwork() }
+        .onReceive(AppRouter.shared.$pendingLyrics) { pending in
+            guard pending else { return }
+            AppRouter.shared.pendingLyrics = false
+            withAnimation(M3Motion.defaultSpatial) { showLyrics = true }
+        }
+        .onReceive(AppRouter.shared.$pendingQueue) { pending in
+            guard pending else { return }
+            AppRouter.shared.pendingQueue = false
+            showQueue = true
+        }
         .task { np.preloadNeighborArtwork() }
         .sheet(isPresented: Binding(get: { showSongMenu && !sidePanelMode }, set: { showSongMenu = $0 })) {
             if let currentSong {

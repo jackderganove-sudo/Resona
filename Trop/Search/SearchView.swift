@@ -5,6 +5,7 @@
 //  Created by 686udjie on 03/07/2026.
 //
 
+import Combine
 import SwiftUI
 
 struct SearchView: View {
@@ -45,6 +46,9 @@ struct SearchView: View {
             .onAppear {
                 viewModel.loadSearchHistory()
                 exploreModel.load()
+            }
+            .onReceive(router.$focusSearchToken.dropFirst()) { _ in
+                fieldFocused = true
             }
             .task(id: viewModel.results.count) {
                 let urls = viewModel.results

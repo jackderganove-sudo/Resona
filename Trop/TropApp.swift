@@ -54,6 +54,7 @@ struct TropApp: App {
                 .environment(settings)
                 .environment(\.downloadManager, DownloadManager.shared)
         }
+        .commands { ResonaCommands() }
     }
 
     private func configureNuke() {

@@ -29,6 +29,13 @@ final class AppRouter: ObservableObject {
     @Published private(set) var goHomeToken = 0
     /// Home scrolls to the very top when this changes.
     @Published private(set) var homeScrollTopToken = 0
+    /// Keyboard shortcuts (⌘F / ⌘L / ⌘K / Esc).
+    @Published private(set) var focusSearchToken = 0
+    /// Consumed by the full player when it appears (it may not exist yet
+    /// when the shortcut fires).
+    @Published var pendingLyrics = false
+    @Published var pendingQueue = false
+    @Published private(set) var escapeToken = 0
 
     var activePathDepth: Int {
         switch selectedTabIndex {
@@ -60,6 +67,27 @@ final class AppRouter: ObservableObject {
 
     func scrollHomeToTop() {
         homeScrollTopToken += 1
+    }
+
+    func focusSearch() {
+        selectedTabIndex = 3
+        focusSearchToken += 1
+    }
+
+    func showLyrics() {
+        guard NowPlaying.shared.videoId != nil else { return }
+        pendingLyrics = true
+        expandPlayer()
+    }
+
+    func showQueue() {
+        guard NowPlaying.shared.videoId != nil else { return }
+        pendingQueue = true
+        expandPlayer()
+    }
+
+    func escape() {
+        escapeToken += 1
     }
 
     func open(_ route: DetailRoute) {
