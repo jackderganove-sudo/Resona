@@ -108,8 +108,17 @@ actor LyricsManager {
         let order: Int
         let lines: [LyricLine]
         let providerName: String
+        let quality: LyricsQuality
     }
 
+    /// Per-provider time budget; slower providers are simply skipped.
+    static let providerTimeout: Double = 4
+
+    /// Asks every enabled provider in parallel (4 s budget each) and picks
+    /// the best result by quality — word-synced > line-synced > plain —
+    /// and, within the same quality, by the user's provider order. Synced
+    /// results whose timestamps run past the song (wrong version/match)
+    /// are dropped.
     func fetchLyricsReturningProvider(query: LyricsQuery) async throws -> ([LyricLine], providerName: String?) {
         let order = await LyricsSettings.shared.providerOrder
         let disabled = SettingsStore.shared.disabledLyricsProviders
@@ -118,16 +127,17 @@ actor LyricsManager {
             return (index, provider)
         }
         guard !candidates.isEmpty else { throw LyricsError.notFound }
+        let firstOrder = candidates.map(\.index).min() ?? 0
 
         let results = await withTaskGroup(of: ProviderHit?.self) { group in
             for (index, provider) in candidates {
                 group.addTask {
                     do {
-                        let lines = try await Self.withTimeout(seconds: 10) {
+                        let lines = try await Self.withTimeout(seconds: Self.providerTimeout) {
                             try await provider.fetch(query: query)
                         }
-                        guard !lines.isEmpty else { return nil }
-                        return ProviderHit(order: index, lines: lines, providerName: provider.name)
+                        guard !lines.isEmpty, Self.plausible(lines, duration: query.duration) else { return nil }
+                        return ProviderHit(order: index, lines: lines, providerName: provider.name, quality: LyricsQuality.of(lines))
                     } catch {
                         return nil
                     }
@@ -135,14 +145,29 @@ actor LyricsManager {
             }
             var collected: [ProviderHit] = []
             for await item in group {
-                if let item { collected.append(item) }
+                guard let item else { continue }
+                collected.append(item)
+                // Nothing can beat word-synced lyrics from the top provider.
+                if item.quality == .wordSynced, item.order == firstOrder {
+                    group.cancelAll()
+                    break
+                }
             }
             return collected
         }
-        guard let best = results.min(by: { $0.order < $1.order }) else {
+        guard let best = results.max(by: { a, b in
+            a.quality != b.quality ? a.quality < b.quality : a.order > b.order
+        }) else {
             throw LyricsError.notFound
         }
         return (best.lines, best.providerName)
+    }
+
+    /// Synced lyrics must fit the song: the last timestamp may not lie
+    /// beyond its end (±3 s tolerance).
+    static func plausible(_ lines: [LyricLine], duration: TimeInterval) -> Bool {
+        guard duration > 0, let last = lines.compactMap(\.startTime).max() else { return true }
+        return last <= duration + 3
     }
 
     private static func withTimeout<T: Sendable>(seconds: Double, work: @escaping @Sendable () async throws -> T) async throws -> T {

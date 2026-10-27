@@ -8,13 +8,13 @@
 import Foundation
 
 /// One timed word (or syllable) of a word-synced line.
-struct LyricWord: Equatable, Sendable {
+struct LyricWord: Equatable, Sendable, Codable {
     let text: String
     let start: TimeInterval
     var end: TimeInterval
 }
 
-struct LyricLine: Identifiable, Equatable, Sendable {
+struct LyricLine: Identifiable, Equatable, Sendable, Codable {
     /// Replaced by `LyricLine.stable(_:)` before display: a UUID per
     /// construction made every reload look like brand-new rows to SwiftUI.
     var id: String = UUID().uuidString
@@ -23,6 +23,8 @@ struct LyricLine: Identifiable, Equatable, Sendable {
     /// Real word timings when the provider supplies them (enhanced LRC);
     /// nil for line-synced lyrics.
     var words: [LyricWord]? = nil
+    /// Background vocals (TTML x-bg spans), shown small under the line.
+    var backgroundText: String? = nil
 
     static let placeholder = LyricLine(text: "♪", startTime: nil)
 
@@ -40,6 +42,74 @@ struct LyricLine: Identifiable, Equatable, Sendable {
     /// Same text, timing and words (ignores the id).
     func sameContent(as other: LyricLine) -> Bool {
         text == other.text && startTime == other.startTime && words == other.words
+    }
+
+    /// Same lines with every timestamp multiplied (slowed/sped-up variants).
+    static func scaled(_ lines: [LyricLine], by factor: Double) -> [LyricLine] {
+        lines.map { line in
+            var copy = LyricLine(
+                text: line.text,
+                startTime: line.startTime.map { $0 * factor },
+                words: line.words?.map { LyricWord(text: $0.text, start: $0.start * factor, end: $0.end * factor) },
+                backgroundText: line.backgroundText
+            )
+            copy.id = line.id
+            return copy
+        }
+    }
+}
+
+/// How good a lyrics result is: word-synced > line-synced > plain text.
+enum LyricsQuality: Int, Comparable, Sendable {
+    case plain = 0
+    case lineSynced = 1
+    case wordSynced = 2
+
+    static func of(_ lines: [LyricLine]) -> LyricsQuality {
+        guard lines.contains(where: { $0.startTime != nil }) else { return .plain }
+        let wordLines = lines.filter { ($0.words?.count ?? 0) > 1 }.count
+        return wordLines * 2 >= lines.filter { $0.startTime != nil }.count ? .wordSynced : .lineSynced
+    }
+
+    static func < (a: LyricsQuality, b: LyricsQuality) -> Bool { a.rawValue < b.rawValue }
+}
+
+/// Persistent per-song lyrics cache (Caches/lyrics/<videoId>.json).
+enum LyricsDiskCache {
+    private struct Entry: Codable {
+        let provider: String?
+        let lines: [LyricLine]
+    }
+
+    private static var directory: URL? {
+        guard let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
+        let dir = base.appendingPathComponent("lyrics", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    private static func file(_ videoId: String) -> URL? {
+        let safe = videoId.replacingOccurrences(of: "/", with: "_")
+        return directory?.appendingPathComponent("\(safe).json")
+    }
+
+    static func load(_ videoId: String) -> (lines: [LyricLine], provider: String?)? {
+        guard let url = file(videoId),
+              let data = try? Data(contentsOf: url),
+              let entry = try? JSONDecoder().decode(Entry.self, from: data),
+              !entry.lines.isEmpty else { return nil }
+        return (entry.lines, entry.provider)
+    }
+
+    static func save(_ lines: [LyricLine], provider: String?, for videoId: String) {
+        guard let url = file(videoId),
+              let data = try? JSONEncoder().encode(Entry(provider: provider, lines: lines)) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+
+    static func remove(_ videoId: String) {
+        guard let url = file(videoId) else { return }
+        try? FileManager.default.removeItem(at: url)
     }
 }
 
@@ -60,6 +130,7 @@ actor LyricsService {
     static let shared = LyricsService()
 
     private var cache: [String: [LyricLine]] = [:]
+    private var providerNames: [String: String] = [:]
     private var customs: [String: (lines: [LyricLine], providerName: String)] = [:]
     private var inFlight: [String: Task<FetchResult, Error>] = [:]
 
@@ -79,8 +150,14 @@ actor LyricsService {
             return custom.lines
         }
         if let cached = cache[videoId] {
-            await updateAvailability(videoId: videoId, available: !cached.isEmpty)
+            await updateAvailability(videoId: videoId, available: !cached.isEmpty, providerName: providerNames[videoId])
             return cached
+        }
+        if let stored = LyricsDiskCache.load(videoId) {
+            cache[videoId] = stored.lines
+            providerNames[videoId] = stored.provider
+            await updateAvailability(videoId: videoId, available: true, providerName: stored.provider)
+            return stored.lines
         }
         if let flight = inFlight[videoId] {
             return try await flight.value.lines
@@ -101,6 +178,8 @@ actor LyricsService {
             // since lyrics can be matched/published after playback starts.
             if !result.lines.isEmpty {
                 cache[videoId] = result.lines
+                providerNames[videoId] = result.providerName
+                LyricsDiskCache.save(result.lines, provider: result.providerName, for: videoId)
             }
             await updateAvailability(videoId: videoId, available: !result.lines.isEmpty, providerName: result.providerName)
             return result.lines
@@ -163,6 +242,7 @@ actor LyricsService {
     /// result (explicit user intent), like Metrolist's refetchLyrics.
     func refetch(videoId: String) async {
         cache.removeValue(forKey: videoId)
+        LyricsDiskCache.remove(videoId)
         func signalReload() {
             Task { await MainActor.run { LyricsState.shared.refreshToken += 1 } }
         }
