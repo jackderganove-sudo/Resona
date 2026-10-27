@@ -45,7 +45,7 @@ struct M3MenuHeaderCard: View {
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 18)
-        .background(m3.surfaceContainerLow, in: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+        .background(m3.surfaceContainerHighest, in: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
     }
 }
 
@@ -92,10 +92,10 @@ struct M3VolumeCard: View {
             }
             .padding(.horizontal, 18)
             .frame(height: 56)
-            .background(m3.surfaceContainerHigh, in: RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous))
+            .background(m3.secondaryContainer, in: RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous))
         }
         .padding(16)
-        .background(m3.surfaceContainerLow, in: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+        .background(m3.surfaceContainerHighest, in: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
     }
 }
 
@@ -128,13 +128,13 @@ struct M3ActionTileGrid: View {
                     .padding(.horizontal, 6)
                     .frame(maxWidth: .infinity)
                     .frame(height: 92)
-                    .background(m3.surfaceContainerHigh, in: RoundedRectangle(cornerRadius: M3Shape.largeIncreased, style: .continuous))
+                    .background(m3.secondaryContainer, in: RoundedRectangle(cornerRadius: M3Shape.largeIncreased, style: .continuous))
                     .contentShape(RoundedRectangle(cornerRadius: M3Shape.largeIncreased, style: .continuous))
                 }
                 .buttonStyle(.expressive)
             }
         }
         .padding(12)
-        .background(m3.surfaceContainerLow, in: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+        .background(m3.surfaceContainerHighest, in: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
     }
 }

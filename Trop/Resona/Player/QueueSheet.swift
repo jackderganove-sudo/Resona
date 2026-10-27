@@ -52,7 +52,7 @@ struct QueueSheet: View {
             .toggleStyle(.m3)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(m3.surfaceContainerHigh, in: RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous))
+            .background(m3.surfaceContainerHighest, in: RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous))
             .padding(.horizontal, 16)
             .padding(.top, 12)
             .padding(.bottom, 10)

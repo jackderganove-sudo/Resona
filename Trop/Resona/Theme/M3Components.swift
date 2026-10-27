@@ -142,7 +142,7 @@ struct M3Chip: View {
             .padding(.horizontal, 16)
             .frame(height: height)
             .foregroundStyle(isSelected ? m3.onPrimary : m3.onSurfaceVariant)
-            .background(isSelected ? m3.primary : m3.surfaceContainerHigh, in: Capsule())
+            .background(isSelected ? m3.primary : m3.surfaceContainerHighest, in: Capsule())
             .contentShape(Capsule())
         }
         .buttonStyle(.expressive)

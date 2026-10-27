@@ -127,7 +127,7 @@ struct PlayerMenuSheet: View {
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(.m3SurfaceContainerLow)
+            .fill(.m3SurfaceContainerHighest)
     }
 
     private var eqVolumeCard: some View {
@@ -540,7 +540,7 @@ struct SongDetailsView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(.m3SurfaceContainerLow)
+                    .fill(.m3SurfaceContainerHighest)
             )
         }
     }

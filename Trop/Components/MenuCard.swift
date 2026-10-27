@@ -57,7 +57,7 @@ struct MenuCard<Content: View>: View {
         .padding(.vertical, 4)
         .background(
             RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous)
-                .fill(m3.surfaceContainerLow)
+                .fill(m3.surfaceContainerHighest)
         )
         .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
         .tint(m3.primary)

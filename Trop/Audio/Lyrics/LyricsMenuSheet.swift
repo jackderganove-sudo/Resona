@@ -118,7 +118,7 @@ struct LyricsMenuSheet: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(.m3SurfaceContainerLow)
+        .background(.m3SurfaceContainerHighest)
     }
 
     private func refetchLyrics() {

@@ -27,11 +27,11 @@ import UIKit
 /// tint, same saturation, same edge.
 enum ResonaGlass {
     /// System blur (rendered matte because the app opts out of Liquid Glass).
-    static let material: Material = .thinMaterial
+    static let material: Material = .ultraThinMaterial
     /// Share of the cover colour (CoverPalette.main) in the tint.
-    static let coverMix = 0.6
+    static let coverMix = 0.5
     /// Tint over the blur — content behind stays visible but calm.
-    static let tintOpacity = 0.42
+    static let tintOpacity = 0.62
     /// Saturation boost of what shows through.
     static let saturation = 1.4
     /// 1 px light edge.
@@ -60,7 +60,10 @@ struct ResonaGlassBackground<S: Shape>: View {
     var body: some View {
         // Same cover colour as the player background (CoverPalette.main),
         // so mini player and player read as one colour.
-        let tint = m3.surfaceContainer.mix(with: palette.main.color, by: ResonaGlass.coverMix)
+        // Lighter base (surfaceContainerHighest, tone 22) + cover colour:
+        // menus, sheets and dialogs land around tone 25-30 instead of
+        // 10-15; text (onSurface, tone 90) stays far above 4.5:1.
+        let tint = m3.surfaceContainerHighest.mix(with: palette.main.color, by: ResonaGlass.coverMix)
         ZStack {
             shape.fill(ResonaGlass.material)
                 .saturation(ResonaGlass.saturation)
