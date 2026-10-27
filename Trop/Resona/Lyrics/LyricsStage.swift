@@ -2,27 +2,44 @@
 //  LyricsStage.swift
 //  Resona
 //
-//  Word-synced karaoke lyrics, modelled on reference/lyrics-animation.mp4:
+//  Word-synced karaoke lyrics, modelled on reference/lyrics-original.mp4.
 //
-//  • All lines share one size (no scaling). The active line is white; words
-//    light up one after another with a soft leading edge and a gentle glow,
-//    words not yet sung stay at ~38 % opacity.
-//  • When the active line changes, every line glides to its new position
-//    with a spring whose start is staggered downwards (lines further below
-//    follow slightly later), so the list "ripples" like the reference.
-//  • Inactive lines dim and blur with their distance (above and below).
-//  • Manual drag scrolls freely (no blur while browsing), flings with
-//    momentum and returns to the active line after a pause.
+//  Scrolling: the whole list is ONE view moved by ONE animated offset
+//  (spring with a light bounce) per line change, so lines glide together and
+//  never cross or re-jitter. Row positions are measured in the list's own
+//  coordinate space, i.e. unaffected by that offset (measuring inside the
+//  offset fed every scroll back into the next target — the list oscillated
+//  and settled near the top).
 //
-//  The active line is redrawn every display frame (TimelineView .animation →
-//  120 Hz on ProMotion) through a TextRenderer; all other lines are static.
+//  Timing: the list scrolls to `scrollIndex`, which the caller computes from
+//  the same PlaybackClock as the word highlight but `LyricsTiming.scrollLead`
+//  earlier, so the glide finishes as the line is sung; highlighting
+//  (`activeIndex`, words) stays exactly on the timestamps.
+//
+//  Manual drag scrolls freely; 3 s after the last touch the list snaps back.
+//  The resume is scheduled on every drag change too, so a drag cancelled by
+//  another gesture (no onEnded) can't leave the stage stuck in manual mode.
 //
 
 import SwiftUI
 
+/// Central lyric timing constants.
+enum LyricsTiming {
+    /// The list starts gliding to the next line this long before its
+    /// timestamp (user-adjustable by ±0.5 s in the lyrics settings).
+    static let scrollLead: TimeInterval = 0.25
+    /// Line-change glide: one spring with a light bounce.
+    static let scrollAnimation = Animation.spring(response: 0.5, dampingFraction: 0.78)
+    /// Back to the current line after manual scrolling.
+    static let resumeDelay: Duration = .seconds(3)
+}
+
 struct LyricsStage<Accessory: View>: View {
     let lines: [LyricLine]
+    /// Line being sung (highlight) — exactly on the timestamps.
     let activeIndex: Int
+    /// Line the list is scrolled to — runs slightly ahead of `activeIndex`.
+    let scrollIndex: Int
     let romanized: (Int) -> String?
     let fontSize: Double
     let alignment: LyricsAlignment
@@ -30,20 +47,15 @@ struct LyricsStage<Accessory: View>: View {
     /// Extra view under a line (instrumental gap indicator).
     @ViewBuilder let accessory: (Int) -> Accessory
 
+    /// Natural top of every row inside the list (independent of scrolling).
     @State private var lineTops: [Int: CGFloat] = [:]
-    /// Where the list is scrolled to (top of the active row − anchor).
-    /// Every change animates with the staggered spring, so the list never
-    /// jumps — not on line changes, not when row positions shift.
-    @State private var scrollTarget: CGFloat = 0
-    /// Direction of the last scroll-target change (true = content moves up)
-    /// and whether rows should stagger at all (only for small moves).
-    @State private var movingUp = true
-    @State private var staggered = true
+    @State private var scrollY: CGFloat = 0
     @State private var stageHeight: CGFloat = 0
     @State private var hasPositioned = false
     @State private var manualOffset: CGFloat = 0
     @State private var dragStart: CGFloat?
     @State private var isManual = false
+    @GestureState private var isTouching = false
     @State private var resumeTask: Task<Void, Never>?
 
     /// Active line sits at this fraction of the stage height (reference ≈ 22 %).
@@ -57,20 +69,23 @@ struct LyricsStage<Accessory: View>: View {
                         .padding(.horizontal, 28)
                         .padding(.vertical, fontSize * 0.36)
                         .frame(maxWidth: .infinity, alignment: Alignment(horizontal: horizontalAlignment, vertical: .center))
-                        .modifier(StageRow(index: -1, activeIndex: activeIndex, scrollTarget: scrollTarget, manualOffset: manualOffset, movingUp: movingUp, staggered: staggered, lineTops: $lineTops))
+                        .modifier(RowMeasure(index: -1, lineTops: $lineTops))
                 }
                 ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
                     row(index: index, line: line)
-                        .modifier(StageRow(index: index, activeIndex: activeIndex, scrollTarget: scrollTarget, manualOffset: manualOffset, movingUp: movingUp, staggered: staggered, lineTops: $lineTops))
+                        .modifier(RowMeasure(index: index, lineTops: $lineTops))
                 }
                 Color.clear.frame(height: geo.size.height)
             }
-            .onAppear { stageHeight = geo.size.height }
-            .onChange(of: geo.size.height) { _, h in stageHeight = h }
-            .frame(width: geo.size.width, alignment: Alignment(horizontal: horizontalAlignment, vertical: .top))
+            // Measured BEFORE the offset: positions stay natural.
             .coordinateSpace(.named(Self.space))
+            .frame(width: geo.size.width, alignment: Alignment(horizontal: horizontalAlignment, vertical: .top))
+            .offset(y: -scrollY)
+            .animation(LyricsTiming.scrollAnimation, value: scrollY)
+            .offset(y: manualOffset)
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
             .contentShape(Rectangle())
-            .gesture(dragGesture(height: geo.size.height))
+            .gesture(dragGesture)
             .overlay(alignment: .bottom) {
                 if isManual {
                     Button {
@@ -88,37 +103,42 @@ struct LyricsStage<Accessory: View>: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
+            .onAppear { stageHeight = geo.size.height }
+            .onChange(of: geo.size.height) { _, h in stageHeight = h }
         }
         .clipped()
         .mask(edgeFade)
         .animation(M3Motion.fastSpatial, value: isManual)
-        .onChange(of: activeIndex) { _, _ in updateScrollTarget() }
+        .onChange(of: scrollIndex) { _, _ in updateScrollTarget() }
         .onChange(of: lineTops) { _, _ in updateScrollTarget() }
         .onChange(of: stageHeight) { _, _ in updateScrollTarget() }
+        .onChange(of: lines.map(\.id)) { _, _ in hasPositioned = false }
+        .onDisappear { resumeTask?.cancel() }
     }
 
-    /// Recomputes the scroll target; the very first placement is instant.
-    private func updateScrollTarget(allowStagger: Bool = true) {
-        // While the user scrolls by hand the list stays where they put it;
-        // the auto-scroll resumes (and catches up) when they let go.
+    /// Row the list centres on: the scroll index, or the intro dots/first
+    /// line before the first timestamp.
+    private var targetKey: Int {
+        if scrollIndex >= 0, lineTops[scrollIndex] != nil { return scrollIndex }
+        return introGap != nil ? -1 : 0
+    }
+
+    /// One offset change per line change (animated by the single
+    /// `.animation` on the list). The first placement — opening the lyrics
+    /// mid-song — is instant.
+    private func updateScrollTarget() {
         guard !isManual else { return }
-        let key = lineTops[activeIndex] != nil ? activeIndex : (introGap != nil ? -1 : 0)
-        guard let top = lineTops[key], stageHeight > 0 else { return }
-        let target = top - stageHeight * anchorFraction
-        let delta = target - scrollTarget
-        guard abs(delta) > 0.5 else { return }
-        if hasPositioned {
-            // Stagger only small, line-to-line moves, trailing rows lagging
-            // in the direction of motion so rows spread instead of crossing.
-            movingUp = delta > 0
-            staggered = allowStagger && abs(delta) < fontSize * 4
-            scrollTarget = target          // animated per row (StageRow)
-        } else {
+        guard let top = lineTops[targetKey], stageHeight > 0 else { return }
+        let target = max(0, top - stageHeight * anchorFraction)
+        if !hasPositioned {
             var t = Transaction()
             t.disablesAnimations = true
-            withTransaction(t) { scrollTarget = target }
+            withTransaction(t) { scrollY = target }
             hasPositioned = true
+            return
         }
+        guard abs(target - scrollY) > 0.5 else { return }
+        scrollY = target
     }
 
     // MARK: Interludes
@@ -229,10 +249,10 @@ struct LyricsStage<Accessory: View>: View {
 
     // MARK: Manual scrolling
 
-    private func dragGesture(height: CGFloat) -> some Gesture {
+    private var dragGesture: some Gesture {
         DragGesture(minimumDistance: 6)
+            .updating($isTouching) { _, touching, _ in touching = true }
             .onChanged { value in
-                resumeTask?.cancel()
                 if dragStart == nil {
                     dragStart = manualOffset
                     isManual = true
@@ -242,12 +262,16 @@ struct LyricsStage<Accessory: View>: View {
                 withTransaction(t) {
                     manualOffset = (dragStart ?? 0) + value.translation.height
                 }
+                // Also scheduled here: if another gesture cancels this one,
+                // onEnded never runs — the stage must still snap back.
+                scheduleResume()
             }
             .onEnded { value in
                 let base = dragStart ?? 0
                 dragStart = nil
-                let maxUp = (lineTops[activeIndex] ?? 0)
-                let maxDown = max(0, (lineTops[lines.count - 1] ?? 0) - (lineTops[activeIndex] ?? 0))
+                let current = lineTops[targetKey] ?? 0
+                let maxUp = current
+                let maxDown = max(0, (lineTops[lines.count - 1] ?? 0) - current)
                 let projected = base + value.predictedEndTranslation.height
                 let clamped = min(max(projected, -maxDown), maxUp)
                 withAnimation(.interpolatingSpring(mass: 1, stiffness: 140, damping: 24, initialVelocity: 0)) {
@@ -260,22 +284,27 @@ struct LyricsStage<Accessory: View>: View {
     private func scheduleResume() {
         resumeTask?.cancel()
         resumeTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            try? await Task.sleep(for: LyricsTiming.resumeDelay)
             guard !Task.isCancelled else { return }
-            resume()
+            if isTouching {
+                scheduleResume()   // finger still down: wait for release
+            } else {
+                resume()
+            }
         }
     }
 
     private func resume() {
         resumeTask?.cancel()
+        dragStart = nil
         guard isManual || manualOffset != 0 else { return }
-        // Back to the active line as one block (no stagger) together with
-        // releasing the manual offset.
-        withAnimation(M3Motion.lyricsScroll) {
+        isManual = false
+        // Back to the current line as one glide: release the manual offset
+        // and catch up with the scroll target in the same animation.
+        withAnimation(LyricsTiming.scrollAnimation) {
             manualOffset = 0
-            isManual = false
         }
-        updateScrollTarget(allowStagger: false)
+        updateScrollTarget()
     }
 
     private var edgeFade: some View {
@@ -292,42 +321,20 @@ struct LyricsStage<Accessory: View>: View {
     }
 }
 
-// MARK: - Row positioning
+// MARK: - Row measuring
 
-/// Measures a row's natural position and offsets it by the scroll target.
-/// The offset animates with a bouncy spring whose start is staggered: rows
-/// at and below the active line follow slightly later the further down
-/// they are, so the list ripples instead of moving as one block.
-private struct StageRow: ViewModifier {
+/// Records a row's natural top inside the list (the list's own coordinate
+/// space, which moves with the scroll offset — so values never feed back).
+private struct RowMeasure: ViewModifier {
     let index: Int
-    let activeIndex: Int
-    let scrollTarget: CGFloat
-    let manualOffset: CGFloat
-    let movingUp: Bool
-    let staggered: Bool
     @Binding var lineTops: [Int: CGFloat]
 
     func body(content: Content) -> some View {
-        content
-            .onGeometryChange(for: CGFloat.self) { proxy in
-                proxy.frame(in: .named("lyricsStage")).minY
-            } action: { top in
-                lineTops[index] = top
-            }
-            .offset(y: -scrollTarget)
-            .animation(M3Motion.lyricsScroll.delay(delay), value: scrollTarget)
-            .offset(y: manualOffset)
-    }
-
-    /// Rows on the trailing side of the motion start a little later, so the
-    /// gaps between rows only ever open up — rows never pass through each
-    /// other (that overlap looked like doubled lyrics).
-    private var delay: Double {
-        guard staggered else { return 0 }
-        let rel = index - activeIndex
-        let trailing = movingUp ? rel + 1 : -(rel - 1)
-        guard trailing > 0 else { return 0 }
-        return min(Double(trailing), 6) * 0.035
+        content.onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.frame(in: .named("lyricsStage")).minY
+        } action: { top in
+            lineTops[index] = top
+        }
     }
 }
 

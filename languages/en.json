@@ -516,5 +516,8 @@
   "Lock order": "Lock order",
   "Shuffle upcoming": "Shuffle upcoming",
   "Animated": "Animated",
-  "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on.": "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on."
+  "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on.": "Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on.",
+  "Line change earlier/later": "Line change earlier/later",
+  "Timing": "Timing",
+  "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.": "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps."
 }

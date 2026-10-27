@@ -23,6 +23,8 @@ struct LyricsView<ProgressSlider: View>: View {
     @State private var lines: [LyricLine] = []
     /// Index of the line being sung; -1 before the first line (intro).
     @State private var activeIndex: Int = -1
+    /// Line the list glides to — `LyricsTiming.scrollLead` ahead (same clock).
+    @State private var scrollIndex: Int = -1
     @State private var displayTime: TimeInterval = 0
     @State private var showLyricsMenu = false
     @State private var instrumentalGaps: [InstrumentalGap] = []
@@ -67,6 +69,7 @@ struct LyricsView<ProgressSlider: View>: View {
         .onAppear { startFrameDriver() }
         .onDisappear { stopFrameDriver() }
         .onChange(of: settings.lyricsOffsetSeconds) { _, _ in updateActiveLine() }
+        .onChange(of: settings.lyricsLineChangeAdjustMs) { _, _ in updateActiveLine() }
         .onChange(of: settings.romanizeCurrentTrack) { _, _ in
             Task { await rebuildRomanization() }
         }
@@ -149,6 +152,7 @@ struct LyricsView<ProgressSlider: View>: View {
                 LyricsStage(
                     lines: lines,
                     activeIndex: activeIndex,
+                    scrollIndex: scrollIndex,
                     romanized: { romanization(for: $0) },
                     fontSize: settings.lyricsFontSize,
                     alignment: settings.lyricsAlignment,
@@ -366,6 +370,8 @@ struct LyricsView<ProgressSlider: View>: View {
     /// every display frame (instead of the 250 ms NowPlaying timer).
     private func startFrameDriver() {
         PlaybackClock.shared.retain()
+        // Correct line immediately when opened mid-song (clock is seeded).
+        updateActiveLine()
         let driver = DisplayLinkDriver(preferredFPS: 60) { timestamp in
             updateActiveLine()
             // The interval ring only needs a coarse clock.
@@ -393,6 +399,7 @@ struct LyricsView<ProgressSlider: View>: View {
         lines = []
         instrumentalGaps = []
         activeIndex = -1
+        scrollIndex = -1
         isLoading = true
         LyricsState.shared.providerName = nil
         defer { isLoading = false }
@@ -411,10 +418,17 @@ struct LyricsView<ProgressSlider: View>: View {
         } catch {}
     }
 
+    /// Highlight index exactly on the timestamps; scroll index earlier by
+    /// the central lead (± the user's adjustment). Both from the same
+    /// PlaybackClock reading, every display frame.
     private func updateActiveLine() {
         guard !lines.isEmpty else { return }
-        let idx = Self.activeIndex(in: lines, at: PlaybackClock.shared.now() + settings.lyricsOffsetSeconds)
+        let t = PlaybackClock.shared.now() + settings.lyricsOffsetSeconds
+        let idx = Self.activeIndex(in: lines, at: t)
+        let lead = LyricsTiming.scrollLead - settings.lyricsLineChangeAdjustMs / 1000
+        let scroll = max(idx, Self.activeIndex(in: lines, at: t + lead))
         if idx != activeIndex { activeIndex = idx }
+        if scroll != scrollIndex { scrollIndex = scroll }
     }
 
     /// Last line whose start time has passed (binary search; lines are sorted).

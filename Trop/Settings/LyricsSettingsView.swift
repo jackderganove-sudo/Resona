@@ -38,6 +38,21 @@ struct LyricsSettingsView: View {
             }
 
             M3Section {
+                M3SliderRow(
+                    value: $settings.lyricsLineChangeAdjustMs,
+                    range: -500...500,
+                    step: 50,
+                    format: { $0 == 0 ? "0 ms" : String(format: "%+.0f ms", $0) }
+                ) {
+                    Label("Line change earlier/later", systemImage: "arrow.up.arrow.down")
+                }
+            } header: {
+                Text("Timing")
+            } footer: {
+                Text("Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.")
+            }
+
+            M3Section {
                 NavigationLink {
                     LyricsProviderOrderView()
                 } label: {

@@ -216,6 +216,11 @@ final class SettingsStore {
         didSet { Self.defaults.set(audioNormalization, forKey: Keys.audioNormalization) }
     }
 
+    /// Shifts the lyric line change (scroll) earlier (−) or later (+), ms.
+    var lyricsLineChangeAdjustMs: Double {
+        didSet { Self.defaults.set(lyricsLineChangeAdjustMs, forKey: Keys.lyricsLineChangeAdjustMs) }
+    }
+
     /// Slowly flowing mesh gradient behind the player.
     var animatedPlayerBackground: Bool {
         didSet { Self.defaults.set(animatedPlayerBackground, forKey: Keys.animatedPlayerBackground) }
@@ -359,6 +364,7 @@ final class SettingsStore {
         static let audioNormalization = "settings.audioNormalization"
         static let gaplessPlayback = "settings.gaplessPlayback"
         static let animatedPlayerBackground = "resona.animatedPlayerBackground"
+        static let lyricsLineChangeAdjustMs = "resona.lyricsLineChangeAdjustMs"
         static let autoplaySimilar = "settings.autoplaySimilar"
         static let persistQueue = "settings.persistQueue"
         static let lastRadioStyle = "settings.lastRadioStyle"
@@ -424,6 +430,7 @@ final class SettingsStore {
         audioNormalization = Self.load(Keys.audioNormalization, default: false)
         gaplessPlayback = Self.load(Keys.gaplessPlayback, default: true)
         animatedPlayerBackground = Self.load(Keys.animatedPlayerBackground, default: true)
+        lyricsLineChangeAdjustMs = Self.load(Keys.lyricsLineChangeAdjustMs, default: 0.0)
         autoplaySimilar = Self.load(Keys.autoplaySimilar, default: true)
         persistQueue = Self.load(Keys.persistQueue, default: false)
         lastRadioStyle = Self.loadEnum(Keys.lastRadioStyle, default: .similar)
