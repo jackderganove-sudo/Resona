@@ -31,6 +31,8 @@ struct SheetChrome<Content: View>: View {
             }
             .scrollContentBackground(.hidden)
             .navigationBarTitleDisplayMode(.inline)
+            // Transparent so the glass shows (sheet or iPad side panel).
+            .containerBackground(.clear, for: .navigation)
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)

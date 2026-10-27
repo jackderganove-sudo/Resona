@@ -26,6 +26,9 @@ struct FullPlayerView: View {
     @State private var editingProgress: Double = 0
     @State private var isEditingSlider = false
     @State private var showLyrics = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    /// iPad landscape: sheets become a side panel.
+    @State private var sidePanelMode = false
     /// Cover morph into the iPad lyrics split view.
     @Namespace private var coverSpace
     @State private var showQueue = false
@@ -49,24 +52,43 @@ struct FullPlayerView: View {
     var body: some View {
         GeometryReader { geo in
             let wide = geo.size.width > geo.size.height && geo.size.width > 560
+            // iPad landscape: queue / player menu as a side panel instead of
+            // a centred sheet; the player content moves aside.
+            let usePanel = sizeClass == .regular && wide
+            let panel = usePanel ? activePanel : nil
+            let contentSize = CGSize(width: geo.size.width - (panel == nil ? 0 : Self.panelWidth + 16), height: geo.size.height)
             ZStack {
                 background
 
-                if showLyrics {
-                    LyricsView(
-                        showLyrics: $showLyrics,
-                        pendingRoute: $pendingRoute,
-                        progressSlider: { progressSlider(compact: true) },
-                        coverNamespace: coverSpace
-                    )
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
-                } else if np.isVideoMode && np.hasVideo {
-                    videoLayout(size: geo.size)
-                } else if wide {
-                    wideLayout(size: geo.size)
-                } else {
-                    portraitLayout(size: geo.size)
+                HStack(spacing: 0) {
+                    ZStack {
+                        if showLyrics {
+                            LyricsView(
+                                showLyrics: $showLyrics,
+                                pendingRoute: $pendingRoute,
+                                progressSlider: { progressSlider(compact: true) },
+                                coverNamespace: coverSpace
+                            )
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        } else if np.isVideoMode && np.hasVideo {
+                            videoLayout(size: contentSize)
+                        } else if wide {
+                            wideLayout(size: contentSize)
+                        } else {
+                            portraitLayout(size: contentSize)
+                        }
+                    }
+                    .frame(width: contentSize.width)
+
+                    if let panel {
+                        sidePanel(panel)
+                            .frame(width: Self.panelWidth)
+                            .padding(.trailing, 16)
+                            .padding(.vertical, 16)
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
                 }
+                .animation(M3Motion.defaultSpatial, value: panel)
 
                 if showSleepTimer {
                     SleepTimerDialog(isPresented: $showSleepTimer)
@@ -83,6 +105,7 @@ struct FullPlayerView: View {
                     .zIndex(6)
                 }
             }
+            .onChange(of: usePanel, initial: true) { _, value in sidePanelMode = value }
             .animation(M3Motion.defaultSpatial, value: showLyrics)
             .animation(M3Motion.defaultSpatial, value: showSleepTimer)
         }
@@ -97,15 +120,57 @@ struct FullPlayerView: View {
         }
         .onChange(of: np.queueIndex) { _, _ in np.preloadNeighborArtwork() }
         .task { np.preloadNeighborArtwork() }
-        .sheet(isPresented: $showSongMenu) {
+        .sheet(isPresented: Binding(get: { showSongMenu && !sidePanelMode }, set: { showSongMenu = $0 })) {
             if let currentSong {
                 PlayerMenuSheet(song: currentSong, onCollapseRequest: { onCollapse() })
             }
         }
-        .sheet(isPresented: $showQueue) {
+        .sheet(isPresented: Binding(get: { showQueue && !sidePanelMode }, set: { showQueue = $0 })) {
             QueueSheet(pendingRoute: $pendingRoute)
         }
         .background(Color.clear.detailRouteSheet(item: $pendingRoute))
+    }
+
+    // MARK: Side panel (iPad landscape)
+
+    enum SidePanel: Equatable { case queue, menu }
+    static let panelWidth: CGFloat = 400
+
+    private var activePanel: SidePanel? {
+        if showQueue { return .queue }
+        if showSongMenu, currentSong != nil { return .menu }
+        return nil
+    }
+
+    private func sidePanel(_ panel: SidePanel) -> some View {
+        let shape = RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous)
+        return VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                M3IconButton(systemName: "xmark", kind: .onDark, size: 40, iconSize: 14, accessibility: "Close") {
+                    withAnimation(M3Motion.defaultSpatial) {
+                        showQueue = false
+                        showSongMenu = false
+                    }
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 10)
+            Group {
+                switch panel {
+                case .queue:
+                    QueueSheet(pendingRoute: $pendingRoute)
+                case .menu:
+                    if let currentSong {
+                        PlayerMenuSheet(song: currentSong, onCollapseRequest: { onCollapse() })
+                    }
+                }
+            }
+            .frame(maxHeight: .infinity)
+        }
+        .background(ResonaGlassBackground(shape: shape))
+        .clipShape(shape)
+        .shadow(color: .black.opacity(0.3), radius: 20, x: -6)
     }
 
     // MARK: Background

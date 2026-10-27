@@ -81,7 +81,7 @@ struct LyricsView<ProgressSlider: View>: View {
         .simultaneousGesture(TapGesture().onEnded { wakeChrome() }, including: .all)
         .task(id: chromeWakeToken) { await scheduleRest() }
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
-        .sheet(isPresented: $showLyricsMenu) { LyricsMenuSheet() }
+        .sheet(isPresented: Binding(get: { showLyricsMenu && !isSplit }, set: { showLyricsMenu = $0 })) { LyricsMenuSheet() }
         .sheet(isPresented: $showManualSearch) {
             SearchLyricsSheet(
                 videoId: np.videoId ?? "",
@@ -179,7 +179,27 @@ struct LyricsView<ProgressSlider: View>: View {
                 lyricsBody
                     .frame(maxHeight: .infinity)
             }
+
+            // iPad landscape: lyrics options as a side panel.
+            if showLyricsMenu {
+                VStack(spacing: 0) {
+                    HStack {
+                        Spacer()
+                        M3IconButton(systemName: "xmark", kind: .onDark, size: 40, iconSize: 14, accessibility: "Close") {
+                            withAnimation(M3Motion.defaultSpatial) { showLyricsMenu = false }
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.top, 10)
+                    LyricsMenuSheet()
+                }
+                .frame(width: 400)
+                .background(ResonaGlassBackground(shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous)))
+                .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
         }
+        .animation(M3Motion.defaultSpatial, value: showLyricsMenu)
         .padding(.horizontal, 40)
         .padding(.vertical, 24)
         .animation(.easeInOut(duration: 0.6), value: chromeResting)
