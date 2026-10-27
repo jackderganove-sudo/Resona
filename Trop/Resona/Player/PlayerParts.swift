@@ -375,7 +375,7 @@ extension M3Scheme {
 
 /// AirPlay / output picker (AVRoutePickerView) in the round player style;
 /// the glyph lights up in the cover accent while a route is active.
-struct AirPlayButton: View {
+struct PlayerAirPlayButton: View {
     @Environment(\.playerAccent) private var playerAccent
 
     var body: some View {

@@ -439,7 +439,7 @@ struct FullPlayerView: View {
             PlayerRoundToggle(systemName: np.isRepeatOn ? "repeat.1" : "repeat", isOn: np.isRepeatOn, label: "Repeat") {
                 np.isRepeatOn.toggle()
             }
-            AirPlayButton()
+            PlayerAirPlayButton()
         }
     }
 
