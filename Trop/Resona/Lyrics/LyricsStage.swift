@@ -21,6 +21,7 @@
 //  another gesture (no onEnded) can't leave the stage stuck in manual mode.
 //
 
+import os
 import SwiftUI
 
 /// Central lyric timing constants.
@@ -138,8 +139,13 @@ struct LyricsStage<Accessory: View>: View {
             return
         }
         guard abs(target - scrollY) > 0.5 else { return }
+        // The offset may only change on a real line change (or layout
+        // change); the log makes any per-frame swing visible.
+        Self.log.debug("scroll \(scrollY, format: .fixed(precision: 1)) → \(target, format: .fixed(precision: 1)) key=\(targetKey) manual=\(isManual)")
         scrollY = target
     }
+
+    private static var log: Logger { Logger(subsystem: "dev.jackderganove.resona", category: "LyricsStage") }
 
     // MARK: Interludes
 
@@ -535,7 +541,10 @@ private struct KaraokeRenderer: TextRenderer {
                 if emphasis > 0.01 {
                     for (radius, alpha) in [(4.0, 0.9), (12.0, 0.6), (24.0, 0.35)] {
                         var glow = c
-                        glow.addFilter(.shadow(color: .white.opacity(alpha * emphasis), radius: radius))
+                        // .shadowOnly: the default shadow filter draws the
+                        // content as well — the lit text was stacked 4× on
+                        // itself and its edges looked doubled/pulsing.
+                        glow.addFilter(.shadow(color: .white.opacity(alpha * emphasis), radius: radius, options: .shadowOnly))
                         glow.drawLayer(content: litLayer)
                     }
                 }

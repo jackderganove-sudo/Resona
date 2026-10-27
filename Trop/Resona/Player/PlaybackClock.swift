@@ -128,15 +128,28 @@ final class PlaybackClock: @unchecked Sendable {
         let latency = AVAudioSession.sharedInstance().outputLatency
         lock.withLock { s in
             let wasPlaying = s.playing
+            let playing = !values.paused
             s.currentLatency = latency
-            s.position = values.pos
+            // Phase-locked tracking instead of hard re-anchoring: mpv's
+            // time-pos arrives with a few ms of jitter, and snapping to every
+            // sample made the time (and with it the word mask, lift and
+            // glow) wobble back and forth. While playing steadily the
+            // extrapolated line is nudged 15 % towards each sample; real
+            // jumps (seek, pause/resume, > 0.25 s off) still snap.
+            let predicted = s.position + max(0, host - s.host)
+            let error = values.pos - predicted
+            if playing, wasPlaying, abs(error) < 0.25 {
+                s.position = predicted + error * 0.15
+            } else {
+                s.position = values.pos
+            }
             s.host = host
-            s.playing = !values.paused
-            if s.playing && !wasPlaying {
+            s.playing = playing
+            if playing && !wasPlaying {
                 // mpv re-reads outputLatency whenever its audio unit starts.
                 s.latencyAtStart = latency
             }
-            if !s.playing { s.lastReported = values.pos }
+            if !playing { s.lastReported = values.pos }
         }
     }
 }
