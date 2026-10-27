@@ -1,0 +1,43 @@
+{
+  "name": "Resona",
+  "identifier": "dev.jackderganove.resona.source",
+  "subtitle": "Official Resona builds",
+  "sourceURL": "https://raw.githubusercontent.com/jackderganove-sudo/Resona/app-source/apps.json",
+  "iconURL": "https://raw.githubusercontent.com/jackderganove-sudo/Resona/main/Trop/Assets.xcassets/AppIcon.appiconset/AppIcon.png",
+  "website": "https://github.com/jackderganove-sudo/Resona",
+  "tintColor": "#99CCF9",
+  "apps": [
+    {
+      "name": "Resona",
+      "bundleIdentifier": "dev.jackderganove.resona",
+      "developerName": "Resona",
+      "subtitle": "YouTube Music client in Material 3 Expressive",
+      "localizedDescription": "Resona is a YouTube Music client for iPhone and iPad with dynamic cover colours, word-synced karaoke lyrics, downloads and a Material 3 Expressive design.",
+      "iconURL": "https://raw.githubusercontent.com/jackderganove-sudo/Resona/main/Trop/Assets.xcassets/AppIcon.appiconset/AppIcon.png",
+      "tintColor": "#99CCF9",
+      "category": "entertainment",
+      "screenshots": [],
+      "versions": [
+        {
+          "version": "0.8.1",
+          "buildVersion": "50",
+          "date": "2026-10-27T21:50:24Z",
+          "localizedDescription": "- Lyrics: plain text instead of fake [00:00.00] timing, sync it yourself\n- Settings: hide the lyrics developer switches behind 7 taps on the version\n- Appearance: player style (large cover / small cover + lyrics), blur strength\n- Songtext settings: animation style, translation, romanization\n- Storage settings: delete all downloads, clear caches with sizes\n- iPad: queue, player menu and lyrics options as a side panel\n- Artists: chevron instead of play on cards, 'Play mix' on the artist page\n- Downloads: keep downloaded playlists up to date\n- Rename the player AirPlay button (clashed with Trop's AirPlayButton)\n- Lyrics: fix timing for slowed/sped-up versions, per-song tempo and offset\n- Playback: crossfade between songs (off / 1-12 s)\n- Lock screen / Control Center: like, shuffle, repeat, AirPlay, safer pauses\n- Auto releases on every main build, ESign/AltStore app source, update check\n- iPad: lyrics full screen with cover, controls and rest mode",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.1/Resona.ipa",
+          "size": 27921376,
+          "minOSVersion": "18.0"
+        }
+      ],
+      "version": "0.8.1",
+      "versionDate": "2026-10-27T21:50:24Z",
+      "versionDescription": "- Lyrics: plain text instead of fake [00:00.00] timing, sync it yourself\n- Settings: hide the lyrics developer switches behind 7 taps on the version\n- Appearance: player style (large cover / small cover + lyrics), blur strength\n- Songtext settings: animation style, translation, romanization\n- Storage settings: delete all downloads, clear caches with sizes\n- iPad: queue, player menu and lyrics options as a side panel\n- Artists: chevron instead of play on cards, 'Play mix' on the artist page\n- Downloads: keep downloaded playlists up to date\n- Rename the player AirPlay button (clashed with Trop's AirPlayButton)\n- Lyrics: fix timing for slowed/sped-up versions, per-song tempo and offset\n- Playback: crossfade between songs (off / 1-12 s)\n- Lock screen / Control Center: like, shuffle, repeat, AirPlay, safer pauses\n- Auto releases on every main build, ESign/AltStore app source, update check\n- iPad: lyrics full screen with cover, controls and rest mode",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.1/Resona.ipa",
+      "size": 27921376,
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {}
+      }
+    }
+  ],
+  "news": []
+}
