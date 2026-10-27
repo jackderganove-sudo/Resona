@@ -28,6 +28,7 @@ struct LyricsView<ProgressSlider: View>: View {
     @State private var scrollIndex: Int = -1
     @State private var displayTime: TimeInterval = 0
     @State private var showLyricsMenu = false
+    @State private var showManualSearch = false
     @State private var instrumentalGaps: [InstrumentalGap] = []
     @State private var romanizedLines: [String?] = []
     @State private var isLoading = false
@@ -66,6 +67,14 @@ struct LyricsView<ProgressSlider: View>: View {
         }
         .simultaneousGesture(swipeBackGesture)
         .sheet(isPresented: $showLyricsMenu) { LyricsMenuSheet() }
+        .sheet(isPresented: $showManualSearch) {
+            SearchLyricsSheet(
+                videoId: np.videoId ?? "",
+                defaultTitle: np.title,
+                defaultArtist: np.displayArtist,
+                duration: np.duration
+            )
+        }
         .task(id: np.videoId) { await loadLyrics() }
         .onAppear { startFrameDriver() }
         .onDisappear { stopFrameDriver() }
@@ -133,8 +142,25 @@ struct LyricsView<ProgressSlider: View>: View {
                         .font(.system(size: 34, weight: .medium))
                         .foregroundStyle(.white.opacity(0.5))
                     Text("No lyrics found")
-                        .font(.poppins(17, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .font(.poppins(18, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.9))
+                    Text("None of the lyrics sources has this song yet.")
+                        .font(.poppins(14))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                    Button {
+                        showManualSearch = true
+                    } label: {
+                        Label("Search manually", systemImage: "magnifyingglass")
+                            .font(.poppins(15, weight: .medium))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 20)
+                            .frame(height: 44)
+                            .background(.white.opacity(0.18), in: Capsule())
+                    }
+                    .buttonStyle(.expressive)
+                    .padding(.top, 6)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -164,22 +190,13 @@ struct LyricsView<ProgressSlider: View>: View {
                 }
             }
         } else {
-            // Unsynced lyrics: plain readable list.
-            ScrollView {
-                LazyVStack(alignment: settings.lyricsAlignment.textAlignment.horizontal, spacing: settings.lyricsFontSize * 0.7) {
-                    if let provider = LyricsState.shared.providerName {
-                        providerLabel(provider)
-                    }
-                    ForEach(lines) { line in
-                        LyricsLineText(text: line.text, fontSize: settings.lyricsFontSize, alignment: settings.lyricsAlignment)
-                            .foregroundStyle(.white.opacity(0.92))
-                            .frame(maxWidth: .infinity, alignment: settings.lyricsAlignment.textAlignment)
-                            .padding(.horizontal, 28)
-                    }
+            // Unsynced lyrics: readable text, "Not synced" note, follows
+            // the song slowly; no highlight that could run wrong.
+            UnsyncedLyricsView(lines: lines, fontSize: settings.lyricsFontSize, alignment: settings.lyricsAlignment) {
+                if let provider = LyricsState.shared.providerName {
+                    providerLabel(provider)
                 }
-                .padding(.vertical, 24)
             }
-            .scrollIndicators(.hidden)
         }
     }
 

@@ -532,5 +532,8 @@
   "Paxsenix only answers requests with your own API key. Without a key it is skipped.": "Paxsenix only answers requests with your own API key. Without a key it is skipped.",
   "Spotify account connected": "Spotify account connected",
   "Sign in to Spotify": "Sign in to Spotify",
-  "Spotify lyrics use the same sign-in as Spotify Canvas. Without it Spotify is skipped.": "Spotify lyrics use the same sign-in as Spotify Canvas. Without it Spotify is skipped."
+  "Spotify lyrics use the same sign-in as Spotify Canvas. Without it Spotify is skipped.": "Spotify lyrics use the same sign-in as Spotify Canvas. Without it Spotify is skipped.",
+  "Not synced": "Not synced",
+  "None of the lyrics sources has this song yet.": "None of the lyrics sources has this song yet.",
+  "Search manually": "Search manually"
 }
