@@ -13,20 +13,11 @@ struct SettingsView: View {
     @Environment(SettingsStore.self) private var settings
     @Environment(\.m3) private var m3
     @Bindable private var accountState = AccountSheetState.shared
-    @State private var titleInBar = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                // Title inside the centred column, flush with the list's
-                // left edge (the system large title sat at the far left in
-                // landscape while the list was centred).
-                Text("Settings")
-                    .font(.m3(.headlineLarge))
-                    .foregroundStyle(m3.onSurface)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 4)
-                    .padding(.bottom, 4)
+                SettingsPageTitle(title: "Settings")
 
                 group([
                     .init(icon: "person.crop.circle", title: "Account", subtitle: accountSubtitle, action: .custom {
@@ -61,22 +52,9 @@ struct SettingsView: View {
         }
         .scrollIndicators(.hidden)
         .background(m3.surface.ignoresSafeArea())
-        .onScrollGeometryChange(for: Bool.self) { geo in
-            geo.contentOffset.y + geo.contentInsets.top > 44
-        } action: { _, scrolled in
-            withAnimation(M3Motion.quickFade) { titleInBar = scrolled }
-        }
-        .navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            // Small title only once the in-column title has scrolled away.
-            ToolbarItem(placement: .principal) {
-                Text("Settings")
-                    .font(.m3(.titleMedium, weight: .medium))
-                    .foregroundStyle(m3.onSurface)
-                    .opacity(titleInBar ? 1 : 0)
-            }
-        }
+        // Same header as every settings subpage; the round back arrow comes
+        // from the route (DetailRouteDestinationView).
+        .settingsPageChrome("Settings", showsBackButton: false)
         .miniPlayerTracksScroll()
         .loginSheet(state: accountState)
         .task {

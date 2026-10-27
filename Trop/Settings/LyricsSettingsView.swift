@@ -19,7 +19,7 @@ struct LyricsSettingsView: View {
     var body: some View {
         @Bindable var settings = settings
 
-        M3Form {
+        M3Form(title: "Lyrics") {
             M3Section {
                 ForEach(LyricsProviderRegistry.all, id: \.id) { provider in
                     Toggle(isOn: Binding(
@@ -152,9 +152,7 @@ struct LyricsSettingsView: View {
                 }
             }
         }
-        .navigationTitle("Lyrics")
         .m3ScreenBackground()
-        .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }
 

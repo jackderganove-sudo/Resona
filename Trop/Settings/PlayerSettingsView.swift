@@ -13,7 +13,7 @@ struct PlayerSettingsView: View {
     var body: some View {
         @Bindable var settings = settings
 
-        M3Form {
+        M3Form(title: "Playback") {
             M3Section {
                 SettingsNavigationRow("Equalizer", icon: "slider.vertical.3") {
                     EqualizerView()
@@ -59,9 +59,7 @@ struct PlayerSettingsView: View {
                 Text("Swipe left or right on the artwork in the full player to play the next or previous song.")
             }
         }
-        .navigationTitle("Player")
         .m3ScreenBackground()
-        .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }
 }

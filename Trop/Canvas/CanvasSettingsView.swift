@@ -20,7 +20,7 @@ struct CanvasSettingsView: View {
 
     var body: some View {
         @Bindable var settings = settings
-        M3Form {
+        M3Form(title: "Spotify Canvas") {
             M3Section {
                 if isLoggedIn {
                     HStack(spacing: 14) {
@@ -93,9 +93,7 @@ struct CanvasSettingsView: View {
                 Text("Plays the looping video behind the player artwork when Spotify has one for the track.")
             }
         }
-        .navigationTitle("Spotify Canvas")
         .m3ScreenBackground()
-        .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
         .sheet(isPresented: $showWebView) {
             SpotifyAuthWebView { success in

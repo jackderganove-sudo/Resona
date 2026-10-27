@@ -30,7 +30,7 @@ struct LastFMSettingsView: View {
     private var isLoggedIn: Bool { !sessionKey.isEmpty }
 
     var body: some View {
-        M3Form {
+        M3Form(title: "Last.fm") {
             // Login / Profile — top cell handles both states (mirrors Discord)
             M3Section("Account") {
                 if isLoggedIn {
@@ -143,9 +143,7 @@ struct LastFMSettingsView: View {
                 Text("Scrobble after \(Int(scrobbleDelayPercent*100))% of track or \(DurationFormat.shortDuration(scrobbleDelaySeconds)), whichever comes first. Tracks shorter than \(DurationFormat.shortDuration(minDuration)) are ignored.")
             }
         }
-        .navigationTitle("Last.fm")
         .m3ScreenBackground()
-        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showWebView) {
             LastFMAuthWebView { success in
                 isBusy = false

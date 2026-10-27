@@ -15,7 +15,7 @@ struct AboutSettingsView: View {
     @State private var developerNote: String?
 
     var body: some View {
-        M3Form {
+        M3Form(title: "About") {
             M3Section {
                 HStack {
                     Label("Version", systemImage: "info.circle")
@@ -72,8 +72,6 @@ struct AboutSettingsView: View {
                 Text("Links")
             }
         }
-        .navigationTitle("About")
-        .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }
 

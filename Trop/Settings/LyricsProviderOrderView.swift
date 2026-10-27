@@ -26,9 +26,10 @@ struct LyricsProviderOrderView: View {
         // Same centred column as the other settings pages.
         .frame(maxWidth: 720)
         .frame(maxWidth: .infinity)
-        .navigationTitle("Lyrics Providers")
         .m3ScreenBackground()
+        .navigationTitle("Lyrics Providers")
         .navigationBarTitleDisplayMode(.inline)
+        .m3BackButton()
         .environment(\.editMode, .constant(.active))
         .safeAreaInset(edge: .bottom) {
             Text("Drag to reorder providers")

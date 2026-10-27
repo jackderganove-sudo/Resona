@@ -16,15 +16,30 @@ import SwiftUI
 
 struct M3Form<Content: View>: View {
     @Environment(\.m3) private var m3
+    private let title: LocalizedStringKey?
     private let content: Content
 
-    init(@ViewBuilder content: () -> Content) {
+    /// With a title: shared settings chrome (round back arrow, large title
+    /// in the column, small bar title after scrolling).
+    init(title: LocalizedStringKey? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title
         self.content = content()
     }
 
     var body: some View {
+        if let title {
+            form.settingsPageChrome(title)
+        } else {
+            form
+        }
+    }
+
+    private var form: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                if let title {
+                    SettingsPageTitle(title: title)
+                }
                 content
             }
             .padding(.horizontal, 16)

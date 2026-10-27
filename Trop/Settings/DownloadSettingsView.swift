@@ -21,7 +21,7 @@ struct DownloadSettingsView: View {
     var body: some View {
         @Bindable var settings = settings
 
-        M3Form {
+        M3Form(title: "Download Settings") {
             M3Section {
                 storageCard
             }
@@ -73,9 +73,7 @@ struct DownloadSettingsView: View {
                 .disabled(downloadManager.tracks.isEmpty)
             }
         }
-        .navigationTitle("Download Settings")
         .m3ScreenBackground()
-        .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
         .task {
             await refreshStats()

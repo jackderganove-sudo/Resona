@@ -19,6 +19,8 @@ struct EqualizerView: View {
 
         ScrollView {
             VStack(spacing: 20) {
+                SettingsPageTitle(title: "Equalizer")
+                    .padding(.horizontal, 16)
                 VStack(spacing: 16) {
                     Toggle(isOn: $settings.equalizerEnabled) {
                         Text(LocalizedStringKey(settings.equalizerEnabled ? "Equalizer On" : "Equalizer Off"))
@@ -43,8 +45,7 @@ struct EqualizerView: View {
             .frame(maxWidth: .infinity)
         }
         .m3ScreenBackground()
-        .navigationTitle("Equalizer")
-        .navigationBarTitleDisplayMode(.inline)
+        .settingsPageChrome("Equalizer")
         .onChange(of: settings.equalizerEnabled) { _, _ in
             PlayerController.shared.applyPlaybackSettings()
         }

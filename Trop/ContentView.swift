@@ -122,7 +122,6 @@ struct ContentView: View {
         .onChange(of: nowPlaying.isBarPresented) { _, presented in
             if !presented { collapse() }
         }
-        .simultaneousGesture(backSwipeGesture)
     }
 
     // MARK: Tabs
@@ -262,22 +261,6 @@ struct ContentView: View {
         }
     }
 
-    private var backSwipeGesture: some Gesture {
-        DragGesture(minimumDistance: 20)
-            .onEnded { value in
-                let isHorizontal = abs(value.translation.width) > abs(value.translation.height)
-                guard !isExpanded,
-                      value.startLocation.x <= 28,
-                      isHorizontal,
-                      value.translation.width > 80 else { return }
-
-                let router = AppRouter.shared
-                let depth = router.activePathDepth
-                guard depth > 0 else { return }
-                guard !isExpanded, router.activePathDepth == depth else { return }
-                router.popActiveRoute()
-            }
-    }
 }
 
 private struct UsesNavigationRailKey: EnvironmentKey {

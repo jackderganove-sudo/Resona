@@ -16,7 +16,7 @@ struct AppearanceSettingsView: View {
     var body: some View {
         @Bindable var settings = settings
 
-        M3Form {
+        M3Form(title: "Appearance") {
             M3Section {
                 SettingsPickerRow("Theme Mode", icon: "sun.max", selection: $settings.themeMode)
             } header: {
@@ -110,9 +110,7 @@ struct AppearanceSettingsView: View {
                 Text("General")
             }
         }
-        .navigationTitle("Appearance")
         .m3ScreenBackground()
-        .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }
 

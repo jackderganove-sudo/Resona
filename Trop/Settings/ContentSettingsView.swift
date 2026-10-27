@@ -15,7 +15,7 @@ struct ContentSettingsView: View {
     var body: some View {
         @Bindable var settings = settings
 
-        M3Form {
+        M3Form(title: "Content") {
             M3Section {
                 SettingsToggleRow("Hide Explicit Content", icon: "eye.slash", isOn: $settings.hideExplicit)
             } header: {
@@ -73,9 +73,7 @@ struct ContentSettingsView: View {
                 Text("Choose which library sections sync from your YouTube Music account.")
             }
         }
-        .navigationTitle("Content")
         .m3ScreenBackground()
-        .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }
 

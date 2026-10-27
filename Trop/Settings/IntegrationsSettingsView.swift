@@ -7,7 +7,7 @@ import SwiftUI
 
 struct IntegrationsSettingsView: View {
     var body: some View {
-        M3Form {
+        M3Form(title: "Integrations") {
             M3Section {
                 SettingsNavigationRow("Last.fm", icon: "music.note") {
                     LastFMSettingsView()
@@ -22,9 +22,7 @@ struct IntegrationsSettingsView: View {
                 Text("Connect external services to enhance your experience.")
             }
         }
-        .navigationTitle("Integrations")
         .m3ScreenBackground()
-        .navigationBarTitleDisplayMode(.inline)
         .miniPlayerTracksScroll()
     }
 }
