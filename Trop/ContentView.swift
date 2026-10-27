@@ -147,22 +147,25 @@ struct ContentView: View {
 
     // MARK: Bottom chrome (mini player + bar)
 
-    /// Central counterpart of the bottom safe-area inset: scrolling content
-    /// fades into the surface before it reaches the floating mini player /
-    /// navigation bar instead of visibly running underneath them. (The inset
-    /// on every tab still guarantees the last row ends above the chrome.)
+    /// Soft edge right at the top of the floating chrome (mini player, or
+    /// the navigation bar without one): content fades over a short band —
+    /// from ~20 pt above the top edge to ~28 pt below it — and then keeps
+    /// scrolling visibly behind the frosted glass. Nothing else is darkened;
+    /// the per-tab safe-area inset still lets the last row end above it.
     private var bottomScrim: some View {
-        LinearGradient(
+        let chromeTop = bottomContentInset - 16
+        let above: CGFloat = 20, below: CGFloat = 28
+        return LinearGradient(
             stops: [
                 .init(color: m3.surface.opacity(0), location: 0),
-                .init(color: m3.surface.opacity(0.85), location: 0.45),
-                .init(color: m3.surface, location: 1)
+                .init(color: m3.surface.opacity(0.55), location: above / (above + below)),
+                .init(color: m3.surface.opacity(0), location: 1)
             ],
             startPoint: .top,
             endPoint: .bottom
         )
-        .frame(height: bottomContentInset + 24)
-        .ignoresSafeArea(edges: .bottom)
+        .frame(height: above + below)
+        .padding(.bottom, max(0, chromeTop - below))
         .allowsHitTesting(false)
         .opacity(1 - min(1, expansion * 2.5))
         .animation(M3Motion.navigationBar, value: miniPlayerVisible)
