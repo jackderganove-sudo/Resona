@@ -36,6 +36,12 @@ struct PlayerSettingsView: View {
                 ) {
                     Label("Crossfade (experimental)", systemImage: "waveform.path")
                 }
+                M3DropdownRow(
+                    selection: $settings.sleepFadeSeconds,
+                    options: [(0.0, String(localized: "Off")), (10.0, "10 s"), (30.0, "30 s"), (60.0, "60 s")]
+                ) {
+                    Label("Sleep timer fade-out", systemImage: "moon.zzz")
+                }
             } header: {
                 Text("Audio")
             } footer: {

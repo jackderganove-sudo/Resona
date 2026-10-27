@@ -41,11 +41,44 @@ final class SleepTimer {
         stopAtSongEnd = false
         timer?.invalidate()
         timer = nil
+        restoreVolume()
+    }
+
+    /// Seconds left until the timer pauses playback (nil if unknown).
+    private var secondsLeft: TimeInterval? {
+        if let endDate { return endDate.timeIntervalSinceNow }
+        let np = NowPlaying.shared
+        if stopAtSongEnd, np.duration > 0 { return np.duration - np.currentTime }
+        return nil
+    }
+
+    /// Fade-out in the last N seconds (setting; 0 = off).
+    private func applyFade() {
+        let fade = SettingsStore.shared.sleepFadeSeconds
+        let player = PlayerController.shared
+        guard fade > 0, let left = secondsLeft, left < fade else {
+            if player.sleepFadeGain != 1 { restoreVolume() }
+            return
+        }
+        let x = min(1, max(0, left / fade))
+        let gain = x * x * (3 - 2 * x)   // smooth, ends at 0
+        if abs(gain - player.sleepFadeGain) > 0.005 {
+            player.sleepFadeGain = gain
+            player.applyPlayerVolume()
+        }
+    }
+
+    private func restoreVolume() {
+        let player = PlayerController.shared
+        guard player.sleepFadeGain != 1 else { return }
+        player.sleepFadeGain = 1
+        player.applyPlayerVolume()
     }
 
     private func schedule() {
         timer?.invalidate()
-        let t = Timer(timeInterval: 0.5, repeats: true) { _ in
+        // 10 Hz so the fade-out is smooth.
+        let t = Timer(timeInterval: 0.1, repeats: true) { _ in
             Task { @MainActor in SleepTimer.shared.tick() }
         }
         RunLoop.main.add(t, forMode: .common)
@@ -53,6 +86,7 @@ final class SleepTimer {
     }
 
     private func tick() {
+        applyFade()
         let np = NowPlaying.shared
         if let endDate, endDate <= Date() {
             fire()
@@ -62,8 +96,16 @@ final class SleepTimer {
     }
 
     private func fire() {
-        cancel()
+        endDate = nil
+        stopAtSongEnd = false
+        timer?.invalidate()
+        timer = nil
         PlayerController.shared.setPaused(true)
+        // Volume back to normal for the next play (after the pause landed).
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(400))
+            SleepTimer.shared.restoreVolume()
+        }
     }
 }
 

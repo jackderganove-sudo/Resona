@@ -295,6 +295,11 @@ final class SettingsStore {
         didSet { Self.defaults.set(showLyricsTranslation, forKey: Keys.showLyricsTranslation) }
     }
 
+    /// Sleep timer fades the volume out over its last N seconds (0 = off).
+    var sleepFadeSeconds: Double {
+        didSet { Self.defaults.set(sleepFadeSeconds, forKey: Keys.sleepFadeSeconds) }
+    }
+
     /// Crossfade length between songs in seconds (0 = off).
     var crossfadeSeconds: Double {
         didSet { Self.defaults.set(crossfadeSeconds, forKey: Keys.crossfadeSeconds) }
@@ -447,6 +452,7 @@ final class SettingsStore {
         static let playerBackgroundBrightness = "resona.playerBackgroundBrightness"
         static let showAudioDetails = "resona.showAudioDetails"
         static let crossfadeSeconds = "resona.crossfadeSeconds"
+        static let sleepFadeSeconds = "resona.sleepFadeSeconds"
         static let removeDeletedPlaylistSongs = "resona.removeDeletedPlaylistSongs"
         static let lyricsAnimationStyle = "resona.lyricsAnimationStyle"
         static let playerLayoutStyle = "resona.playerLayoutStyle"
@@ -521,6 +527,7 @@ final class SettingsStore {
         playerBackgroundBrightness = Self.load(Keys.playerBackgroundBrightness, default: 1.0)
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)
+        sleepFadeSeconds = Self.load(Keys.sleepFadeSeconds, default: 30.0)
         removeDeletedPlaylistSongs = Self.load(Keys.removeDeletedPlaylistSongs, default: false)
         lyricsAnimationStyle = Self.loadEnum(Keys.lyricsAnimationStyle, default: LyricsAnimationStyle.karaoke)
         playerLayoutStyle = Self.loadEnum(Keys.playerLayoutStyle, default: PlayerLayoutStyle.largeCover)

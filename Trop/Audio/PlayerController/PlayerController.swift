@@ -49,6 +49,8 @@ final class PlayerController {
     nonisolated(unsafe) var desiredPlaying = false
     /// Extra volume factor while a crossfade runs (CrossfadeEngine).
     nonisolated(unsafe) var crossfadeGain: Double = 1
+    /// Volume factor while the sleep timer fades out (SleepTimer).
+    nonisolated(unsafe) var sleepFadeGain: Double = 1
     private var wasPlayingBeforeInterruption = false
 
     /// Video-mode state. Reads happen on the event loop thread from event handlers;
@@ -310,7 +312,7 @@ extension PlayerController {
 
     func applyPlayerVolume() {
         let vol = SettingsStore.shared.playerVolume
-        let gain = crossfadeGain
+        let gain = crossfadeGain * sleepFadeGain
         withMpvAsync { mpv in
             var val = Double(vol * 100) * gain
             mpv_set_property(mpv, "volume", MPV_FORMAT_DOUBLE, &val)
