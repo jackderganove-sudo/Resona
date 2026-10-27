@@ -481,8 +481,8 @@ private struct KaraokeRenderer: TextRenderer {
                 let p = min(max((time - word.start) / duration, 0), 1)
                 let rect = run.typographicBounds.rect
 
-                // Emphasis: rises fast at the start of the word, settles back
-                // over 0.25 s after it ends.
+                // Glow intensity (unchanged): rises quickly with the word,
+                // fades over 0.25 s after it ends.
                 let emphasis: Double
                 if p > 0 && p < 1 {
                     emphasis = Self.easeOut(min(1, p * 4))
@@ -492,15 +492,31 @@ private struct KaraokeRenderer: TextRenderer {
                     emphasis = 0
                 }
 
+                // Growth (Better Lyrics style): follows the progress through
+                // the word with an ease-in-out, so the word swells evenly
+                // while it is sung; held words grow a little more (1.02 for
+                // short words up to 1.05 from ~1 s), then it eases back over
+                // 0.35 s. Draw-only transform — the layout never changes.
+                let hold = min(max((duration - 0.25) / 0.75, 0), 1)
+                let growth: Double
+                if p > 0 && p < 1 {
+                    growth = Self.easeInOut(p)
+                } else if p >= 1 {
+                    growth = 1 - Self.easeInOut(min(1, (time - word.end) / 0.35))
+                } else {
+                    growth = 0
+                }
+
                 var c = ctx
-                if emphasis > 0.001 {
-                    let scale = 1 + 0.08 * emphasis
-                    c.translateBy(x: rect.midX, y: rect.midY - 2.5 * emphasis)
+                if growth > 0.001 {
+                    let scale = 1 + (0.02 + 0.03 * hold) * growth
+                    let lift = (0.5 + 1.0 * hold) * growth
+                    c.translateBy(x: rect.midX, y: rect.midY - lift)
                     c.scaleBy(x: scale, y: scale)
                     c.translateBy(x: -rect.midX, y: -rect.midY)
                 }
 
-                if p >= 1 && emphasis <= 0.001 {
+                if p >= 1 && emphasis <= 0.001 && growth <= 0.001 {
                     // Sung and settled: bright, no glow.
                     c.draw(run)
                     continue
@@ -555,6 +571,11 @@ private struct KaraokeRenderer: TextRenderer {
 
     private static func easeOut(_ x: Double) -> Double {
         1 - pow(1 - min(max(x, 0), 1), 3)
+    }
+
+    private static func easeInOut(_ x: Double) -> Double {
+        let t = min(max(x, 0), 1)
+        return t < 0.5 ? 2 * t * t : 1 - pow(-2 * t + 2, 2) / 2
     }
 }
 
