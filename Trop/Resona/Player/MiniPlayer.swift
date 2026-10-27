@@ -50,9 +50,9 @@ struct MiniPlayer: View {
         .padding(.trailing, 4)
         .padding(.vertical, 8)
         .frame(height: M3Metrics.miniPlayerHeight)
-        .background { MiniPlayerBackground(colors: artworkColors) }
+        .background { MiniPlayerBackground() }
         .clipShape(shape)
-        .overlay(shape.stroke(.white.opacity(M3Frost.edgeOpacity), lineWidth: M3Frost.edgeWidth))
+        .overlay(shape.stroke(.white.opacity(ResonaGlass.edgeOpacity), lineWidth: ResonaGlass.edgeWidth))
         .contentShape(shape)
         .shadow(color: .black.opacity(0.22), radius: 8, y: 3)
         .onChange(of: np.videoId) { _, _ in
@@ -157,6 +157,7 @@ struct MiniPlayer: View {
 // MARK: - Info (artwork ring + titles)
 
 private struct MiniPlayerInfo: View {
+    @Environment(\.m3) private var m3
     let song: SongItem?
     let isCurrent: Bool
     @Bindable private var np = NowPlaying.shared
@@ -170,7 +171,7 @@ private struct MiniPlayerInfo: View {
         HStack(spacing: 0) {
             ZStack {
                 PlaybackProgressReader { _, progress in
-                    ProgressRing(progress: isCurrent ? progress : 0, isLoading: isCurrent && np.isPlaying && np.duration <= 0)
+                    ProgressRing(progress: isCurrent ? progress : 0, isLoading: isCurrent && np.isPlaying && np.duration <= 0, color: m3.primary, track: m3.primary.opacity(0.22))
                 }
                 .frame(width: 52, height: 52)
                 artwork
@@ -201,7 +202,7 @@ private struct MiniPlayerInfo: View {
 
     private var artist: String {
         if isCurrent, !np.displayArtist.isEmpty { return np.displayArtist }
-        return song.map { artistDisplayString(from: $0.artists) } ?? ""
+        return song.map { ArtistNameResolver.shared.artist(for: $0) } ?? ""
     }
 
     @ViewBuilder
@@ -251,6 +252,7 @@ struct ProgressRing: View {
 // MARK: - Transport
 
 private struct MiniTransportControls: View {
+    @Environment(\.m3) private var m3
     let isPlaying: Bool
     let hasPrevious: Bool
     let hasNext: Bool
@@ -271,9 +273,11 @@ private struct MiniTransportControls: View {
             Image(systemName: icon)
                 .font(.system(size: size, weight: .bold))
                 .contentTransition(.symbolEffect(.replace.downUp))
-                .foregroundStyle(primary ? Color.black : Color.white.opacity(enabled ? 1 : 0.38))
+                // Cover accent: play = primary, skip = primaryContainer.
+                .foregroundStyle(primary ? m3.onPrimary : m3.onPrimaryContainer.opacity(enabled ? 1 : 0.38))
                 .frame(width: 48, height: 48)
-                .background(primary ? Color.white.opacity(0.92) : Color.black.opacity(0.22), in: Circle())
+                .background(primary ? m3.primary : m3.primaryContainer.opacity(0.7), in: Circle())
+                .animation(M3Motion.colorChange, value: m3.primary)
         }
         .buttonStyle(.expressive(scale: 0.86))
         .disabled(!enabled)
@@ -283,23 +287,11 @@ private struct MiniTransportControls: View {
 
 // MARK: - Background
 
-/// Frosted mini player: whatever scrolls behind is strongly blurred and
-/// tinted with the cover's colours (matte, no glass refraction).
+/// Mini player glass: the shared ResonaGlassBackground (cover-tinted blur,
+/// same values as every other blurred surface).
 struct MiniPlayerBackground: View {
-    let colors: ArtworkColors
-
     var body: some View {
-        let c = colors.gradient
-        let first = (c.first ?? RGB(hex: 0x1D5D7A)).color
-        let second = (c.count > 1 ? c[1] : c.first ?? RGB(hex: 0x0B3A55)).color
-        // See-through: blurred content behind, a light cover-coloured wash
-        // and a hairline edge (M3Frost tokens).
-        FrostedSurface(
-            tint: LinearGradient(colors: [first, second], startPoint: .leading, endPoint: .trailing),
-            role: .floating,
-            edge: false
-        )
-        .animation(M3Motion.colorChange, value: colors)
+        ResonaGlassBackground(shape: Rectangle(), edge: false)
     }
 }
 

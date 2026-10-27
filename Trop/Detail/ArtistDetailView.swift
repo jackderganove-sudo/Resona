@@ -340,7 +340,7 @@ struct ArtistDetailView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(
-            FrostedSurface(tint: ThemeStore.shared.dark.surface, role: .chrome)
+            ResonaGlassBackground()
                 .opacity(barProgress)
                 .ignoresSafeArea(edges: .top)
                 .allowsHitTesting(false)

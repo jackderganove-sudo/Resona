@@ -234,7 +234,7 @@ struct LibraryCard<MenuContent: View>: View {
         .padding(.trailing, 6)
         .frame(height: LibraryCardMetrics.height)
         .background {
-            FrostedArtworkCardBackground(artworkURL: artwork.backdropURL, tint: m3.surfaceContainerLow)
+            ResonaGlassBackground(shape: RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous), artworkURL: artwork.backdropURL)
         }
         .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))

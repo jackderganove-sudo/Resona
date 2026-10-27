@@ -68,7 +68,7 @@ struct QueueSheet: View {
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(M3Shape.extraLarge)
         .presentationBackground {
-            FrostedSurface(tint: m3.surfaceContainerLow, role: .sheet)
+            ResonaGlassBackground()
         }
         .sheet(item: $menuSong) { item in
             SongMenuSheet(song: item.song, onNavigate: { route in
@@ -229,7 +229,7 @@ struct QueueSheet: View {
                     .lineLimit(1)
                 HStack(spacing: 4) {
                     DownloadStatusIndicator(videoId: song.videoId, size: 13)
-                    Text(song.subtitleLine(duration: displayDuration(song, isCurrent: isCurrent)))
+                    Text(subtitle(for: song, isCurrent: isCurrent))
                         .font(.m3(.bodyMedium))
                         .foregroundStyle(isCurrent ? m3.onSecondaryContainer.opacity(0.8) : m3.onSurfaceVariant)
                         .lineLimit(1)
@@ -283,6 +283,14 @@ struct QueueSheet: View {
             }
         }
         .animation(M3Motion.defaultEffects, value: isCurrent)
+    }
+
+    /// "Artist • m:ss" — the artist falls back to the resolved uploader when
+    /// the queue item carries no credits.
+    private func subtitle(for song: SongItem, isCurrent: Bool) -> String {
+        let artist = isCurrent && !np.displayArtist.isEmpty ? np.displayArtist : ArtistNameResolver.shared.artist(for: song)
+        let duration = displayDuration(song, isCurrent: isCurrent).formattedDuration
+        return [artist, duration].filter { !$0.isEmpty }.joined(separator: " • ")
     }
 
     /// Some sources (home shelves, radio) deliver songs without a length;

@@ -49,11 +49,7 @@ struct LyricsView<ProgressSlider: View>: View {
             header
                 .padding(8)
                 .background {
-                    FrostedSurface(
-                        shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous),
-                        tint: Color.black,
-                        role: .card
-                    )
+                    ResonaGlassBackground(shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
                 }
                 .padding(.horizontal, 12)
                 .padding(.top, 8)

@@ -75,7 +75,7 @@ struct PlayerBackground: View {
 /// rounded square (playing) and a pill (paused).
 struct PlaybackButtonGroup: View {
     @Environment(\.m3) private var m3
-    @Environment(\.artworkColors) private var artwork
+    @Environment(\.playerAccent) private var playerAccent
     let isPlaying: Bool
     let hasPrevious: Bool
     let hasNext: Bool
@@ -117,9 +117,9 @@ struct PlaybackButtonGroup: View {
     private func sideButton(_ slot: Slot, icon: String, enabled: Bool, width: CGFloat, height: CGFloat, action: @escaping () -> Void) -> some View {
         Image(systemName: icon)
             .font(.system(size: 26, weight: .bold))
-            .foregroundStyle(artwork.accent.on.opacity(enabled ? 1 : 0.4))
+            .foregroundStyle(playerAccent.on.opacity(enabled ? 1 : 0.4))
             .frame(width: max(0, width), height: max(0, height))
-            .background(artwork.accent.container, in: RoundedRectangle(cornerRadius: pressed == slot ? 14 : 24, style: .continuous))
+            .background(playerAccent.container, in: RoundedRectangle(cornerRadius: pressed == slot ? 14 : 24, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .gesture(pressGesture(slot, enabled: enabled, action: action))
             .accessibilityElement()
@@ -163,7 +163,7 @@ struct PlaybackButtonGroup: View {
 
 struct PlayerRoundToggle: View {
     @Environment(\.m3) private var m3
-    @Environment(\.artworkColors) private var artwork
+    @Environment(\.playerAccent) private var playerAccent
     let systemName: String
     let isOn: Bool
     var label: LocalizedStringKey
@@ -173,9 +173,9 @@ struct PlayerRoundToggle: View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(isOn ? artwork.accent.on : .white.opacity(0.6))
+                .foregroundStyle(isOn ? playerAccent.on : .white.opacity(0.6))
                 .frame(width: 44, height: 44)
-                .background(isOn ? artwork.accent.container : .white.opacity(0.1), in: Circle())
+                .background(isOn ? playerAccent.container : .white.opacity(0.1), in: Circle())
         }
         .buttonStyle(.expressive(scale: 0.86))
         .animation(M3Motion.defaultEffects, value: isOn)
@@ -218,7 +218,7 @@ struct PlayerBottomPill: View {
     let action: () -> Void
 
     @Environment(\.m3) private var m3
-    @Environment(\.artworkColors) private var artwork
+    @Environment(\.playerAccent) private var playerAccent
 
     var body: some View {
         Button(action: action) {
@@ -235,11 +235,11 @@ struct PlayerBottomPill: View {
                         .layoutPriority(1)
                 }
             }
-            .foregroundStyle(highlighted ? artwork.accent.on : .white.opacity(0.92))
+            .foregroundStyle(highlighted ? playerAccent.on : .white.opacity(0.92))
             .padding(.horizontal, title == nil ? 0 : 14)
             .frame(maxWidth: title == nil ? 48 : .infinity)
             .frame(width: title == nil ? 48 : nil, height: 48)
-            .background(highlighted ? artwork.accent.container : .white.opacity(0.12), in: Capsule())
+            .background(highlighted ? playerAccent.container : .white.opacity(0.12), in: Capsule())
             .contentShape(Capsule())
         }
         .buttonStyle(.expressive)
@@ -295,25 +295,17 @@ struct StreamInfoLine: View {
 
 // MARK: - Player accent
 
-/// Tonal accent for player controls taken from the artwork's dominant
-/// colour — the same source as the player background, so buttons always
-/// match the cover (the app-wide scheme seed can pick a different,
-/// more chromatic hue).
-struct PlayerAccent {
+/// Tonal accent for player controls. Comes from the SAME dynamic scheme as
+/// the rest of the app (dark primaryContainer / onPrimaryContainer of the
+/// current cover's seed), injected by `M3ThemeProvider` — so previous/next,
+/// toggles and pills can never fall back to a stale or unrelated colour.
+struct PlayerAccent: Equatable {
     let container: Color
     let on: Color
 }
 
-extension ArtworkColors {
-    var accent: PlayerAccent {
-        let base = gradient.first ?? seed
-        let hsv = base.hsv
-        if isGreyscale || hsv.s < 0.12 {
-            return PlayerAccent(container: RGB(h: 0, s: 0, v: 0.3).color, on: .white)
-        }
-        return PlayerAccent(
-            container: RGB(h: hsv.h, s: min(0.85, max(0.45, hsv.s)), v: 0.36).color,
-            on: RGB(h: hsv.h, s: 0.16, v: 0.98).color
-        )
+extension M3Scheme {
+    var playerAccent: PlayerAccent {
+        PlayerAccent(container: primaryContainer, on: onPrimaryContainer)
     }
 }

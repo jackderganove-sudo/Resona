@@ -165,7 +165,7 @@ struct KeepListeningCard: View {
             .padding(12)
             .frame(width: horizontalSizeClass == .regular ? 400 : 330)
             .background {
-                FrostedArtworkCardBackground(artworkURL: item.thumbnailUrl, tint: m3.surfaceContainerHigh)
+                ResonaGlassBackground(shape: RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous), artworkURL: item.thumbnailUrl)
             }
             .clipShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: M3Shape.extraLargeIncreased, style: .continuous))

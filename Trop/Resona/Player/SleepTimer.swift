@@ -134,11 +134,7 @@ struct SleepTimerDialog: View {
             .padding(24)
             .frame(maxWidth: 400)
             .background {
-                FrostedSurface(
-                    shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous),
-                    tint: m3.surfaceContainerHigh,
-                    role: .floating
-                )
+                ResonaGlassBackground(shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
             }
             .padding(.horizontal, 24)
             .transition(.scale(scale: 0.9).combined(with: .opacity))
@@ -178,7 +174,7 @@ struct SleepTimerDialog: View {
 /// a spring and filled with the player accent. Tapping while active turns
 /// the timer off immediately.
 struct SleepTimerButton: View {
-    @Environment(\.artworkColors) private var artwork
+    @Environment(\.playerAccent) private var playerAccent
     private let timer = SleepTimer.shared
     let onOpen: () -> Void
     let onCancelled: () -> Void
@@ -207,11 +203,11 @@ struct SleepTimerButton: View {
                     .transition(.scale(scale: 0.6, anchor: .leading).combined(with: .opacity))
                 }
             }
-            .foregroundStyle(timer.isActive ? artwork.accent.on : .white.opacity(0.92))
+            .foregroundStyle(timer.isActive ? playerAccent.on : .white.opacity(0.92))
             .padding(.horizontal, timer.isActive ? 16 : 0)
             .frame(minWidth: 48)
             .frame(height: 48)
-            .background(timer.isActive ? artwork.accent.container : .white.opacity(0.12), in: Capsule())
+            .background(timer.isActive ? playerAccent.container : .white.opacity(0.12), in: Capsule())
             .contentShape(Capsule())
         }
         .buttonStyle(.expressive)
@@ -239,7 +235,7 @@ struct PlayerToast: View {
             .padding(.horizontal, 18)
             .frame(height: 40)
             .background {
-                FrostedSurface(shape: Capsule(), tint: Color.black, role: .floating)
+                ResonaGlassBackground(shape: Capsule())
             }
             .transition(.move(edge: .bottom).combined(with: .opacity))
     }

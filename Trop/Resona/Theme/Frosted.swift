@@ -6,10 +6,9 @@
 //  NOT Liquid Glass: no refraction, no specular highlights, no glassEffect.
 //
 //  Two tools:
-//  • FrostedSurface — live background blur (system material, rendered in the
-//    classic matte style because the app opts out of Liquid Glass) with a
-//    Material 3 / artwork tint on top. For chrome that floats over moving
-//    content (mini player, navigation bar, sheets, menus).
+//  • ResonaGlassBackground — the single live-blur surface (system material,
+//    matte because the app opts out of Liquid Glass) with the cover tint on
+//    top, used by every blurred element in the app.
 //  • BlurredArtwork — a cover blurred ONCE in the background with Core Image
 //    and cached. Drawing it is as cheap as drawing any image, so cards and
 //    the player background don't recompute a Gaussian blur every frame
@@ -23,68 +22,57 @@ import UIKit
 
 // MARK: - Tokens
 
-/// One set of rules for every blur in the app (Android-17 style frosted
-/// glass): thin material, light tint, hairline edge, a bit more saturation.
-enum M3Frost {
-    enum Role {
-        /// Content cards (Keep listening, library) — most see-through.
-        case card
-        /// Floating chrome over content (mini player, dropdown, dialogs).
-        case floating
-        /// Bars the user reads text on (navigation bar, top bars).
-        case chrome
-        /// Sheets with long content (menus, queue).
-        case sheet
-    }
-
-    static let material: Material = .ultraThinMaterial
-
-    /// Tint over the blur: 20–35 % so the content behind stays visible.
-    static func tintOpacity(_ role: Role) -> Double {
-        switch role {
-        case .card: 0.22
-        case .floating: 0.26
-        case .chrome: 0.32
-        case .sheet: 0.35
-        }
-    }
-
-    /// 1 px light edge on floating shapes.
-    static let edgeOpacity = 0.14
-    static let edgeWidth: CGFloat = 1
+/// The ONE set of glass values used everywhere (mini player, navigation
+/// bar, sheets, menus, dialogs, cards): same blur strength, same cover
+/// tint, same saturation, same edge.
+enum ResonaGlass {
+    /// System blur (rendered matte because the app opts out of Liquid Glass).
+    static let material: Material = .thinMaterial
+    /// Share of the cover colour (primaryContainer) in the tint.
+    static let coverMix = 0.55
+    /// Tint over the blur — content behind stays visible but calm.
+    static let tintOpacity = 0.42
     /// Saturation boost of what shows through.
-    static let saturation = 1.3
+    static let saturation = 1.4
+    /// 1 px light edge.
+    static let edgeOpacity = 0.12
+    static let edgeWidth: CGFloat = 1
     /// Pre-blurred artwork (Core Image) radius, in 96 px space.
     static let artworkBlurRadius = 12.0
-    /// How strongly a card's own blurred cover shows.
-    static let artworkOpacity = 0.85
-
-    static func showsEdge(_ role: Role) -> Bool {
-        switch role {
-        case .card, .floating: true
-        case .chrome, .sheet: false
-        }
-    }
+    /// How strongly a card's own blurred cover shows under the glass.
+    static let artworkOpacity = 0.8
 }
 
-// MARK: - Live frosted surface
+// MARK: - Glass background
 
-struct FrostedSurface<S: Shape, T: ShapeStyle>: View {
+/// The app's only blur surface. Tint = surface mixed with the current
+/// cover's primaryContainer, so every glass element carries the cover
+/// colour and changes with it (animated by ThemeStore).
+struct ResonaGlassBackground<S: Shape>: View {
+    @Environment(\.m3) private var m3
     var shape: S
-    /// Tint laid over the blur (surface colour, artwork colour/gradient).
-    var tint: T
-    var role: M3Frost.Role = .floating
-    /// Override the role's hairline edge (e.g. when the caller strokes its
-    /// own, differently shaped outline).
-    var edge: Bool?
+    /// Cards: the item's own cover, pre-blurred, shows under the glass.
+    var artworkURL: String?
+    var edge = true
 
     var body: some View {
+        let tint = m3.surfaceContainer.mix(with: m3.primaryContainer, by: ResonaGlass.coverMix)
         ZStack {
-            shape.fill(M3Frost.material)
-                .saturation(M3Frost.saturation)
-            shape.fill(tint).opacity(M3Frost.tintOpacity(role))
-            if edge ?? M3Frost.showsEdge(role) {
-                shape.stroke(.white.opacity(M3Frost.edgeOpacity), lineWidth: M3Frost.edgeWidth)
+            shape.fill(ResonaGlass.material)
+                .saturation(ResonaGlass.saturation)
+            if let artworkURL {
+                BlurredArtwork(url: artworkURL, radius: ResonaGlass.artworkBlurRadius)
+                    .opacity(ResonaGlass.artworkOpacity)
+                    .clipShape(shape)
+            }
+            shape.fill(tint.opacity(ResonaGlass.tintOpacity))
+            if artworkURL != nil {
+                // Keeps white text legible on very bright covers.
+                LinearGradient(colors: [.clear, .black.opacity(0.18)], startPoint: .top, endPoint: .bottom)
+                    .clipShape(shape)
+            }
+            if edge {
+                shape.stroke(.white.opacity(ResonaGlass.edgeOpacity), lineWidth: ResonaGlass.edgeWidth)
             }
         }
         .environment(\.colorScheme, .dark)
@@ -92,34 +80,10 @@ struct FrostedSurface<S: Shape, T: ShapeStyle>: View {
     }
 }
 
-extension FrostedSurface where S == Rectangle {
-    init(tint: T, role: M3Frost.Role = .floating, edge: Bool? = nil) {
-        self.init(shape: Rectangle(), tint: tint, role: role, edge: edge)
-    }
-}
-
-/// Card background: live blur + the card's own blurred cover (colourful)
-/// + light tint + hairline edge, all clipped to the card shape.
-struct FrostedArtworkCardBackground: View {
-    var artworkURL: String?
-    var tint: Color
-    var radius: CGFloat = M3Shape.extraLargeIncreased
-
-    var body: some View {
-        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        ZStack {
-            shape.fill(M3Frost.material).saturation(M3Frost.saturation)
-            if let artworkURL {
-                BlurredArtwork(url: artworkURL, radius: M3Frost.artworkBlurRadius)
-                    .opacity(M3Frost.artworkOpacity)
-            }
-            tint.opacity(M3Frost.tintOpacity(.card))
-            // Keeps white text legible on very bright covers.
-            LinearGradient(colors: [.black.opacity(0.0), .black.opacity(0.18)], startPoint: .top, endPoint: .bottom)
-        }
-        .clipShape(shape)
-        .overlay(shape.stroke(.white.opacity(M3Frost.edgeOpacity), lineWidth: M3Frost.edgeWidth))
-        .environment(\.colorScheme, .dark)
+extension ResonaGlassBackground where S == Rectangle {
+    /// Full-bleed glass (sheets, bars) — no edge.
+    init() {
+        self.init(shape: Rectangle(), edge: false)
     }
 }
 
@@ -156,7 +120,7 @@ final class BlurredImageCache: @unchecked Sendable {
             blur.radius = Float(radius)
             let color = CIFilter.colorControls()
             color.inputImage = blur.outputImage
-            color.saturation = Float(M3Frost.saturation)
+            color.saturation = Float(ResonaGlass.saturation)
             guard let output = color.outputImage?.cropped(to: small.extent),
                   let rendered = context.createCGImage(output, from: small.extent) else { return nil }
             return UIImage(cgImage: rendered)
@@ -226,7 +190,7 @@ private struct FrostedTopChrome<Header: View>: ViewModifier {
                 header()
                     .background {
                         // Content scrolls underneath and shows through blurred.
-                        FrostedSurface(tint: m3.surface, role: .chrome)
+                        ResonaGlassBackground()
                             .ignoresSafeArea(edges: .top)
                     }
             }
@@ -259,7 +223,7 @@ private struct FrostedDetailBar: ViewModifier {
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
                 .background {
-                    FrostedSurface(tint: m3.surface, role: .chrome)
+                    ResonaGlassBackground()
                         .ignoresSafeArea(edges: .top)
                 }
                 .overlay(alignment: .bottom) {

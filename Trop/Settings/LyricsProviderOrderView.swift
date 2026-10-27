@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct LyricsProviderOrderView: View {
+    @Environment(\.m3) private var m3
     @State private var settings = LyricsSettings.shared
     @State private var order: [String] = LyricsSettings.shared.providerOrder
 
@@ -29,10 +30,10 @@ struct LyricsProviderOrderView: View {
         .safeAreaInset(edge: .bottom) {
             Text("Drag to reorder providers")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(m3.onSurfaceVariant)
                 .padding(.vertical, 8)
                 .frame(maxWidth: .infinity)
-                .background(.bar)
+                .background { ResonaGlassBackground() }
         }
         .miniPlayerTracksScroll()
         .onAppear {

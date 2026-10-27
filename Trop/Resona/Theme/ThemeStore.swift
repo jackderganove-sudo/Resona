@@ -147,6 +147,10 @@ private struct M3SchemeKey: EnvironmentKey {
     static let defaultValue: M3Scheme = .fallbackDark
 }
 
+private struct PlayerAccentKey: EnvironmentKey {
+    static let defaultValue = M3Scheme.fallbackDark.playerAccent
+}
+
 private struct ArtworkColorsKey: EnvironmentKey {
     static let defaultValue: ArtworkColors = .fallback
 }
@@ -156,6 +160,12 @@ extension EnvironmentValues {
     var m3: M3Scheme {
         get { self[M3SchemeKey.self] }
         set { self[M3SchemeKey.self] = newValue }
+    }
+
+    /// Accent for the (always dark) player controls, from the same scheme.
+    var playerAccent: PlayerAccent {
+        get { self[PlayerAccentKey.self] }
+        set { self[PlayerAccentKey.self] = newValue }
     }
 
     /// Raw artwork colours for gradients/glows (player, mini player).
@@ -176,6 +186,7 @@ struct M3ThemeProvider: ViewModifier {
         content
             .environment(\.m3, scheme)
             .environment(\.artworkColors, theme.artwork)
+            .environment(\.playerAccent, theme.dark.playerAccent)
             .tint(scheme.primary)
     }
 }
