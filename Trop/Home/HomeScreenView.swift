@@ -5,6 +5,7 @@
 //  Created by 686udjie on 01/07/2026.
 //
 
+import Combine
 import SwiftUI
 
 struct HomeScreenView: View {
@@ -76,8 +77,10 @@ struct HomeScreenView: View {
     }
 
     private var homescreenContent: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             LazyVStack(spacing: 0) {
+                Color.clear.frame(height: 0).id(Self.topAnchor)
                 if let chips = viewModel.homePage?.chips, !chips.isEmpty {
                     ChipsRowView(
                         chips: chips,
@@ -126,7 +129,15 @@ struct HomeScreenView: View {
         .onChange(of: settings.contentCountry) { _, _ in
             Task { await viewModel.refresh() }
         }
+        .onReceive(router.$homeScrollTopToken.dropFirst()) { _ in
+            withAnimation(M3Motion.defaultSpatial) {
+                proxy.scrollTo(Self.topAnchor, anchor: .top)
+            }
+        }
+        }
     }
+
+    private static let topAnchor = "resona-home-top"
 
     @ViewBuilder
     private func sectionView(for section: HomeSection) -> some View {

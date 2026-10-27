@@ -30,8 +30,7 @@ struct ResonaTopBar: View {
         HStack(spacing: 10) {
             // With the rail the brand mark already sits in the rail.
             if !usesRail {
-                ResonaGlyph()
-                    .frame(width: 34, height: 34)
+                ResonaHomeButton(size: 34)
             }
             Text(verbatim: "Resona")
                 .font(.m3(.headlineSmall))

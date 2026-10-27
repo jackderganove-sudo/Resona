@@ -134,6 +134,7 @@ final class ThemeStore {
         } else {
             update()
         }
+        ResonaAppearance.applyNavigationBars(dark: dark, light: light, animated: animated)
     }
 
     private func rebuildSchemes(seed: RGB, animated: Bool) {
@@ -142,6 +143,7 @@ final class ThemeStore {
             self.light = .generate(seed: seed, dark: false)
         }
         if animated { withAnimation(M3Motion.colorChange, update) } else { update() }
+        ResonaAppearance.applyNavigationBars(dark: dark, light: light, animated: animated)
     }
 }
 

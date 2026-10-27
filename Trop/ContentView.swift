@@ -95,6 +95,9 @@ struct ContentView: View {
         .onReceive(AppRouter.shared.$playerExpandToken.dropFirst()) { _ in
             expand()
         }
+        .onReceive(AppRouter.shared.$goHomeToken.dropFirst()) { _ in
+            goHome()
+        }
         .onChange(of: nowPlaying.isBarPresented) { _, presented in
             if !presented { collapse() }
         }
@@ -201,6 +204,29 @@ struct ContentView: View {
     }
 
     // MARK: Navigation helpers
+
+    /// Logo tap: close sheets, menu and player, select Home, pop its stack
+    /// to the root and scroll to the top.
+    private func goHome() {
+        Self.dismissPresentedSheets()
+        if accountMenu.isPresented {
+            withAnimation(M3Motion.defaultSpatial) { accountMenu.isPresented = false }
+        }
+        collapse()
+        if selectedTab != .home {
+            withAnimation(M3Motion.defaultSpatial) { selectedTab = .home }
+        }
+        popToRoot(.home)
+        AppRouter.shared.scrollHomeToTop()
+    }
+
+    private static func dismissPresentedSheets() {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let root = (scene as? UIWindowScene)?.keyWindow?.rootViewController,
+                  root.presentedViewController != nil else { continue }
+            root.dismiss(animated: true)
+        }
+    }
 
     private func popToRoot(_ tab: ResonaTab) {
         let router = AppRouter.shared

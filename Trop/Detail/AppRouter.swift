@@ -25,6 +25,10 @@ final class AppRouter: ObservableObject {
     @Published private(set) var activeRoute: DetailRoute?
 
     @Published private(set) var playerExpandToken = 0
+    /// Logo tap: ContentView goes home (tab, stack, sheets, player).
+    @Published private(set) var goHomeToken = 0
+    /// Home scrolls to the very top when this changes.
+    @Published private(set) var homeScrollTopToken = 0
 
     var activePathDepth: Int {
         switch selectedTabIndex {
@@ -47,6 +51,15 @@ final class AppRouter: ObservableObject {
 
     func expandPlayer() {
         playerExpandToken += 1
+    }
+
+    /// From anywhere back to the top of the home tab.
+    func goHome() {
+        goHomeToken += 1
+    }
+
+    func scrollHomeToTop() {
+        homeScrollTopToken += 1
     }
 
     func open(_ route: DetailRoute) {

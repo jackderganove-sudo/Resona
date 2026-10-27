@@ -72,8 +72,7 @@ struct NavigationRail: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            ResonaGlyph()
-                .frame(width: 40, height: 40)
+            ResonaHomeButton(size: 40)
                 .padding(.top, 12)
                 .padding(.bottom, 28)
 
@@ -146,6 +145,28 @@ private struct NavigationItem: View {
 }
 
 // MARK: - Brand glyph
+
+/// The Resona mark as a "go home" button: home tab, root of its stack,
+/// sheets and player closed, scrolled to the top. Press effect + haptic.
+struct ResonaHomeButton: View {
+    var size: CGFloat = 40
+    @State private var taps = 0
+
+    var body: some View {
+        Button {
+            taps += 1
+            AppRouter.shared.goHome()
+        } label: {
+            ResonaGlyph()
+                .frame(width: size, height: size)
+                .padding(4)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.expressive(scale: 0.82))
+        .sensoryFeedback(.impact(weight: .light), trigger: taps)
+        .accessibilityLabel(Text("Home"))
+    }
+}
 
 /// Resona's mark (dot + resonance arcs), drawn in the current primary colour.
 struct ResonaGlyph: View {
