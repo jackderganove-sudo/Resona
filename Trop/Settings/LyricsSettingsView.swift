@@ -51,6 +51,20 @@ struct LyricsSettingsView: View {
             }
 
             M3Section {
+                if SpotifyAccountStore.shared.isLoggedIn {
+                    Label("Spotify account connected", systemImage: "checkmark.circle")
+                } else {
+                    SettingsNavigationRow("Sign in to Spotify", icon: "person.crop.circle.badge.plus") {
+                        CanvasSettingsView()
+                    }
+                }
+            } header: {
+                Text(verbatim: "Spotify")
+            } footer: {
+                Text("Spotify lyrics use the same sign-in as Spotify Canvas. Without it Spotify is skipped.")
+            }
+
+            M3Section {
                 HStack(spacing: 12) {
                     Label("API key", systemImage: "key")
                     SecureField(String(localized: "Optional"), text: $paxsenixKey)
