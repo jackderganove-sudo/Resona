@@ -14,6 +14,7 @@ struct UnsyncedLyricsView<Header: View>: View {
     let lines: [LyricLine]
     let fontSize: Double
     let alignment: LyricsAlignment
+    var onSync: (() -> Void)? = nil
     @ViewBuilder var header: () -> Header
 
     private let np = NowPlaying.shared
@@ -26,14 +27,27 @@ struct UnsyncedLyricsView<Header: View>: View {
         ScrollView {
             LazyVStack(alignment: alignment.textAlignment.horizontal, spacing: fontSize * 0.7) {
                 header()
-                Label("Not synced", systemImage: "text.alignleft")
-                    .font(.poppins(12, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.75))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(.white.opacity(0.12), in: Capsule())
-                    .frame(maxWidth: .infinity, alignment: alignment.textAlignment)
-                    .padding(.horizontal, 28)
+                HStack(spacing: 8) {
+                    Label("Not synced", systemImage: "text.alignleft")
+                        .font(.poppins(12, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(.white.opacity(0.12), in: Capsule())
+                    if let onSync {
+                        Button(action: onSync) {
+                            Label("Sync yourself", systemImage: "hand.tap")
+                                .font(.poppins(12, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(.white.opacity(0.22), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: alignment.textAlignment)
+                .padding(.horizontal, 28)
                 ForEach(lines) { line in
                     LyricsLineText(text: line.text, fontSize: fontSize, alignment: alignment)
                         .foregroundStyle(.white.opacity(0.9))

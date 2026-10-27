@@ -144,9 +144,9 @@ actor LyricsManager {
             for (index, provider) in candidates {
                 group.addTask {
                     do {
-                        let lines = try await Self.withTimeout(seconds: Self.providerTimeout) {
+                        let lines = LyricLine.normalizedTiming(try await Self.withTimeout(seconds: Self.providerTimeout) {
                             try await provider.fetch(query: query)
-                        }
+                        })
                         guard !lines.isEmpty, Self.plausible(lines, duration: query.duration) else { return nil }
                         return ProviderHit(order: index, lines: lines, providerName: provider.name, quality: LyricsQuality.of(lines))
                     } catch {

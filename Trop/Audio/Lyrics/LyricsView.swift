@@ -40,6 +40,7 @@ struct LyricsView<ProgressSlider: View>: View {
     @State private var displayTime: TimeInterval = 0
     @State private var showLyricsMenu = false
     @State private var showManualSearch = false
+    @State private var showSyncSheet = false
     @State private var instrumentalGaps: [InstrumentalGap] = []
     @State private var romanizedLines: [String?] = []
     @State private var isLoading = false
@@ -82,6 +83,9 @@ struct LyricsView<ProgressSlider: View>: View {
         .task(id: chromeWakeToken) { await scheduleRest() }
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
         .sheet(isPresented: Binding(get: { showLyricsMenu && !isSplit }, set: { showLyricsMenu = $0 })) { LyricsMenuSheet() }
+        .sheet(isPresented: $showSyncSheet) {
+            LyricsSyncSheet(videoId: np.videoId ?? "", songTitle: np.title)
+        }
         .sheet(isPresented: $showManualSearch) {
             SearchLyricsSheet(
                 videoId: np.videoId ?? "",
@@ -324,7 +328,7 @@ struct LyricsView<ProgressSlider: View>: View {
         } else {
             // Unsynced lyrics: readable text, "Not synced" note, follows
             // the song slowly; no highlight that could run wrong.
-            UnsyncedLyricsView(lines: lines, fontSize: lyricsFontSize, alignment: settings.lyricsAlignment) {
+            UnsyncedLyricsView(lines: lines, fontSize: lyricsFontSize, alignment: settings.lyricsAlignment, onSync: { showSyncSheet = true }) {
                 if let provider = LyricsState.shared.providerName {
                     providerLabel(provider)
                 }
@@ -584,7 +588,7 @@ struct LyricsView<ProgressSlider: View>: View {
         do {
             let result = try await LyricsService.shared.fetchLyrics(videoId: videoId)
             guard !result.isEmpty else { return }
-            let withoutMarkers = result.filter { !Self.isInstrumentalMarker($0) }
+            let withoutMarkers = LyricLine.normalizedTiming(result.filter { !Self.isInstrumentalMarker($0) })
             // Manual tempo (lyrics menu) on top of the automatic factor.
             let manual = LyricsSongAdjustments.shared.tempo(for: videoId)
             let auto = LyricsState.shared.autoTempo[videoId] ?? 1

@@ -16,6 +16,8 @@ struct LyricsMenuSheet: View {
     @State private var showOffsetEditor = false
     @State private var showEditSheet = false
     @State private var showSearchSheet = false
+    @State private var showSyncSheet = false
+    @State private var isSelfSynced = false
 
     var body: some View {
         @Bindable var settings = settings
@@ -25,6 +27,8 @@ struct LyricsMenuSheet: View {
                 actionGrid
 
                 MenuCard {
+                        syncRow
+                        Divider()
                         offsetRow
                         Divider()
                         tempoRow
@@ -71,6 +75,13 @@ struct LyricsMenuSheet: View {
         }
         .sheet(isPresented: $showOffsetEditor) {
             LyricsOffsetSheet()
+        }
+        .sheet(isPresented: $showSyncSheet) {
+            LyricsSyncSheet(videoId: np.videoId ?? "", songTitle: np.title)
+        }
+        .task(id: np.videoId) {
+            guard let id = np.videoId else { return }
+            isSelfSynced = await LyricsService.shared.customProvider(videoId: id) == LyricsSyncSheet.providerName
         }
         .sheet(isPresented: $showEditSheet) {
             EditLyricsSheet(videoId: np.videoId ?? "", songTitle: np.title)
@@ -139,6 +150,39 @@ struct LyricsMenuSheet: View {
     }
 
     // MARK: - Offset Row
+
+    /// "Sync yourself" (tap along) — or reset self-synced lyrics.
+    private var syncRow: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "hand.tap")
+                .font(.system(size: 18))
+                .foregroundStyle(settings.accentColor)
+                .frame(width: 26)
+            Button {
+                showSyncSheet = true
+            } label: {
+                Text("Sync yourself")
+                    .font(.body)
+                    .foregroundStyle(.m3OnSurface)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if isSelfSynced {
+                Button("Reset") {
+                    if let id = np.videoId {
+                        Task { await LyricsService.shared.removeCustom(videoId: id) }
+                        isSelfSynced = false
+                    }
+                }
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(settings.accentColor)
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
 
     /// Per-song tempo: scales every timestamp (slowed / sped-up uploads
     /// whose lyrics follow the original). "Auto" = automatic detection.
@@ -428,12 +472,36 @@ struct EditLyricsSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var text = ""
+    @State private var showSync = false
+
+    /// No [mm:ss] timestamps in the text = plain lyrics.
+    private var isUnsynced: Bool {
+        !text.isEmpty && text.range(of: #"\[\d{1,3}:\d{2}"#, options: .regularExpression) == nil
+    }
 
     var body: some View {
         NavigationStack {
-            TextEditor(text: $text)
-                .font(.system(size: 14))
-                .padding(.horizontal, 8)
+            VStack(spacing: 0) {
+                if isUnsynced {
+                    HStack(spacing: 10) {
+                        Label("Not synced", systemImage: "text.alignleft")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.m3OnSurfaceVariant)
+                        Spacer()
+                        Button("Sync yourself") { showSync = true }
+                            .font(.footnote.weight(.semibold))
+                            .buttonStyle(.m3Tonal)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                }
+                TextEditor(text: $text)
+                    .font(.system(size: 14))
+                    .padding(.horizontal, 8)
+            }
+            .sheet(isPresented: $showSync) {
+                LyricsSyncSheet(videoId: videoId, songTitle: songTitle)
+            }
                 .navigationTitle(songTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {

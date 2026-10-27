@@ -595,5 +595,16 @@
   "Blur strength": "Blur strength",
   "No synced lyrics": "No synced lyrics",
   "Developer options enabled (Settings → Lyrics).": "Developer options enabled (Settings → Lyrics).",
-  "Developer options hidden.": "Developer options hidden."
+  "Developer options hidden.": "Developer options hidden.",
+  "Sync lyrics": "Sync lyrics",
+  "Tap along with the song": "Tap along with the song",
+  "Each tap sets the start of the highlighted line to the current playback time and moves on to the next line. Use Undo or −2 s if you were off.": "Each tap sets the start of the highlighted line to the current playback time and moves on to the next line. Use Undo or −2 s if you were off.",
+  "%d lines": "%d lines",
+  "Start from the beginning": "Start from the beginning",
+  "Start at the current position": "Start at the current position",
+  "Line %d of %d": "Line %d of %d",
+  "Tap": "Tap",
+  "Undo": "Undo",
+  "Start over": "Start over",
+  "Sync yourself": "Sync yourself"
 }

@@ -46,6 +46,15 @@ struct LyricLine: Identifiable, Equatable, Sendable, Codable {
         text == other.text && startTime == other.startTime && words == other.words
     }
 
+    /// "Fake synced" lyrics (every line at the same time, typically
+    /// [00:00.00]) are plain text: timestamps removed.
+    static func normalizedTiming(_ lines: [LyricLine]) -> [LyricLine] {
+        let times = lines.compactMap(\.startTime)
+        guard times.count >= 3, let first = times.first,
+              times.allSatisfy({ abs($0 - first) < 0.01 }) else { return lines }
+        return lines.map { LyricLine(text: $0.text, startTime: nil, backgroundText: $0.backgroundText, translation: $0.translation) }
+    }
+
     /// Same lines with every timestamp multiplied (slowed/sped-up variants).
     static func scaled(_ lines: [LyricLine], by factor: Double) -> [LyricLine] {
         lines.map { line in
@@ -215,12 +224,33 @@ actor LyricsService {
     /// Raw text of the active lyrics for the editor.
     func editableText(videoId: String) -> String {
         if let custom = customEntry(for: videoId) {
-            return LyricsParsing.serializeLines(custom.lines)
+            return LyricsParsing.serializeLines(LyricLine.normalizedTiming(custom.lines))
         }
         if let cached = cache[videoId] {
-            return LyricsParsing.serializeLines(cached)
+            return LyricsParsing.serializeLines(LyricLine.normalizedTiming(cached))
         }
         return ""
+    }
+
+    /// Current lines (custom, cached or fetched) with fake timing removed.
+    func currentLines(videoId: String) async -> [LyricLine] {
+        let lines = (try? await fetchLyrics(videoId: videoId)) ?? []
+        return LyricLine.normalizedTiming(lines)
+    }
+
+    /// Drops self-synced / edited lyrics and loads the providers' again.
+    func removeCustom(videoId: String) async {
+        customs.removeValue(forKey: videoId)
+        cache.removeValue(forKey: videoId)
+        LyricsDiskCache.remove(videoId)
+        UserDefaults.standard.removeObject(forKey: Self.customKey(videoId))
+        UserDefaults.standard.removeObject(forKey: Self.customProviderKey(videoId))
+        await MainActor.run { LyricsState.shared.refreshToken += 1 }
+    }
+
+    /// Provider name of the stored custom lyrics (e.g. "Self-synced").
+    func customProvider(videoId: String) -> String? {
+        customEntry(for: videoId)?.providerName
     }
 
     /// Plain text without timestamps for the clipboard.
@@ -389,7 +419,17 @@ actor LyricsService {
             // providers match the original recording.
             lookup = LyricsQuery(title: query.title, artist: query.artist, album: nil, duration: original ?? 0, videoId: query.videoId)
         }
-        let (lines, provider) = try await LyricsManager.shared.fetchLyricsReturningProvider(query: lookup)
+        var (lines, provider) = try await LyricsManager.shared.fetchLyricsReturningProvider(query: lookup)
+        // Before settling for plain text: once more without length/album
+        // constraints (cleaned title, e.g. without "Slowed") for a synced
+        // version — it is scaled below if its timing belongs to the original.
+        if LyricsQuality.of(lines) == .plain, lookup.duration > 0 || lookup.album != nil {
+            let open = LyricsQuery(title: query.title, artist: query.artist, album: nil, duration: 0, videoId: query.videoId)
+            if let retry = try? await LyricsManager.shared.fetchLyricsReturningProvider(query: open),
+               LyricsQuality.of(retry.0) != .plain {
+                (lines, provider) = retry
+            }
+        }
         guard played > 0, let last = lines.compactMap(\.startTime).max() else { return (lines, provider, nil) }
 
         let mismatch = last > played + 3
