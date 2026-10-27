@@ -184,7 +184,7 @@ final class CrossfadeEngine {
             if CACurrentMediaTime() - lastLog > 0.5 {
                 lastLog = CACurrentMediaTime()
                 let st = self.tail.status()
-                self.log.info("CROSSFADE ramp t=\(fmt(t, 2)) main=\(fmt(base * mainGain, 1)) tail=\(fmt(tailVolume, 1)) tailPlaying=\(st.isPlaying) tailPos=\(fmt(st.timePos ?? -1, 2))")
+                self.log.info("CROSSFADE ramp t=\(self.fmt(t, 2)) main=\(self.fmt(base * mainGain, 1)) tail=\(self.fmt(tailVolume, 1)) tailPlaying=\(st.isPlaying) tailPos=\(self.fmt(st.timePos ?? -1, 2))")
             }
         }
         log.info("CROSSFADE finished")
