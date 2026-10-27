@@ -535,5 +535,8 @@
   "Spotify lyrics use the same sign-in as Spotify Canvas. Without it Spotify is skipped.": "Spotify lyrics use the same sign-in as Spotify Canvas. Without it Spotify is skipped.",
   "Not synced": "Not synced",
   "None of the lyrics sources has this song yet.": "None of the lyrics sources has this song yet.",
-  "Search manually": "Search manually"
+  "Search manually": "Search manually",
+  "Get API key": "Get API key",
+  "Paste": "Paste",
+  "Paxsenix only answers requests with your own API key; without one it is skipped. Get a key for free: sign in with GitHub on the Paxsenix website (free Starter plan, 1,000 requests a day), create a key in the dashboard, copy it and tap Paste.": "Paxsenix only answers requests with your own API key; without one it is skipped. Get a key for free: sign in with GitHub on the Paxsenix website (free Starter plan, 1,000 requests a day), create a key in the dashboard, copy it and tap Paste."
 }

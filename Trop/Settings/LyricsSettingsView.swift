@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct LyricsSettingsView: View {
     @Environment(\.settingsStore) private var settings
@@ -73,10 +74,32 @@ struct LyricsSettingsView: View {
                         .multilineTextAlignment(.trailing)
                         .foregroundStyle(m3.onSurface)
                 }
+                HStack(spacing: 10) {
+                    // Free "Starter" plan: sign in with GitHub on the
+                    // Paxsenix dashboard (api.paxsenix.org/pricing →
+                    // "Get started" leads to this login page).
+                    Link(destination: URL(string: "https://api.paxsenix.org/login")!) {
+                        Label("Get API key", systemImage: "arrow.up.right.square")
+                            .labelStyle(.titleAndIcon)
+                            .font(.m3(.labelLarge, weight: .medium))
+                    }
+                    .buttonStyle(.m3Tonal)
+                    Button {
+                        if let text = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+                            paxsenixKey = text
+                        }
+                    } label: {
+                        Label("Paste", systemImage: "doc.on.clipboard")
+                            .labelStyle(.titleAndIcon)
+                            .font(.m3(.labelLarge, weight: .medium))
+                    }
+                    .buttonStyle(.m3Outlined)
+                    Spacer(minLength: 0)
+                }
             } header: {
                 Text(verbatim: "Paxsenix")
             } footer: {
-                Text("Paxsenix only answers requests with your own API key. Without a key it is skipped.")
+                Text("Paxsenix only answers requests with your own API key; without one it is skipped. Get a key for free: sign in with GitHub on the Paxsenix website (free Starter plan, 1,000 requests a day), create a key in the dashboard, copy it and tap Paste.")
             }
 
             M3Section {
