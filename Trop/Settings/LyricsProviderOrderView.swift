@@ -23,6 +23,9 @@ struct LyricsProviderOrderView: View {
             }
             .onMove(perform: move)
         }
+        // Same centred column as the other settings pages.
+        .frame(maxWidth: 720)
+        .frame(maxWidth: .infinity)
         .navigationTitle("Lyrics Providers")
         .m3ScreenBackground()
         .navigationBarTitleDisplayMode(.inline)

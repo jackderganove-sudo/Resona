@@ -39,7 +39,7 @@ struct EqualizerView: View {
             }
             .padding(.top, 16)
             .padding(.bottom, 24)
-            .frame(maxWidth: M3Metrics.contentMaxWidth)
+            .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
         .m3ScreenBackground()
