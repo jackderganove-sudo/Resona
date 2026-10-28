@@ -51,22 +51,67 @@ struct EqualizerView: View {
         }
     }
 
+    /// Presets as chips that wrap onto further lines — a horizontal strip
+    /// was cut off hard at the column edge (simulator screenshots).
     private func presetStrip(settings: SettingsStore) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(EqualizerPresets.all, id: \.id) { preset in
-                    M3Chip(
-                        title: String(localized: String.LocalizationValue(preset.name)),
-                        isSelected: settings.equalizerPresetID == preset.id
-                    ) {
-                        settings.equalizerGains = preset.gains
-                        settings.equalizerPresetID = preset.id
-                        PlayerController.shared.applyPlaybackSettings()
-                    }
+        ChipFlowLayout(spacing: 10) {
+            ForEach(EqualizerPresets.all, id: \.id) { preset in
+                M3Chip(
+                    title: String(localized: String.LocalizationValue(preset.name)),
+                    isSelected: settings.equalizerPresetID == preset.id
+                ) {
+                    settings.equalizerGains = preset.gains
+                    settings.equalizerPresetID = preset.id
+                    PlayerController.shared.applyPlaybackSettings()
                 }
             }
-            .padding(.horizontal, 16)
         }
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Left-aligned rows that wrap when the next item doesn't fit.
+private struct ChipFlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = arrange(width: proposal.width ?? .infinity, subviews: subviews)
+        let height = rows.map(\.height).reduce(0, +) + spacing * CGFloat(max(0, rows.count - 1))
+        let width = rows.map(\.width).max() ?? 0
+        return CGSize(width: proposal.width ?? width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in arrange(width: bounds.width, subviews: subviews) {
+            var x = bounds.minX
+            for index in row.indices {
+                let size = subviews[index].sizeThatFits(.unspecified)
+                subviews[index].place(at: CGPoint(x: x, y: y + (row.height - size.height) / 2), proposal: ProposedViewSize(size))
+                x += size.width + spacing
+            }
+            y += row.height + spacing
+        }
+    }
+
+    private struct Row { var indices: [Int] = []; var width: CGFloat = 0; var height: CGFloat = 0 }
+
+    private func arrange(width: CGFloat, subviews: Subviews) -> [Row] {
+        var rows: [Row] = [Row()]
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            let needed = rows[rows.count - 1].indices.isEmpty ? size.width : rows[rows.count - 1].width + spacing + size.width
+            if needed > width, !rows[rows.count - 1].indices.isEmpty {
+                rows.append(Row())
+            }
+            var row = rows[rows.count - 1]
+            row.width = row.indices.isEmpty ? size.width : row.width + spacing + size.width
+            row.height = max(row.height, size.height)
+            row.indices.append(index)
+            rows[rows.count - 1] = row
+        }
+        return rows.filter { !$0.indices.isEmpty }
     }
 }
 
