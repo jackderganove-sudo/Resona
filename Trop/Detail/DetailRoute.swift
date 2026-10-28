@@ -71,6 +71,8 @@ struct DetailRouteDestinationView: View {
 enum AutoPlaylistRoute: Hashable {
     case likedSongs
     case topSongs(limit: Int)
+    /// Automatic playlists from the local play history.
+    case history(HistoryPlaylistKind)
 }
 
 /// Dispatches a tapped `YTItem` to playback or a pushed detail route.

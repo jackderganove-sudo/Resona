@@ -14,6 +14,10 @@ struct PlaylistMoreSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showEditAlert = false
     @State private var editedName = ""
+    @State private var showSplit = false
+    @State private var showDuplicates = false
+    @State private var saving = false
+    @State private var saved = false
 
     var body: some View {
         SheetChrome {
@@ -36,6 +40,42 @@ struct PlaylistMoreSheet: View {
                     dismiss()
                 }
                 Divider()
+                if playlist.playlistId.isEmpty {
+                    // Automatic playlists: keep them as a real playlist.
+                    MenuRow(
+                        icon: saved ? "checkmark.circle" : "square.and.arrow.down.on.square",
+                        title: saved ? "Saved to YouTube Music" : (saving ? "Saving…" : "Save to YouTube Music"),
+                        subtitle: "Create a playlist with these songs in your account"
+                    ) {
+                        guard !saving, !saved else { return }
+                        saving = true
+                        Task {
+                            _ = try? await PlaylistTools.saveToYouTubeMusic(title: playlist.title, songs: playlist.songs)
+                            saving = false
+                            saved = true
+                        }
+                    }
+                    Divider()
+                } else {
+                    MenuRow(
+                        icon: "doc.on.doc",
+                        title: "Remove duplicates",
+                        subtitle: "Find songs that are in this playlist twice"
+                    ) {
+                        showDuplicates = true
+                    }
+                    Divider()
+                }
+                if playlist.songs.count >= 6 {
+                    MenuRow(
+                        icon: "rectangle.split.3x1",
+                        title: "Split playlist",
+                        subtitle: "Split into several new playlists"
+                    ) {
+                        showSplit = true
+                    }
+                    Divider()
+                }
                 MenuRow(
                     icon: "list.bullet",
                     title: "Add to Queue",
@@ -64,6 +104,12 @@ struct PlaylistMoreSheet: View {
                     dismiss()
                 }
             }
+        }
+        .sheet(isPresented: $showSplit) {
+            PlaylistSplitSheet(playlist: playlist)
+        }
+        .sheet(isPresented: $showDuplicates) {
+            PlaylistDuplicatesSheet(playlist: playlist) { onSync?() }
         }
         .textPrompt(
             "Rename Playlist",

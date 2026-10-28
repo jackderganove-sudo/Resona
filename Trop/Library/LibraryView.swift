@@ -178,6 +178,7 @@ struct LibraryView: View {
                 switch selectedFilter {
                 case .playlists:
                     playlistsSection
+                    historyPlaylistsSection
                 case .albums:
                     if !albums.isEmpty { albumsSection }
                 case .artists:
@@ -186,6 +187,7 @@ struct LibraryView: View {
                     if !podcasts.isEmpty { podcastsSection }
                 case nil:
                     playlistsSection
+                    historyPlaylistsSection
                     if !albums.isEmpty { albumsSection }
                     if !artists.isEmpty { artistsSection }
                     if !podcasts.isEmpty { podcastsSection }
@@ -194,6 +196,23 @@ struct LibraryView: View {
         }
         .scrollIndicators(.automatic)
         .miniPlayerTracksScroll()
+    }
+
+    // MARK: - Automatic playlists from the play history
+
+    private var historyPlaylistsSection: some View {
+        librarySection(title: "Automatic playlists", count: HistoryPlaylistKind.allCases.count) {
+            ForEach(HistoryPlaylistKind.allCases) { kind in
+                NavigationLink(value: DetailRoute.autoPlaylist(.history(kind))) {
+                    entry(
+                        artwork: .icon(kind.icon),
+                        title: String(localized: String.LocalizationValue(kind.title)),
+                        subtitle: String(localized: String.LocalizationValue(kind.subtitle))
+                    )
+                }
+                .buttonStyle(.expressive(scale: 0.98))
+            }
+        }
     }
 
     // MARK: - Playlists (Auto + User)

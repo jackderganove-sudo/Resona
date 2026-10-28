@@ -148,6 +148,9 @@ final class PlaylistDetailViewModel {
             case .likedSongs:
                 title = "Liked Songs"
                 entities = try await DatabaseService.shared.fetchAllLikedSongs(sort: autoSongSort)
+            case .history(let kind):
+                title = String(localized: String.LocalizationValue(kind.title))
+                entities = try await kind.songs()
             case .topSongs(let limit):
                 title = "My Top \(limit)"
                 await SyncBridge.mutations.repairOrphanSongs()
@@ -565,7 +568,7 @@ struct PlaylistDetailView: View {
                 .onChange(of: viewModel.autoTopPeriod) {
                     Task { await viewModel.load() }
                 }
-            case nil:
+            case .history, nil:
                 EmptyView()
             }
         }
