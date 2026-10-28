@@ -14,7 +14,7 @@ Entscheidungen, offene Fragen und bekannte Einschränkungen pro Punkt.
 |---|-------|--------|
 | 1 | Crossfade A/B (zwei gleichwertige mpv-Instanzen) | fertig (experimentell, Standard aus) |
 | 2 | Sleep-Timer Fade-out | fertig |
-| 3 | Tastatur-Kürzel (iPad) | offen |
+| 3 | Tastatur-Kürzel (iPad) | fertig |
 | 4 | „Zum Drop springen“ (Most replayed) | offen |
 | 5 | Lyrics-Übersetzung (Translation-Framework) | offen |
 | 6 | Playlist-Werkzeuge | offen |
@@ -53,6 +53,15 @@ Push-Rhythmus: nach jedem 2.–3. fertigen Punkt (jeder Push auf main = Release)
   danach Lautstärke zurück. Abbrechen des Timers stellt sofort wieder her.
 - Einstellung unter Wiedergabe: Aus / 10 / 30 / 60 s, Standard 30 s.
 
+### 3. Tastatur-Kürzel
+- Als SwiftUI-`Commands` an der Szene (Menüs „Wiedergabe“ und „Gehe zu“) → iPadOS
+  zeigt sie in der Kürzel-Übersicht (⌘ halten).
+- Kürzel ohne Modifier (Leertaste, Pfeile, Esc) sind deaktiviert, solange ein
+  Textfeld bearbeitet wird; zusätzlich hat Texteingabe bei UIKit ohnehin Vorrang.
+- ⌘L/⌘K öffnen erst den Player, dann Songtext bzw. Warteschlange („pending“-Flags,
+  weil der Player beim Auslösen evtl. noch nicht existiert).
+- ⌘2 = Suche-Tab (Reihenfolge der Leiste: Start, Suche, Bibliothek).
+
 ## Offene Fragen an dich
 
 ## Bekannte Einschränkungen
@@ -74,3 +83,9 @@ Push-Rhythmus: nach jedem 2.–3. fertigen Punkt (jeder Push auf main = Release)
 - Danach Play: normale Lautstärke.
 - „Songende“ + Fade 10 s: Ausblenden in den letzten 10 s des Songs.
 - Timer während des Ausblendens abbrechen: Lautstärke sofort wieder normal.
+
+### 3. Tastatur-Kürzel (iPad mit Tastatur)
+- ⌘ gedrückt halten: Übersicht zeigt die Kürzel.
+- Leertaste, ←/→ (±10 s), ⌘←/⌘→, ↑/↓ (Lautstärke), ⌘F, ⌘L, ⌘K, ⌘1/2/3, Esc.
+- Im Suchfeld tippen: Leertaste/Pfeile müssen normal im Text wirken.
+
