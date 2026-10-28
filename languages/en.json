@@ -680,5 +680,9 @@
   "Only %d %% of the words were recognized — not reliable enough.": "Only %d %% of the words were recognized — not reliable enough.",
   "The AI model is downloaded on Wi-Fi only. Connect to Wi-Fi and try again.": "The AI model is downloaded on Wi-Fi only. Connect to Wi-Fi and try again.",
   "No audio source found.": "No audio source found.",
-  "The audio could not be converted.": "The audio could not be converted."
+  "The audio could not be converted.": "The audio could not be converted.",
+  "Genre/Mood": "Genre/Mood",
+  "Chill/Sad": "Chill/Sad",
+  "Genre and mood come from Last.fm tags (YouTube Music has none). Rename groups, drag songs between them, then create the playlists.": "Genre and mood come from Last.fm tags (YouTube Music has none). Rename groups, drag songs between them, then create the playlists.",
+  "Loading Last.fm tags… %d/%d": "Loading Last.fm tags… %d/%d"
 }

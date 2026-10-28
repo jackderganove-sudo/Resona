@@ -8,10 +8,11 @@
 //  • Find duplicates in a synced playlist (same video id, or same title +
 //    main artist) and remove the extra entries.
 //  • Split a playlist into several new ones. YouTube Music exposes no
-//    genre/mood/tempo per song, so grouping uses what is available: main
-//    artist, album or (detected) language. Groups can be renamed, songs
-//    moved between groups by drag & drop (or the context menu), then
-//    "Create" makes them real playlists in the account.
+//    genre/mood/tempo per song, so grouping uses main artist, album,
+//    (detected) language — and genre/mood from Last.fm tags when an API
+//    key is available or Last.fm is connected (LastFMTags.swift). Groups
+//    can be renamed, songs moved between groups by drag & drop (or the
+//    context menu), then "Create" makes them real playlists.
 //
 
 import GRDB
@@ -157,13 +158,14 @@ struct PlaylistSplitSheet: View {
     @Environment(\.m3) private var m3
 
     enum Strategy: String, CaseIterable, Identifiable {
-        case artist, album, language
+        case artist, album, language, genre
         var id: String { rawValue }
         var title: LocalizedStringKey {
             switch self {
             case .artist: "Artist"
             case .album: "Album"
             case .language: "Language"
+            case .genre: "Genre/Mood"
             }
         }
     }
@@ -178,22 +180,44 @@ struct PlaylistSplitSheet: View {
     @State private var groups: [SplitGroup] = []
     @State private var creating = false
     @State private var created = 0
+    /// Genre/mood group per video id (Last.fm), loaded on first use.
+    @State private var genreKeys: [String: String]?
+    @State private var genreProgress = 0
+    @State private var genreTask: Task<Void, Never>?
+    private var genreAvailable: Bool { LastFMTagService.isAvailable }
+
+    private var strategies: [Strategy] {
+        genreAvailable ? Strategy.allCases : Strategy.allCases.filter { $0 != .genre }
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Picker("Group by", selection: $strategy) {
-                        ForEach(Strategy.allCases) { Text($0.title).tag($0) }
+                        ForEach(strategies) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.segmented)
 
-                    Text("YouTube Music provides no genre or mood per song, so songs are grouped by artist, album or language. Rename groups, drag songs between them, then create the playlists.")
+                    Text(genreAvailable
+                         ? LocalizedStringKey("Genre and mood come from Last.fm tags (YouTube Music has none). Rename groups, drag songs between them, then create the playlists.")
+                         : LocalizedStringKey("YouTube Music provides no genre or mood per song, so songs are grouped by artist, album or language. Rename groups, drag songs between them, then create the playlists."))
                         .font(.m3(.bodySmall))
                         .foregroundStyle(m3.onSurfaceVariant)
 
-                    ForEach($groups) { $group in
-                        groupCard($group)
+                    if strategy == .genre, genreKeys == nil {
+                        VStack(spacing: 10) {
+                            ProgressView(value: Double(genreProgress), total: Double(max(1, playlist.songs.count)))
+                                .tint(m3.primary)
+                            Text(String(format: String(localized: "Loading Last.fm tags… %d/%d"), genreProgress, playlist.songs.count))
+                                .font(.m3(.labelMedium))
+                                .foregroundStyle(m3.onSurfaceVariant)
+                        }
+                        .padding(.vertical, 24)
+                    } else {
+                        ForEach($groups) { $group in
+                            groupCard($group)
+                        }
                     }
                 }
                 .padding(16)
@@ -208,13 +232,14 @@ struct PlaylistSplitSheet: View {
                     Button(creating ? String(localized: "Creating \(created)/\(groups.filter { !$0.songs.isEmpty }.count)…") : String(localized: "Create")) {
                         create()
                     }
-                    .disabled(creating || groups.allSatisfy(\.songs.isEmpty))
+                    .disabled(creating || groups.allSatisfy(\.songs.isEmpty) || (strategy == .genre && genreKeys == nil))
                 }
             }
         }
         .presentationBackground { ResonaGlassBackground() }
         .onAppear { regroup() }
         .onChange(of: strategy) { _, _ in regroup() }
+        .onDisappear { genreTask?.cancel() }
     }
 
     private func groupCard(_ group: Binding<SplitGroup>) -> some View {
@@ -278,9 +303,29 @@ struct PlaylistSplitSheet: View {
                 let code = recognizer.dominantLanguage?.rawValue ?? "und"
                 return Locale.current.localizedString(forLanguageCode: code) ?? String(localized: "Other")
             }
+        case .genre:
+            guard let keys = genreKeys else {
+                loadGenres()
+                return
+            }
+            key = { keys[$0.videoId] ?? String(localized: "Other") }
         }
         groups = PlaylistTools.splitGroups(playlist.songs, title: playlist.title, key: key)
             .map { SplitGroup(name: $0.name, songs: $0.songs) }
+    }
+
+    private func loadGenres() {
+        guard genreTask == nil else { return }
+        let songs = playlist.songs
+        genreTask = Task {
+            let keys = await LastFMTagService.shared.groups(for: songs) { done in
+                await MainActor.run { genreProgress = done }
+            }
+            guard !Task.isCancelled else { return }
+            genreKeys = keys
+            genreTask = nil
+            if strategy == .genre { regroup() }
+        }
     }
 
     private func create() {

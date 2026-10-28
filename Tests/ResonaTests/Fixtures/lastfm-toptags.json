@@ -1,0 +1,35 @@
+{
+ "toptags": {
+  "tag": [
+   {
+    "count": 100,
+    "name": "phonk",
+    "url": "https://www.last.fm/tag/phonk"
+   },
+   {
+    "count": 61,
+    "name": "drift phonk",
+    "url": ""
+   },
+   {
+    "count": 34,
+    "name": "Hip-Hop",
+    "url": ""
+   },
+   {
+    "count": 20,
+    "name": "trap",
+    "url": ""
+   },
+   {
+    "count": 3,
+    "name": "seen live",
+    "url": ""
+   }
+  ],
+  "@attr": {
+   "artist": "Testkünstler",
+   "track": "Platzhalter"
+  }
+ }
+}
