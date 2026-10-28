@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.3",
+          "buildVersion": "57",
+          "date": "2026-10-28T00:06:41Z",
+          "localizedDescription": "- Docs: progress round 3 - shortcuts done\n- AppRouter: shortcut actions on the main actor\n- iPad keyboard shortcuts\n- Docs: progress round 3 - crossfade and sleep timer done\n- Sleep timer: fade the volume out before it pauses\n- Crossfade: two equivalent mpv instances (A/B) instead of a tail handover\n- Docs: progress file for round 3",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.3/Resona.ipa",
+          "size": 27933469,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.2",
           "buildVersion": "53",
           "date": "2026-10-27T22:40:49Z",
@@ -37,11 +46,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.2",
-      "versionDate": "2026-10-27T22:40:49Z",
-      "versionDescription": "- Settings: same header on every page, 'Wiedergabe' everywhere\n- Crossfade: explicit self in the ramp log closure\n- Crossfade: verified tail with the main player's options, detailed logs",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.2/Resona.ipa",
-      "size": 27931915,
+      "version": "0.8.3",
+      "versionDate": "2026-10-28T00:06:41Z",
+      "versionDescription": "- Docs: progress round 3 - shortcuts done\n- AppRouter: shortcut actions on the main actor\n- iPad keyboard shortcuts\n- Docs: progress round 3 - crossfade and sleep timer done\n- Sleep timer: fade the volume out before it pauses\n- Crossfade: two equivalent mpv instances (A/B) instead of a tail handover\n- Docs: progress file for round 3",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.3/Resona.ipa",
+      "size": 27933469,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
