@@ -147,6 +147,11 @@ struct SettingsCardRow: View {
     let position: M3GroupPosition
 
     var body: some View {
+        rowBody.accessibilityIdentifier("settings.\(entry.icon)")
+    }
+
+    @ViewBuilder
+    private var rowBody: some View {
         switch entry.action {
         case .page(let destination):
             NavigationLink {

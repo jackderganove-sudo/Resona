@@ -95,6 +95,9 @@ struct MiniPlayer: View {
             .clipped()
             .contentShape(Rectangle())
             .onTapGesture { onExpand() }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityIdentifier("miniplayer")
             .gesture(dragGesture(pageWidth: width))
         }
     }

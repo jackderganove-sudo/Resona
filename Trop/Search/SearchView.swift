@@ -525,6 +525,7 @@ struct SearchView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(M3RowPressStyle())
+                    .accessibilityIdentifier("suggestion.item")
                 }
 
                 if !viewModel.suggestionItems.isEmpty && !viewModel.suggestionTexts.isEmpty {
@@ -560,6 +561,9 @@ struct SearchView: View {
                     .frame(minHeight: 50)
                     .contentShape(Rectangle())
                     .onTapGesture { submit(text) }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityIdentifier("suggestion.text")
                 }
             }
             .padding(.vertical, 6)

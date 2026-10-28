@@ -433,6 +433,10 @@ extension PlayerController {
         mpv_set_option_string(mpv, "audio-exclusive", "yes")
         #endif
 
+        // Automated simulator runs: no audio device, still real-time.
+        if TestMode.useNullAudio {
+            mpv_set_option_string(mpv, "ao", "null")
+        }
         mpv_set_option_string(mpv, "keep-open", "no")
         mpv_set_option_string(mpv, "cache", "yes")
         mpv_set_option_string(mpv, "cache-secs", "120")
@@ -1381,3 +1385,42 @@ extension PlayerController {
         }
     }
 }
+
+#if DEBUG
+// MARK: - Test probe (crossfade measurement)
+
+extension PlayerController {
+    struct InstanceProbe {
+        let slot: String
+        let active: Bool
+        let path: String
+        let position: Double
+        let volume: Double
+        let paused: Bool
+        let idle: Bool
+    }
+
+    /// Both mpv instances (active + spare) as they are right now.
+    func probeInstances() -> [InstanceProbe] {
+        mpvAccessQueue.sync {
+            var result: [InstanceProbe] = []
+            for (slot, handle) in [("main", _mpv), ("spare", _spare)] {
+                guard let handle else { continue }
+                var pos = Double(-1), vol = Double(-1)
+                var pause: Int32 = 0, idle: Int32 = 1
+                mpv_get_property(handle, "time-pos", MPV_FORMAT_DOUBLE, &pos)
+                mpv_get_property(handle, "volume", MPV_FORMAT_DOUBLE, &vol)
+                mpv_get_property(handle, "pause", MPV_FORMAT_FLAG, &pause)
+                mpv_get_property(handle, "idle-active", MPV_FORMAT_FLAG, &idle)
+                var path = ""
+                if let raw = mpv_get_property_string(handle, "path") {
+                    path = String(cString: raw)
+                    mpv_free(raw)
+                }
+                result.append(InstanceProbe(slot: slot, active: handle == _mpv, path: path, position: pos, volume: vol, paused: pause != 0, idle: idle != 0))
+            }
+            return result
+        }
+    }
+}
+#endif

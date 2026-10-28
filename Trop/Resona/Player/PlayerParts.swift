@@ -240,6 +240,7 @@ struct PlayerRoundToggle: View {
         .buttonStyle(.expressive(scale: 0.86))
         .animation(M3Motion.defaultEffects, value: isOn)
         .accessibilityLabel(Text(label))
+        .accessibilityIdentifier("player.toggle.\(systemName)")
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }
@@ -266,6 +267,7 @@ struct PlayerActionButton: View {
         }
         .buttonStyle(.expressive(scale: 0.86))
         .accessibilityLabel(Text(label))
+        .accessibilityIdentifier("player.action.\(systemName)")
     }
 }
 
@@ -303,6 +305,7 @@ struct PlayerBottomPill: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.expressive)
+        .accessibilityIdentifier("player.pill.\(systemName)")
     }
 }
 

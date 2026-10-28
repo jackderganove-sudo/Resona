@@ -49,6 +49,7 @@ struct ResonaTopBar: View {
                 }
                 .buttonStyle(.expressive(scale: 0.88))
                 .accessibilityLabel(Text("Account"))
+                .accessibilityIdentifier("account.menu")
             }
             .frame(width: 44, height: 44)
         }
@@ -154,6 +155,7 @@ struct AccountMenuOverlay: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("menu.\(icon)")
     }
 
     private func open(_ route: DetailRoute) {

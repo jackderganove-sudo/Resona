@@ -256,6 +256,7 @@ struct SleepTimerButton: View {
         .animation(M3Motion.defaultSpatial, value: timer.isActive)
         .sensoryFeedback(.impact(weight: .medium), trigger: timer.isActive) { was, now in was && !now }
         .accessibilityLabel(Text(timer.isActive ? "Turn off sleep timer" : "Sleep timer"))
+        .accessibilityIdentifier("player.sleep")
     }
 
     private var label: String {

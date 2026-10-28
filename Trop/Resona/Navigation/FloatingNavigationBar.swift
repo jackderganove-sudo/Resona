@@ -140,6 +140,7 @@ private struct NavigationItem: View {
         }
         .buttonStyle(.expressive(scale: 0.9))
         .accessibilityLabel(Text(tab.title))
+        .accessibilityIdentifier("tab.\(tab)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

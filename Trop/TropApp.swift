@@ -24,6 +24,9 @@ struct TropApp: App {
         Task { await InnerTubeClient.tropShared.syncTropLocale() }
         Task { @MainActor in DiscordIntegration.shared.start() }
         Task { @MainActor in LastFMIntegration.shared.start() }
+        #if DEBUG
+        Task { @MainActor in CrossfadeTestHarness.runIfRequested() }
+        #endif
     }
 
     /// Re-applies mpv playback settings whenever the user changes the

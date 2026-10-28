@@ -807,6 +807,9 @@ extension DownloadManager {
     // MARK: - Local URL Resolution
 
     func localURL(for videoId: String) async -> URL? {
+        #if DEBUG
+        if let url = TestMode.localOverride[videoId] { return url }
+        #endif
         if let track = tracksById[videoId], let url = resolvedURL(for: track) {
             repairStoredPathIfNeeded(track, url: url)
             return url

@@ -35,6 +35,7 @@ struct M3SearchBar<Trailing: View>: View {
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .onSubmit(onSubmit)
+            .accessibilityIdentifier("search.field")
 
             if !text.isEmpty {
                 Button {

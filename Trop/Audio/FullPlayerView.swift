@@ -368,6 +368,7 @@ struct FullPlayerView: View {
         .onTapGesture { onCollapse() }
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(Text("Collapse player"))
+        .accessibilityIdentifier("player.collapse")
     }
 
     // MARK: Artwork
