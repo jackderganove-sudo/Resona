@@ -58,6 +58,14 @@ DERIVED="/Volumes/TropBuild/DerivedDataTests"
 COMMON=(-project "$ROOT/Trop.xcodeproj" -scheme ResonaTests -configuration Debug
         -destination "id=$UDID" -derivedDataPath "$DERIVED" SKIP_SWIFTLINT=YES)
 
+step "Resolve packages (with retries for flaky downloads)"
+for attempt in 1 2 3; do
+    xcodebuild -resolvePackageDependencies -project "$ROOT/Trop.xcodeproj" -scheme ResonaTests \
+        -derivedDataPath "$DERIVED" > "$OUT/logs/resolve-$attempt.log" 2>&1 && break
+    echo "package resolution failed (attempt $attempt)"; tail -3 "$OUT/logs/resolve-$attempt.log"
+    sleep 20
+done
+
 step "Build for testing (Debug, simulator)"
 xcodebuild build-for-testing "${COMMON[@]}" > "$OUT/logs/xcodebuild-build.log" 2>&1
 BUILD_STATUS=$?
