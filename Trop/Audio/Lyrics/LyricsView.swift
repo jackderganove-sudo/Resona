@@ -183,6 +183,7 @@ struct LyricsView<ProgressSlider: View>: View {
                         showLyricsMenu = true
                     }
                     M3IconButton(systemName: "xmark", kind: .onDark, size: 44, iconSize: 16, accessibility: "Close lyrics") {
+                        Log.player.info("UI lyrics close tapped (split)")
                         withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
                     }
                     .accessibilityIdentifier("lyrics.close")
@@ -257,6 +258,7 @@ struct LyricsView<ProgressSlider: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             M3IconButton(systemName: "xmark", kind: .onDark, size: 40, iconSize: 15, accessibility: "Close lyrics") {
+                Log.player.info("UI lyrics close tapped (stack)")
                 withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
             }
             .accessibilityIdentifier("lyrics.close")

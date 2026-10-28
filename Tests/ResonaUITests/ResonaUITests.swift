@@ -221,27 +221,37 @@ final class ResonaUITests: XCTestCase {
     /// Escape (hardware keyboard → app's escape handling), then a swipe down
     /// on the sheet / a tap outside of a popover.
     private func closeOverlay() {
-        for id in ["lyrics.close", "overlay.close"] {
-            // Several layouts may carry the id; take the visible one.
-            // Buttons only: a query over every element type times out in the
-            // animated lyrics view.
-            let candidates = app.buttons.matching(identifier: id).allElementsBoundByIndex
-            if let button = candidates.first(where: { $0.exists && $0.isHittable }) {
-                button.tap()
+        XCTContext.runActivity(named: "close overlay") { _ in
+            for attempt in 1...2 {
+                for id in ["lyrics.close", "overlay.close"] {
+                    // Several layouts may carry the id; take the visible one.
+                    // Buttons only: a query over every element type times out
+                    // in the animated lyrics view.
+                    let candidates = app.buttons.matching(identifier: id).allElementsBoundByIndex
+                    if let button = candidates.first(where: { $0.exists && $0.isHittable }) {
+                        XCTContext.runActivity(named: "tap \(id) (attempt \(attempt))") { _ in button.tap() }
+                        sleep(2)
+                        snap("after-close-\(id)")
+                        if !button.exists || !button.isHittable { return }
+                    } else if !candidates.isEmpty {
+                        XCTContext.runActivity(named: "\(id): \(candidates.count) found, none hittable") { _ in }
+                    }
+                }
+                // Landscape lyrics hide their chrome after a while: one tap
+                // in the middle wakes it, then try again.
+                app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 sleep(1)
-                return
+            }
+            XCTContext.runActivity(named: "fallback: escape / swipe") { _ in
+                app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
+                sleep(1)
+                if element("player.collapse").isHittable { return }
+                let window = app.windows.firstMatch
+                window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12))
+                    .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
+                sleep(1)
             }
         }
-        app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
-        sleep(1)
-        if element("player.collapse").isHittable { return }
-        let window = app.windows.firstMatch
-        window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12))
-            .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
-        sleep(1)
-        if element("player.collapse").isHittable { return }
-        window.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.5)).tap()
-        sleep(1)
     }
 
     private func back() {

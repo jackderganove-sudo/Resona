@@ -11,6 +11,15 @@ on:
       - 'docs/**'
       - '**/*.md'
   workflow_dispatch:
+    inputs:
+      only_testing:
+        description: 'Only these tests (xcodebuild -only-testing, comma separated), e.g. ResonaUITests/ResonaUITests/test1Portrait'
+        required: false
+        default: ''
+      skip_crossfade:
+        description: 'Skip the crossfade measurement'
+        type: boolean
+        default: false
 
 concurrency:
   group: resona-tests-${{ github.ref }}
@@ -66,6 +75,8 @@ jobs:
           ./scripts/simulator_tests.sh
         env:
           FFMPEG_KIT_TAG: ${{ env.FFMPEG_KIT_TAG }}
+          ONLY_TESTING: ${{ inputs.only_testing }}
+          SKIP_CROSSFADE: ${{ inputs.skip_crossfade }}
 
       - name: Save ffmpeg-kit XCFrameworks
         if: always() && steps.ffmpeg-cache.outputs.cache-hit != 'true' && hashFiles('build/ffmpeg-kit-xcframeworks/**') != ''

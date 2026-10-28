@@ -82,7 +82,10 @@ xcrun simctl spawn "$UDID" log stream --style compact --level info --predicate '
     > "$OUT/logs/console.log" 2>&1 &
 LOG_PID=$!
 sleep 2
-xcodebuild test-without-building "${COMMON[@]}" -parallel-testing-enabled NO \
+ONLY=()
+IFS=',' read -ra ONLY_LIST <<< "${ONLY_TESTING:-}"
+for t in ${ONLY_LIST[@]+"${ONLY_LIST[@]}"}; do ONLY+=("-only-testing:$t"); done
+xcodebuild test-without-building "${COMMON[@]}" -parallel-testing-enabled NO ${ONLY[@]+"${ONLY[@]}"} \
     -resultBundlePath "$OUT/Resona.xcresult" > "$OUT/logs/xcodebuild-test.log" 2>&1
 TEST_STATUS=$?
 grep -E "Test Case .*(passed|failed)|error:|\*\* TEST" "$OUT/logs/xcodebuild-test.log" | head -120
@@ -135,7 +138,9 @@ xcrun xcresulttool get test-results tests --path "$OUT/Resona.xcresult" --compac
 
 step "Crossfade measurements"
 DATA="$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data 2>/dev/null)"
-if [ -z "$DATA" ]; then
+if [ "${SKIP_CROSSFADE:-false}" = "true" ]; then
+    echo "skipped (SKIP_CROSSFADE)"
+elif [ -z "$DATA" ]; then
     echo "app not installed — no crossfade measurement"
 else
     for case in fade3 fade10 skip pause off; do

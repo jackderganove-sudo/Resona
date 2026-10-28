@@ -108,6 +108,7 @@ struct FullPlayerView: View {
                 }
             }
             .onChange(of: usePanel, initial: true) { _, value in sidePanelMode = value }
+            .onChange(of: showLyrics) { _, shown in Log.player.info("UI lyrics shown=\(shown)") }
             .animation(M3Motion.defaultSpatial, value: showLyrics)
             .animation(M3Motion.defaultSpatial, value: showSleepTimer)
         }
