@@ -528,6 +528,8 @@ struct FullPlayerView: View {
             .background(alignment: .top) {
                 if let heatmap, !compact, settings.showMostReplayedCurve {
                     HeatmapWave(heatmap: heatmap, color: playerAccentColor)
+                        .accessibilityElement()
+                        .accessibilityIdentifier("player.heatmap")
                         .frame(height: 26)
                         .offset(y: -18)
                         .transition(.opacity)

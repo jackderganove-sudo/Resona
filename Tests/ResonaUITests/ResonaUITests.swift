@@ -96,6 +96,7 @@ final class ResonaUITests: XCTestCase {
         guard tap("miniplayer", timeout: 15) else { return }
         sleep(3)
         snap("player")
+        dropMenu()
         // The player may come up with the lyrics already open.
         if visibleButton("lyrics.close", attempts: 2) != nil {
             closeOverlay()
@@ -141,6 +142,54 @@ final class ResonaUITests: XCTestCase {
         }
         snap("player-after-sheets")
         collapsePlayerIfOpen()
+    }
+
+    /// Long press on the lightning button: both entries have text, are
+    /// enabled and work (curve hides / shows again, jump shows its toast).
+    private func dropMenu() {
+        let bolt = app.buttons["player.toggle.bolt.fill"]
+        guard bolt.waitForExistence(timeout: 8) else {
+            softFail("no drop button (no most-replayed data for this song)")
+            return
+        }
+        func menuItem(_ labels: [String]) -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
+        }
+        let hide = ["Meistgehört-Kurve ausblenden", "Hide most-replayed curve"]
+        let show = ["Meistgehört-Kurve anzeigen", "Show most-replayed curve"]
+        let jump = ["Zum Drop springen", "Jump to the drop"]
+        let curve = app.otherElements["player.heatmap"]
+        XCTAssertTrue(curve.waitForExistence(timeout: 5), "[\(prefix)] most-replayed curve visible before")
+
+        bolt.press(forDuration: 1.2)
+        sleep(1)
+        snap("drop-menu-open")
+        let hideItem = menuItem(hide), jumpItem = menuItem(jump)
+        XCTAssertTrue(hideItem.waitForExistence(timeout: 3), "[\(prefix)] curve entry with text")
+        XCTAssertTrue(jumpItem.exists, "[\(prefix)] jump entry with text")
+        XCTAssertTrue(hideItem.isEnabled && jumpItem.isEnabled, "[\(prefix)] entries enabled")
+        hideItem.tap()
+        sleep(1)
+        snap("drop-curve-hidden")
+        XCTAssertFalse(curve.exists, "[\(prefix)] curve hidden after the menu entry")
+
+        bolt.press(forDuration: 1.2)
+        sleep(1)
+        snap("drop-menu-open-again")
+        let showItem = menuItem(show)
+        XCTAssertTrue(showItem.waitForExistence(timeout: 3), "[\(prefix)] entry now says 'show'")
+        showItem.tap()
+        sleep(1)
+        XCTAssertTrue(curve.waitForExistence(timeout: 3), "[\(prefix)] curve visible again")
+
+        bolt.press(forDuration: 1.2)
+        sleep(1)
+        let jumpAgain = menuItem(jump)
+        XCTAssertTrue(jumpAgain.waitForExistence(timeout: 3))
+        jumpAgain.tap()
+        let toast = app.staticTexts.matching(NSPredicate(format: "label IN {'Zum Drop gesprungen', 'Jumped to the drop'}")).firstMatch
+        XCTAssertTrue(toast.waitForExistence(timeout: 3), "[\(prefix)] jump to the drop happened (toast)")
+        snap("drop-jumped")
     }
 
     /// Back to the tabs: chevron if there is one (portrait), otherwise the

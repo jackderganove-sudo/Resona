@@ -247,19 +247,28 @@ struct PlayerRoundToggle: View {
 
 /// "Jump to the drop": tap jumps, long press opens a small menu that also
 /// switches the most-replayed curve behind the progress bar.
-/// Plain system menu on purpose: a buttonStyle/menuStyle on the Menu is
-/// inherited by its items (empty row with two checkmarks, items looked
-/// disabled and didn't react on the iPad).
+/// Plain system menu with plain buttons on purpose: a buttonStyle/menuStyle
+/// on the Menu is inherited by its items, and a Toggle takes the app's
+/// toggle style (empty rows with checkmarks, greyed-out entries).
 struct PlayerDropButton: View {
     @Binding var showCurve: Bool
     let jump: () -> Void
 
     var body: some View {
         Menu {
+            // Plain buttons only: a Toggle inside this Menu picked up the
+            // app's custom toggle style (greyed-out header + an empty row
+            // with two checkmarks on the iPad).
+            Button {
+                showCurve.toggle()
+            } label: {
+                Label(showCurve ? "Hide most-replayed curve" : "Show most-replayed curve", systemImage: "waveform.path")
+            }
+            .accessibilityIdentifier("drop.menu.curve")
             Button(action: jump) {
                 Label("Jump to the drop", systemImage: "bolt.fill")
             }
-            Toggle("Show most-replayed curve", isOn: $showCurve)
+            .accessibilityIdentifier("drop.menu.jump")
         } label: {
             Image(systemName: "bolt.fill")
                 .font(.system(size: 17, weight: .semibold))
