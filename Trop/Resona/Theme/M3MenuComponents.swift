@@ -119,11 +119,14 @@ struct M3ActionTileGrid: View {
                         Image(systemName: tile.icon)
                             .font(.system(size: 22, weight: .regular))
                             .foregroundStyle(m3.onSurfaceVariant)
+                        // Two lines: narrow panels (iPad landscape) cut
+                        // single-line labels off with "…".
                         Text(tile.title)
                             .font(.m3(.bodyMedium))
                             .foregroundStyle(m3.onSurface)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.75)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.8)
                     }
                     .padding(.horizontal, 6)
                     .frame(maxWidth: .infinity)

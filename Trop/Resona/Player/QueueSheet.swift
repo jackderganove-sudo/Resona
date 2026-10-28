@@ -127,44 +127,56 @@ struct QueueSheet: View {
                 .foregroundStyle(m3.onSurfaceVariant)
                 .lineLimit(1)
                 .padding(.horizontal, 4)
-            HStack(spacing: 8) {
-                // Lock = order frozen: no reordering, removing or clearing.
-                M3Chip(
-                    title: isLocked ? String(localized: "Order locked") : String(localized: "Lock order"),
-                    systemImage: isLocked ? "lock.fill" : "lock.open",
-                    isSelected: isLocked
-                ) {
-                    withAnimation(M3Motion.fastSpatial) { isLocked.toggle() }
+            // Side by side when they fit, otherwise stacked (narrow side
+            // panel in iPad landscape cut the labels off).
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    queueChips
+                    Spacer(minLength: 0)
                 }
-                M3Chip(title: String(localized: "Clear queue"), systemImage: "trash", isSelected: false) {
-                    clearUpcoming()
+                VStack(alignment: .leading, spacing: 8) {
+                    queueChips
                 }
-                .disabled(isLocked)
-                .opacity(isLocked ? 0.38 : 1)
-                Menu {
-                    Button {
-                        np.shuffleQueue()
-                    } label: {
-                        Label("Shuffle upcoming", systemImage: "shuffle")
-                    }
-                    .disabled(isLocked)
-                    Button {
-                        UIPasteboard.general.string = np.queueSongs.map(\.webUrl).joined(separator: "\n")
-                    } label: {
-                        Label("Copy Link", systemImage: "link")
-                    }
-                } label: {
-                    Label("More", systemImage: "ellipsis")
-                        .labelStyle(.iconOnly)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(m3.onSecondaryContainer)
-                        .frame(width: 40, height: 32)
-                        .background(m3.secondaryContainer, in: Capsule())
-                }
-                .accessibilityLabel(Text("More"))
-                Spacer(minLength: 0)
             }
         }
+    }
+
+    @ViewBuilder
+    private var queueChips: some View {
+        // Lock = order frozen: no reordering, removing or clearing.
+        M3Chip(
+            title: isLocked ? String(localized: "Order locked") : String(localized: "Lock order"),
+            systemImage: isLocked ? "lock.fill" : "lock.open",
+            isSelected: isLocked
+        ) {
+            withAnimation(M3Motion.fastSpatial) { isLocked.toggle() }
+        }
+        M3Chip(title: String(localized: "Clear queue"), systemImage: "trash", isSelected: false) {
+            clearUpcoming()
+        }
+        .disabled(isLocked)
+        .opacity(isLocked ? 0.38 : 1)
+        Menu {
+            Button {
+                np.shuffleQueue()
+            } label: {
+                Label("Shuffle upcoming", systemImage: "shuffle")
+            }
+            .disabled(isLocked)
+            Button {
+                UIPasteboard.general.string = np.queueSongs.map(\.webUrl).joined(separator: "\n")
+            } label: {
+                Label("Copy Link", systemImage: "link")
+            }
+        } label: {
+            Label("More", systemImage: "ellipsis")
+                .labelStyle(.iconOnly)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(m3.onSecondaryContainer)
+                .frame(width: 40, height: 32)
+                .background(m3.secondaryContainer, in: Capsule())
+        }
+        .accessibilityLabel(Text("More"))
     }
 
     private var summary: String {

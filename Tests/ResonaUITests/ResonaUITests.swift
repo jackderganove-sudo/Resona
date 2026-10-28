@@ -131,11 +131,13 @@ final class ResonaUITests: XCTestCase {
             snap("player-menu")
             closeOverlay()
         }
-        // Sleep timer.
+        // Sleep timer (dialog with Cancel / OK, no ✕).
         if tap("player.sleep") {
             sleep(2)
             snap("sleep-timer")
-            closeOverlay()
+            let cancel = app.buttons.matching(NSPredicate(format: "label IN {'Abbrechen', 'Cancel'}")).firstMatch
+            if cancel.waitForExistence(timeout: 3), cancel.isHittable { cancel.tap() } else { closeOverlay() }
+            sleep(1)
         }
         snap("player-after-sheets")
         collapsePlayerIfOpen()
