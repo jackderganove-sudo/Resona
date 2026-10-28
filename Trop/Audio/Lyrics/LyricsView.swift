@@ -736,7 +736,7 @@ struct LyricsView<ProgressSlider: View>: View {
         do {
             let result = try await LyricsService.shared.fetchLyrics(videoId: videoId)
             guard !result.isEmpty else { return }
-            let withoutMarkers = LyricLine.normalizedTiming(result.filter { !Self.isInstrumentalMarker($0) })
+            let withoutMarkers = LyricLine.monotonicTiming(LyricLine.normalizedTiming(result.filter { !Self.isInstrumentalMarker($0) }))
             // Manual tempo (lyrics menu) on top of the automatic factor.
             let manual = LyricsSongAdjustments.shared.tempo(for: videoId)
             let auto = LyricsState.shared.autoTempo[videoId] ?? 1

@@ -55,6 +55,36 @@ struct LyricLine: Identifiable, Equatable, Sendable, Codable {
         return lines.map { LyricLine(text: $0.text, startTime: nil, backgroundText: $0.backgroundText, translation: $0.translation) }
     }
 
+    /// Line and word times never go backwards (a line starting before the
+    /// previous one made the highlight jump back and forth): such times are
+    /// pulled up to the previous one + a minimum length.
+    static func monotonicTiming(_ lines: [LyricLine], minLine: Double = 0.2, minWord: Double = 0.05) -> [LyricLine] {
+        var lastLine: Double?
+        var lastWord: Double?
+        return lines.map { line in
+            guard var start = line.startTime else { return line }
+            if let lastLine, start < lastLine + minLine { start = lastLine + minLine }
+            lastLine = start
+            var words = line.words
+            if let original = line.words {
+                var fixed: [LyricWord] = []
+                for (index, word) in original.enumerated() {
+                    var wordStart = max(word.start, index == 0 ? start : word.start)
+                    if let lastWord, wordStart < lastWord + minWord { wordStart = lastWord + minWord }
+                    if index == 0 { wordStart = max(wordStart, start) }
+                    lastWord = wordStart
+                    fixed.append(LyricWord(text: word.text, start: wordStart, end: max(word.end, wordStart + minWord)))
+                }
+                words = fixed
+            }
+            guard start != line.startTime || words != line.words else { return line }
+            var copy = LyricLine(text: line.text, startTime: start, words: words,
+                                 backgroundText: line.backgroundText, translation: line.translation)
+            copy.id = line.id
+            return copy
+        }
+    }
+
     /// Same lines with every timestamp multiplied (slowed/sped-up variants).
     static func scaled(_ lines: [LyricLine], by factor: Double) -> [LyricLine] {
         lines.map { line in

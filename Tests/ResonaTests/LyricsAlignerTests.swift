@@ -123,6 +123,64 @@ final class LyricsAlignerTests: XCTestCase {
         assertMonotonic(result)
     }
 
+    func testOutlierTimesDoNotMakeLinesJump() {
+        var (words, starts) = recognition(of: lines)
+        // Two recognitions with absurd times (hallucination / wrong chunk):
+        // "dritte" claims to be at 0.3 s, "vierte" at 55 s.
+        words = words.map { word in
+            switch word.text {
+            case "dritte": return RecognizedWord(text: word.text, start: 0.3, end: 0.6)
+            case "vierte": return RecognizedWord(text: word.text, start: 55, end: 55.3)
+            default: return word
+            }
+        }
+        let result = LyricsAligner.align(lines: lines, recognized: words, duration: 60)
+        let lineStarts = result.lines.compactMap(\.startTime)
+        XCTAssertEqual(lineStarts.count, lines.count)
+        XCTAssertEqual(lineStarts, lineStarts.sorted(), "line starts never go backwards")
+        // The outliers are interpolated from their neighbours, not taken over.
+        XCTAssertEqual(lineStarts[2], starts[2], accuracy: 1.2)
+        XCTAssertEqual(lineStarts[3], starts[3], accuracy: 1.2)
+        assertMonotonic(result)
+    }
+
+    func testUnsortedRecognitionStaysMonotonic() {
+        // Chunks transcribed in parallel may come back out of order.
+        let (words, _) = recognition(of: lines)
+        let shuffled = Array(words[8...]) + Array(words[..<8])
+        let result = LyricsAligner.align(lines: lines, recognized: shuffled, duration: 60)
+        let lineStarts = result.lines.compactMap(\.startTime)
+        XCTAssertEqual(lineStarts, lineStarts.sorted())
+        assertMonotonic(result)
+    }
+
+    func testLongestNonDecreasing() {
+        let values: [Double?] = [1, nil, 3, 2, 4, 0, 5, 5]
+        let picked = LyricsAligner.longestNonDecreasing(values)
+        XCTAssertEqual(picked.count, 5)
+        let pickedValues = picked.compactMap { values[$0] }
+        XCTAssertEqual(pickedValues, pickedValues.sorted())
+        XCTAssertTrue(LyricsAligner.longestNonDecreasing([nil, nil]).isEmpty)
+    }
+
+    func testMonotonicTimingPullsBackwardLinesUp() {
+        let scrambled = [
+            LyricLine(text: "la la eins", startTime: 1),
+            LyricLine(text: "la la zwei", startTime: 5),
+            LyricLine(text: "la la drei", startTime: 3),
+            LyricLine(text: "la la vier", startTime: 7),
+            LyricLine(text: "ohne Zeit", startTime: nil)
+        ]
+        let fixed = LyricLine.monotonicTiming(scrambled)
+        for (got, want) in zip(fixed.compactMap(\.startTime), [1, 5, 5.2, 7]) {
+            XCTAssertEqual(got, want, accuracy: 1e-9)
+        }
+        XCTAssertNil(fixed[4].startTime)
+        XCTAssertEqual(fixed.map(\.id), scrambled.map(\.id), "ids unchanged")
+        let ordered = [LyricLine(text: "a", startTime: 1), LyricLine(text: "b", startTime: 2)]
+        XCTAssertEqual(LyricLine.monotonicTiming(ordered), ordered, "correct timing is untouched")
+    }
+
     func testCompletelyDifferentAudioHasLowRatio() {
         let (words, _) = recognition(of: ["ganz andere Silben", "nichts davon passt", "komplett fremd"])
         let result = LyricsAligner.align(lines: lines, recognized: words, duration: 60)

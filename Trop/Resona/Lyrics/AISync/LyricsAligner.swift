@@ -111,6 +111,15 @@ enum LyricsAligner {
             }
         }
         let matched = match.compactMap { $0 }.count
+        // Outliers (a word matched to a recognition far earlier/later than
+        // its neighbours) would make lines jump back and forth: only the
+        // longest non-decreasing run of matched times is kept as anchors,
+        // the rest is interpolated like unmatched words.
+        let anchors = Set(longestNonDecreasing(starts))
+        for k in 0..<n where starts[k] != nil && !anchors.contains(k) {
+            starts[k] = nil
+            ends[k] = nil
+        }
         var k = 0
         while k < n {
             guard starts[k] == nil else { k += 1; continue }
@@ -129,9 +138,12 @@ enum LyricsAligner {
             }
             k = e
         }
-        // Monotonic, words end where the next one starts at the latest.
+        // Strictly increasing with a minimum word length; never past the end.
+        let minWord = 0.05
         for idx in 1..<max(1, n) where idx < n {
-            if let prev = starts[idx - 1], let cur = starts[idx], cur < prev { starts[idx] = prev }
+            if let prev = starts[idx - 1], let cur = starts[idx], cur < prev + minWord {
+                starts[idx] = min(prev + minWord, max(prev, duration))
+            }
         }
 
         var result: [LyricLine] = []
@@ -150,6 +162,36 @@ enum LyricsAligner {
             }
             result.append(LyricLine(text: text, startTime: start, words: words.count > 1 ? words : nil))
         }
-        return Result(lines: result, matchedRatio: Double(matched) / Double(n))
+        return Result(lines: LyricLine.monotonicTiming(result), matchedRatio: Double(matched) / Double(n))
+    }
+
+    /// Indices of the longest non-decreasing subsequence of the non-nil
+    /// values (patience sorting, O(n log n)).
+    static func longestNonDecreasing(_ values: [Double?]) -> [Int] {
+        var tailValues: [Double] = []
+        var tailIndices: [Int] = []
+        var previous = [Int](repeating: -1, count: values.count)
+        for (index, value) in values.enumerated() {
+            guard let value else { continue }
+            // First tail strictly greater than value (non-decreasing run).
+            var lo = 0, hi = tailValues.count
+            while lo < hi {
+                let mid = (lo + hi) / 2
+                if tailValues[mid] <= value { lo = mid + 1 } else { hi = mid }
+            }
+            if lo > 0 { previous[index] = tailIndices[lo - 1] }
+            if lo == tailValues.count {
+                tailValues.append(value); tailIndices.append(index)
+            } else {
+                tailValues[lo] = value; tailIndices[lo] = index
+            }
+        }
+        var result: [Int] = []
+        var cursor = tailIndices.last ?? -1
+        while cursor >= 0 {
+            result.append(cursor)
+            cursor = previous[cursor]
+        }
+        return result.reversed()
     }
 }
