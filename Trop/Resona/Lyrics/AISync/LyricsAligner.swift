@@ -25,11 +25,54 @@ enum LyricsAligner {
         let matchedRatio: Double
     }
 
+    /// Sung / informal spellings → the written form (single tokens only).
+    private static let canonical: [String: String] = [
+        "cause": "because", "cuz": "because", "coz": "because", "bc": "because",
+        "til": "until", "till": "until", "ya": "you", "yah": "you", "u": "you",
+        "em": "them", "tho": "though", "thru": "through", "ur": "your", "yall": "youall",
+        "nothin": "nothing", "somethin": "something", "everythin": "everything",
+        "lovin": "loving", "goin": "going", "feelin": "feeling", "tryin": "trying",
+        "ok": "okay", "imma": "ima", "oh": "o", "ooh": "o", "yeah": "yea", "yea": "yea"
+    ]
+
+    private static let numberWords = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+                                      "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+                                      "seventeen", "eighteen", "nineteen", "twenty"]
+
     static func normalize(_ word: String) -> String {
-        word.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
+        let plain = word.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
             .lowercased()
             .filter { $0.isLetter || $0.isNumber }
+        if let number = Int(plain), number >= 0, number < numberWords.count { return numberWords[number] }
+        return canonical[plain] ?? plain
     }
+
+    /// Rough sound key: similar consonants merged, vowels after the first
+    /// letter dropped, doubles collapsed ("nite" ~ "night", "luv" ~ "love").
+    static func phoneticKey(_ word: String) -> String {
+        var s = word
+        for (from, to) in [("ght", "t"), ("ph", "f"), ("ck", "k"), ("qu", "kw"), ("wh", "w"), ("th", "t"),
+                           ("c", "k"), ("q", "k"), ("z", "s"), ("v", "f"), ("y", "i")] {
+            s = s.replacingOccurrences(of: from, with: to)
+        }
+        guard let first = s.first else { return "" }
+        var key = String(first)
+        for char in s.dropFirst() where !"aeiou".contains(char) && key.last != char {
+            key.append(char)
+        }
+        return key
+    }
+
+    /// 0…1: spelling similarity, or (for words of 4+ letters) sound
+    /// similarity capped at 0.9 — sung words are often heard differently.
+    static func wordSimilarity(_ a: String, _ b: String) -> Double {
+        let spelled = similarity(a, b)
+        guard spelled < 0.9, a.count >= 4, b.count >= 4 else { return spelled }
+        return max(spelled, min(0.9, similarity(phoneticKey(a), phoneticKey(b))))
+    }
+
+    /// Minimum word similarity for a match.
+    static let matchThreshold = 0.5
 
     /// 0…1 similarity (1 - normalized Levenshtein distance).
     static func similarity(_ a: String, _ b: String) -> Double {
@@ -71,8 +114,8 @@ enum LyricsAligner {
         if m > 0 {
             for i in 1...n {
                 for j in 1...m {
-                    let sim = similarity(lyric[i - 1].norm, heardNorm[j - 1])
-                    let matchScore = sim >= 0.55 ? sim * 2 : -0.6
+                    let sim = wordSimilarity(lyric[i - 1].norm, heardNorm[j - 1])
+                    let matchScore = sim >= matchThreshold ? sim * 2 : -0.6
                     let diag = score[i - 1][j - 1] + matchScore
                     let up = score[i - 1][j] + gap
                     let left = score[i][j - 1] + gap * 0.5   // extra recognized words are cheap (ad-libs)
@@ -92,7 +135,7 @@ enum LyricsAligner {
         while i > 0 || j > 0 {
             let step = (i > 0 && j > 0) ? move[i][j] : (i > 0 ? 2 : 3)
             if step == 1 {
-                if similarity(lyric[i - 1].norm, heardNorm[j - 1]) >= 0.55 { match[i - 1] = j - 1 }
+                if wordSimilarity(lyric[i - 1].norm, heardNorm[j - 1]) >= matchThreshold { match[i - 1] = j - 1 }
                 i -= 1; j -= 1
             } else if step == 2 {
                 i -= 1

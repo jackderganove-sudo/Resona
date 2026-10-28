@@ -181,6 +181,20 @@ final class LyricsAlignerTests: XCTestCase {
         XCTAssertEqual(LyricLine.monotonicTiming(ordered), ordered, "correct timing is untouched")
     }
 
+    func testSungSpellingsAndNumbersMatch() {
+        XCTAssertEqual(LyricsAligner.normalize("'Cause"), "because")
+        XCTAssertEqual(LyricsAligner.normalize("cuz"), "because")
+        XCTAssertEqual(LyricsAligner.normalize("2"), "two")
+        XCTAssertEqual(LyricsAligner.normalize("nothin'"), "nothing")
+        XCTAssertGreaterThanOrEqual(LyricsAligner.wordSimilarity("nite", "night"), LyricsAligner.matchThreshold)
+        XCTAssertGreaterThanOrEqual(LyricsAligner.wordSimilarity("phone", "fone"), LyricsAligner.matchThreshold)
+        XCTAssertLessThan(LyricsAligner.wordSimilarity("me", "my"), 1, "short words get no phonetic credit")
+        let lyrics = ["zwei Herzen weil 2 Sterne", "nothin' ändert sich bis morgen"]
+        let (words, _) = recognition(of: ["zwei Herzen cause two Sterne", "nothing ändert sich bis morgen"])
+        let result = LyricsAligner.align(lines: lyrics, recognized: words, duration: 30)
+        XCTAssertGreaterThan(result.matchedRatio, 0.8)
+    }
+
     func testCompletelyDifferentAudioHasLowRatio() {
         let (words, _) = recognition(of: ["ganz andere Silben", "nichts davon passt", "komplett fremd"])
         let result = LyricsAligner.align(lines: lines, recognized: words, duration: 60)

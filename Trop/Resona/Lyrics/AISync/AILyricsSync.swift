@@ -140,8 +140,32 @@ final class AILyricsSync {
 
             // 4) Forced alignment onto the known lyrics.
             phase = .aligning
-            let aligned = LyricsAligner.align(lines: texts, recognized: words, duration: max(duration, audioSeconds))
-            log.info("AISYNC matched \(Int(aligned.matchedRatio * 100)) % of \(texts.count) lines' words")
+            var aligned = LyricsAligner.align(lines: texts, recognized: words, duration: max(duration, audioSeconds))
+            log.info("AISYNC matched \(Int(aligned.matchedRatio * 100)) % of \(texts.count) lines' words (\(variant))")
+
+            // 4b) Too few words with the small model: the larger one hears
+            //     sung words much better (download on Wi-Fi only, as usual).
+            if aligned.matchedRatio < 0.3, variant == AISyncModel.fast.variant {
+                let larger = AISyncModel.accurate.variant
+                log.info("AISYNC trying the larger model \(larger)")
+                if let folder = try? await modelFolder(variant: larger) {
+                    try Task.checkCancellation()
+                    let largePipe = try await WhisperKit(WhisperKitConfig(modelFolder: folder.path, verbose: false, download: false))
+                    phase = .transcribing(0)
+                    let largeWords = try await Self.transcribe(samples: samples, pipe: largePipe, language: language) { done in
+                        Task { @MainActor in
+                            if case .transcribing = AILyricsSync.shared.phase { AILyricsSync.shared.phase = .transcribing(done) }
+                        }
+                    }
+                    try Task.checkCancellation()
+                    phase = .aligning
+                    let second = LyricsAligner.align(lines: texts, recognized: largeWords, duration: max(duration, audioSeconds))
+                    log.info("AISYNC larger model matched \(Int(second.matchedRatio * 100)) %")
+                    if second.matchedRatio > aligned.matchedRatio { aligned = second }
+                } else {
+                    log.info("AISYNC larger model not available (Wi-Fi needed for the download)")
+                }
+            }
             guard aligned.matchedRatio >= 0.3 else {
                 throw SyncError.message(String(format: String(localized: "Only %d %% of the words were recognized — not reliable enough."), Int(aligned.matchedRatio * 100)))
             }
