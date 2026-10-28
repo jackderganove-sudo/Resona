@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.9",
+          "buildVersion": "67",
+          "date": "2026-10-28T21:58:25Z",
+          "localizedDescription": "- UI test: drop jump checked via the elapsed time; test report: drop menu proof screenshots\n- Docs: round 8 progress\n- More lyrics sources: SimpMusic and Unison (per YouTube upload — remixes/edits), Megalobiz, QQ Music; candidates with title/artist/duration, version-aware ranking; manual search lists every hit (provider, title, artist, duration, sync type, 'this version') and offers AI calibration after a pick; tests\n- Drop menu: plain buttons only (the Toggle took the app-wide custom toggle style); UI test proves both entries (screenshot, curve hides/shows, jump toast)",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.9/Resona.ipa",
+          "size": 28819319,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.8",
           "buildVersion": "66",
           "date": "2026-10-28T20:02:48Z",
@@ -91,11 +100,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.8",
-      "versionDate": "2026-10-28T20:02:48Z",
-      "versionDescription": "- Docs: round 7 progress\n- AI for every song: synced lyrics are calibrated (robust Theil–Sen fit of tempo + offset from confident anchors, stored per song, shown under the label), otherwise synced; remixes: partial sync of every sung line occurrence, lyrics from audio, clear message with options; slowed/sped-up: calibration offer / automatic on Wi-Fi (setting); tests\n- Drop menu rebuilt as a plain system menu (inherited button style broke its items): jump + curve toggle, tap still jumps\n- Docs: test report with UI screenshots (no lyrics), device findings rounds 5–6\n- Landscape side panel: action tile labels on two lines, queue chips stack when they don't fit (were cut off with …); UI test closes the sleep timer dialog via Cancel\n- UI tests: collapse the player robustly (wide layout has no chevron), tolerant taps on search results\n- UI tests: lyrics opened once and closed by swiping (coordinates), ✕ only as fallback\n- UI tests: close diagnostics (frame, screenshot), swipe fallback for lyrics\n- Simulator tests: skip XCTest's automatic screen recordings in the export (artifact was 1 GB)",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.8/Resona.ipa",
-      "size": 28794027,
+      "version": "0.8.9",
+      "versionDate": "2026-10-28T21:58:25Z",
+      "versionDescription": "- UI test: drop jump checked via the elapsed time; test report: drop menu proof screenshots\n- Docs: round 8 progress\n- More lyrics sources: SimpMusic and Unison (per YouTube upload — remixes/edits), Megalobiz, QQ Music; candidates with title/artist/duration, version-aware ranking; manual search lists every hit (provider, title, artist, duration, sync type, 'this version') and offers AI calibration after a pick; tests\n- Drop menu: plain buttons only (the Toggle took the app-wide custom toggle style); UI test proves both entries (screenshot, curve hides/shows, jump toast)",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.9/Resona.ipa",
+      "size": 28819319,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
