@@ -33,11 +33,12 @@ Darstellung und Crossfade-Engine. Keine Fakes für Frameworks.
 
 ## Ergebnisse
 
-### Unit-Tests – 46/46 bestanden
+### Unit-Tests – alle bestanden (Stand Runde 6)
 | Bereich | Tests |
 |---|---|
-| LyricsAligner (KI-Sync) | exakte Erkennung, fehlende, zusätzliche und falsch geschriebene Wörter, Normalisierung, nichts erkannt, fremdes Audio (< 30 %) |
-| Slowed/Sped-up | Titel-Erkennung, Skalierung ×1,15/×0,85 inkl. Wortzeiten, Längen-Mismatch ohne „slowed“ im Titel, < 2 % unverändert, unplausibler Faktor bzw. fehlende Originallänge → Klartext |
+| LyricsAligner (KI-Sync) | exakte Erkennung, fehlende, zusätzliche und falsch geschriebene Wörter, Normalisierung, nichts erkannt, fremdes Audio (< 30 %), Ausreißer-Zeiten, unsortierte Erkennung, Sing-Schreibweisen/Zahlen, längste nicht fallende Folge, monotone Zeiten |
+| KI-Sync Ende-zu-Ende | ≈ 3 min synthetische Sprache (macOS `say`, generierte Sätze): ffmpeg-Umwandlung in voller Länge, Whisper über alle 30-s-Fenster (≈ 90 Wörter je Fenster), 99 % zugeordnet |
+| Slowed/Sped-up | Titel-Erkennung, Skalierung ×1,15/×0,85 inkl. Wortzeiten, Längen-Mismatch ohne „slowed“ im Titel, < 2 % unverändert, unplausibler Faktor bzw. fehlende Originallänge → Klartext, Tempo-Diagnose (angewendet / gleiche Länge / unplausibel / Länge unbekannt), Text-Abgleich für die Originalsuche |
 | „Alle Zeiten gleich“ | alle `[00:00.00]` bzw. alle gleich → Klartext; echte Zeiten bleiben |
 | Zeilen-IDs / Scroll | eindeutige IDs bei Refrains, identisch nach Neuladen und Skalierung; aktive Zeile monoton, genau ein Wechsel pro Zeile; Scroller retargetet nur bei Zeilenwechsel (nicht bei Messrauschen < 0,5 pt), nie rückwärts; ganze Pixel |
 | Heatmap | aktuelles und altes Antwortformat (gespeicherte Beispiel-JSONs), keine Heatmap, Drop-Erkennung ohne Anfangs-/End-Spitzen, nie negativ |
@@ -99,7 +100,20 @@ RMS in dBFS, Position je Song.
   (normaler mpv-Dateiwechsel im Simulator). Am Gerät mit Gapless-Album-Übergängen
   nachprüfen.
 
-## UI-Rundgang (Hoch- und Querformat)
+## UI-Rundgang (Hoch- und Querformat) – beide Tests bestanden
+
+| | |
+|---|---|
+| ![Start](test-report/hoch-start.jpg) | ![Suche](test-report/hoch-suche.jpg) |
+| ![Player](test-report/hoch-player.jpg) | ![Warteschlange](test-report/hoch-warteschlange.jpg) |
+| ![Künstler](test-report/hoch-kuenstler.jpg) | ![Einstellungen](test-report/hoch-einstellungen.jpg) |
+| ![Equalizer](test-report/hoch-equalizer.jpg) | |
+
+| | |
+|---|---|
+| ![Player quer](test-report/quer-player.jpg) | ![Bibliothek quer](test-report/quer-bibliothek.jpg) |
+| ![Album quer](test-report/quer-album.jpg) | ![Equalizer quer](test-report/quer-equalizer.jpg) |
+
 
 Start, alle Tabs, Suche „numb“ → Live-Vorschläge → Song abspielen, Mini-Player,
 Player, Songtext (im Querformat Vollbild-Songtext), Warteschlange, Player-Menü,
@@ -109,13 +123,46 @@ Einstellungsseiten inkl. Equalizer. Nach jedem Schritt ein Screenshot
 Konsolenlog als Artefakte.
 
 Geprüft auf abgeschnittene Texte, falsche Farben, Überlappungen, leere
-Flächen, englische Texte und einen Mini-Player, der Inhalte verdeckt. Bis auf den
-Equalizer (behoben) keine Auffälligkeiten in den Einstellungen, der Suche, der
-Bibliothek und auf der Künstlerseite. Alle Texte deutsch, außer Eigennamen
-(Anbieter, „Songs“, „Canvas“).
+Flächen, englische Texte und einen Mini-Player, der Inhalte verdeckt. Gefunden
+und behoben:
+- Equalizer-Presets abgeschnitten (umbrechen jetzt);
+- im Querformat-Seitenpanel abgeschnittene Kachel-Beschriftungen des
+  Player-Menüs („Zur Playlist hinzuf…“) und Warteschlangen-Chips
+  („Warteschla…“) – jetzt zweizeilig bzw. untereinander.
+
+Alle Texte deutsch, außer Eigennamen (Anbieter, „Songs“, „Canvas“).
+
+Test-Infrastruktur, die nötig war, um den Rundgang stabil zu bekommen:
+- kein Update-Banner im Test;
+- Lyrics per Wischen (Koordinaten) schließen, weil Element-Abfragen in der
+  animierten Lyrics-Ansicht sehr langsam sind;
+- Player im Querformat per Wischgeste einklappen;
+- Sleep-Timer über „Abbrechen“ schließen.
 
 Screenshots mit Songtexten bleiben bewusst nur im CI-Artefakt und werden hier
 nicht eingebunden.
+
+## Am Gerät gefunden und behoben (Runden 5–6)
+
+- **Crossfade:**
+  - nächster Song stumm bzw. „Plopp“: mpvs iOS-Audioausgabe deaktiviert beim
+    Beenden die AVAudioSession;
+  - kurze Aussetzer: Session-Modus wechselte zwischen mpv (MoviePlayback) und
+    App (Default).
+  - Jetzt: Session identisch zu mpv, festes Ausgabeformat, die ausgeblendete
+    Instanz wird geparkt statt gestoppt, die zweite Instanz wird vorab
+    aufgewärmt. Im Simulator weiterhin 5/5, am Gerät erneut zu prüfen.
+- **KI-Sync:**
+  - ffmpeg ohne CA-Datei (Streams);
+  - WhisperKit übersprang „stille“ 30-s-Fenster (Gesang über Musik);
+  - Zeiten nicht monoton (springende Zeilen).
+- **Slowed:**
+  - Originallänge nur über den Künstler gesucht (Re-Uploads laufen unter dem
+    Kanal);
+  - von Hand gewählte Lyrics wurden nie skaliert;
+  - Hinweis vertauscht;
+  - jetzt mit Diagnose unter „Songtext von …“ und Gegenprüfung über die
+    Audiospur auf YouTube Music.
 
 ## Nur am echten Gerät prüfbar
 
