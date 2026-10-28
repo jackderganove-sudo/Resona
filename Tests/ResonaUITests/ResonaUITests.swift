@@ -204,7 +204,7 @@ final class ResonaUITests: XCTestCase {
             return false
         }
         if !target.isHittable,
-           let visible = app.descendants(matching: .any).matching(identifier: identifier).allElementsBoundByIndex
+           let visible = app.buttons.matching(identifier: identifier).allElementsBoundByIndex
                .first(where: { $0.isHittable }) {
             target = visible
         }
@@ -223,7 +223,9 @@ final class ResonaUITests: XCTestCase {
     private func closeOverlay() {
         for id in ["lyrics.close", "overlay.close"] {
             // Several layouts may carry the id; take the visible one.
-            let candidates = app.descendants(matching: .any).matching(identifier: id).allElementsBoundByIndex
+            // Buttons only: a query over every element type times out in the
+            // animated lyrics view.
+            let candidates = app.buttons.matching(identifier: id).allElementsBoundByIndex
             if let button = candidates.first(where: { $0.exists && $0.isHittable }) {
                 button.tap()
                 sleep(1)
