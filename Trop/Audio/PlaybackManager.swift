@@ -23,7 +23,14 @@ actor PlaybackManager {
     @discardableResult
     func resolveAndPlay(videoId: String) async throws -> PlaybackResult {
         await MainActor.run { SponsorBlockIntegration.shared.warm(for: videoId) }
-        if let localPath = await DownloadManager.shared.localURL(for: videoId) {
+        var local = await DownloadManager.shared.localURL(for: videoId)
+        #if DEBUG
+        // UI tests in the simulator: YouTube answers CI runner IPs with a bot
+        // check, so every song plays a local test tone (metadata, covers and
+        // lyrics stay real). Never compiled into release builds.
+        if local == nil, TestMode.isUITest { local = TestMode.uiTestToneURL }
+        #endif
+        if let localPath = local {
             let song = await MainActor.run { NowPlaying.shared.queueSongs.first { $0.videoId == videoId } }
             let artists = song?.artists ?? []
             let resolvedArtist = await MainActor.run { ArtistNameResolver.shared.cached(videoId) }

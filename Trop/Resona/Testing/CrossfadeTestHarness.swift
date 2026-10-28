@@ -38,7 +38,7 @@ enum CrossfadeTestHarness {
         let tones: [(id: String, freq: Double)] = [("xf-a", 440), ("xf-b", 660), ("xf-c", 880)]
         for tone in tones {
             let url = tmp.appendingPathComponent("\(tone.id).wav")
-            writeSine(to: url, frequency: tone.freq, seconds: length)
+            TestMode.writeSine(to: url, frequency: tone.freq, seconds: length)
             TestMode.localOverride[tone.id] = url
         }
 
@@ -117,26 +117,6 @@ enum CrossfadeTestHarness {
             .write(to: meta, atomically: true, encoding: .utf8)
         log.info("XFTEST done case=\(testCase) rows=\(rows.count) file=\(csv.path)")
         try? "done".write(to: documents.appendingPathComponent("crossfade-\(testCase).done"), atomically: true, encoding: .utf8)
-    }
-
-    /// 16-bit mono 44.1 kHz sine WAV (amplitude 0.5).
-    private static func writeSine(to url: URL, frequency: Double, seconds: Double) {
-        let rate = 44_100
-        let count = Int(Double(rate) * seconds)
-        var data = Data()
-        func append<T>(_ value: T) { withUnsafeBytes(of: value) { data.append(contentsOf: $0) } }
-        data.append(contentsOf: Array("RIFF".utf8)); append(UInt32(36 + count * 2).littleEndian)
-        data.append(contentsOf: Array("WAVEfmt ".utf8)); append(UInt32(16).littleEndian)
-        append(UInt16(1).littleEndian); append(UInt16(1).littleEndian)
-        append(UInt32(rate).littleEndian); append(UInt32(rate * 2).littleEndian)
-        append(UInt16(2).littleEndian); append(UInt16(16).littleEndian)
-        data.append(contentsOf: Array("data".utf8)); append(UInt32(count * 2).littleEndian)
-        var samples = [Int16](repeating: 0, count: count)
-        for i in 0..<count {
-            samples[i] = Int16(0.5 * 32767 * sin(2 * Double.pi * frequency * Double(i) / Double(rate)))
-        }
-        samples.withUnsafeBytes { data.append(contentsOf: $0) }
-        try? data.write(to: url)
     }
 }
 #endif

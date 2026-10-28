@@ -227,6 +227,8 @@ final class ResonaUITests: XCTestCase {
     private func back() {
         let custom = element("nav.back")
         if custom.exists, custom.isHittable { custom.tap(); return }
+        let labelled = app.buttons.matching(NSPredicate(format: "label IN {'Back', 'Zurück'}")).firstMatch
+        if labelled.exists, labelled.isHittable { labelled.tap(); return }
         let system = app.navigationBars.buttons.firstMatch
         if system.exists, system.isHittable { system.tap(); return }
         // Edge swipe.

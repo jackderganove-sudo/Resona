@@ -357,6 +357,7 @@ struct ArtistDetailView: View {
             accessibilityLabel: "Back",
             action: { dismiss() }
         )
+        .accessibilityIdentifier("nav.back")
     }
 
     private var topBarCopyLinkButton: some View {

@@ -69,6 +69,53 @@ def gain(vol):
     return AMP * max(0.0, vol / 100.0) ** 3
 
 
+def segments(times, samples):
+    """Per instance: runs of samples that play the same file (not idle,
+    not paused, position known). mpv reports time-pos in ~0.1 s steps, so
+    the playback clock is modelled as t - offset with the offset smoothed by
+    a rolling minimum (the freshest reports) — a real position jump shows up
+    as a step in that offset."""
+    # Grouped by FILE, not by slot: the probe names the instances by role
+    # (main/spare) and they swap roles at the handover — the old song keeps
+    # playing on the same mpv instance, now called "spare".
+    files = sorted({s["file"] for t in times for s in samples[t].values() if s["file"] in FREQ})
+    result = []
+    for file in files:
+        run = []
+        for t in times:
+            playing = [(slot, s) for slot, s in samples[t].items()
+                       if s["file"] == file and not s["idle"] and not s["paused"] and s["pos"] >= 0]
+            if playing:
+                slot, s = playing[0]
+                if run and s["pos"] < run[-1][1]["pos"] - 1:   # restarted from the beginning
+                    result.append((file, run))
+                    run = []
+                run.append((t, s))
+            elif run and any(x["file"] == file and not x["paused"] and not x["idle"] for x in samples[t].values()):
+                continue   # position briefly unknown: run goes on after it
+            elif run:
+                result.append((file, run))
+                run = []
+        if run:
+            result.append((file, run))
+    out = []
+    for slot, run in result:   # slot = file name here
+        if len(run) < 2:
+            continue
+        ts = np.array([t for t, _ in run])
+        offs = ts - np.array([s["pos"] for _, s in run])
+        rolling = np.array([offs[(ts >= t - 0.15) & (ts <= t + 0.15)].min() for t in ts])
+        # Constant offset between real jumps (> 0.25 s): the clock itself is
+        # continuous, small report jitter must not become phase jumps.
+        smooth = np.empty_like(rolling)
+        cuts = [0] + [k + 1 for k in np.where(np.abs(np.diff(rolling)) > 0.25)[0]] + [len(ts)]
+        for a, b in zip(cuts, cuts[1:]):
+            smooth[a:b] = np.percentile(offs[a:b], 10)
+        vols = np.array([s["vol"] for _, s in run])
+        out.append({"slot": slot, "file": run[0][1]["file"], "t": ts, "offset": smooth, "vol": vols})
+    return out
+
+
 def reconstruct(times, samples):
     """Mix + per-tone amplitude envelopes at RATE."""
     duration = times[-1]
@@ -76,26 +123,16 @@ def reconstruct(times, samples):
     tau = np.arange(n) / RATE
     mix = np.zeros(n)
     envelopes = {f: np.zeros(n) for f in FREQ}
-    slots = sorted({s for t in times for s in samples[t]})
-    for slot in slots:
-        for a, b in zip(times, times[1:]):
-            sa, sb = samples[a].get(slot), samples[b].get(slot)
-            if not sa or sa["file"] not in FREQ or sa["idle"] or sa["paused"]:
-                continue
-            i0, i1 = int(a * RATE), min(n, int(b * RATE))
-            if i1 <= i0:
-                continue
-            frac = (tau[i0:i1] - a) / max(1e-6, b - a)
-            same = sb and sb["file"] == sa["file"] and not sb["idle"] and 0 <= sb["pos"] - sa["pos"] < 0.2 + (b - a)
-            if same:
-                pos = sa["pos"] + (sb["pos"] - sa["pos"]) * frac
-                vol = sa["vol"] + (sb["vol"] - sa["vol"]) * frac
-            else:
-                pos = sa["pos"] + (tau[i0:i1] - a)
-                vol = np.full(i1 - i0, sa["vol"])
-            amp = AMP * np.clip(vol / 100.0, 0, None) ** 3
-            mix[i0:i1] += amp * np.sin(2 * math.pi * FREQ[sa["file"]] * pos)
-            envelopes[sa["file"]][i0:i1] += amp
+    for seg in segments(times, samples):
+        i0, i1 = int(seg["t"][0] * RATE), min(n, int(seg["t"][-1] * RATE))
+        if i1 <= i0:
+            continue
+        x = tau[i0:i1]
+        pos = x - np.interp(x, seg["t"], seg["offset"])
+        vol = np.interp(x, seg["t"], seg["vol"])
+        amp = AMP * np.clip(vol / 100.0, 0, None) ** 3
+        mix[i0:i1] += amp * np.sin(2 * math.pi * FREQ[seg["file"]] * pos)
+        envelopes[seg["file"]][i0:i1] += amp
     return tau, mix, envelopes
 
 
@@ -172,18 +209,15 @@ def analyze(case_dir: Path, out: Path, case: str):
              if abs(rms_db[i] - rms_db[i - 1]) > 6 and not excused(centers[i])
              and rms_db[i] > SILENCE_DB and rms_db[i - 1] > SILENCE_DB]
 
-    # Position jumps of each instance while playing the same file.
+    # Position jumps: steps of the smoothed clock offset within a run.
     pos_jumps = []
-    for a, b in zip(times, times[1:]):
-        for slot, sa in samples[a].items():
-            sb = samples[b].get(slot)
-            if not sb or sa["file"] != sb["file"] or sa["file"] not in FREQ:
-                continue
-            if sa["paused"] or sb["paused"] or sa["idle"] or sb["idle"]:
-                continue
-            delta = sb["pos"] - sa["pos"]
-            if abs(delta - (b - a)) > 0.25 and not excused(b):
-                pos_jumps.append({"t": round(b, 3), "slot": slot, "file": sa["file"], "delta": round(delta, 3)})
+    for seg in segments(times, samples):
+        steps = np.diff(seg["offset"])
+        for k in np.where(np.abs(steps) > 0.25)[0]:
+            t = float(seg["t"][k + 1])
+            if not excused(t):
+                pos_jumps.append({"t": round(t, 3), "slot": seg["slot"], "file": seg["file"],
+                                  "delta": round(float(-steps[k]), 3)})
 
     # Overlap = both tones present; power sum relative to steady state.
     a_env, b_env = env["xf-a.wav"], env["xf-b.wav"]
@@ -281,20 +315,14 @@ def plot(path, case, fade, tau, env, centers, rms_db, tones, times, samples, eve
     ax.legend(loc="lower right", fontsize=8)
 
     ax = axes[3]
-    for slot in ("A", "B"):
-        xs, ys = [], []
-        for t in times:
-            s = samples[t].get(slot)
-            if s and s["file"] in FREQ and not s["idle"]:
-                xs.append(t)
-                ys.append(s["pos"])
-            else:
-                xs.append(t)
-                ys.append(float("nan"))
-        ax.plot(xs, ys, label=f"mpv {slot} Position", linewidth=1.2)
-    ax.set_ylabel("Position (s)")
+    for seg in segments(times, samples):
+        ax.plot(seg["t"], seg["t"] - seg["offset"], color=colors[seg["file"]], linewidth=1.2,
+                label=f"{names[seg['file']]} Position")
+    ax.set_ylabel("Position im Song (s)")
     ax.set_xlabel("Messzeit (s)")
-    ax.legend(loc="upper left", fontsize=8)
+    handles, labels = ax.get_legend_handles_labels()
+    unique = dict(zip(labels, handles))
+    ax.legend(unique.values(), unique.keys(), loc="upper left", fontsize=8)
 
     for t, name in events:
         for a in axes:
