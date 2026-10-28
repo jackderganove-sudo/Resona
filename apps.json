@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.4",
+          "buildVersion": "61",
+          "date": "2026-10-28T00:30:15Z",
+          "localizedDescription": "- Docs: progress round 3 - points 7 and 8, limitations, test list\n- PlaylistTools: import GRDB for statement arguments\n- Lyrics: sync with AI (WhisperKit, on-device) + forced alignment\n- Smart downloads (optional, off by default)\n- Docs: progress round 3 - points 4 to 6\n- Playlist tools: automatic playlists, save, split, remove duplicates\n- Lyrics: on-device translation into German\n- Player: 'Most replayed' wave and 'Jump to the drop'",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.4/Resona.ipa",
+          "size": 28660320,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.3",
           "buildVersion": "57",
           "date": "2026-10-28T00:06:41Z",
@@ -46,11 +55,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.3",
-      "versionDate": "2026-10-28T00:06:41Z",
-      "versionDescription": "- Docs: progress round 3 - shortcuts done\n- AppRouter: shortcut actions on the main actor\n- iPad keyboard shortcuts\n- Docs: progress round 3 - crossfade and sleep timer done\n- Sleep timer: fade the volume out before it pauses\n- Crossfade: two equivalent mpv instances (A/B) instead of a tail handover\n- Docs: progress file for round 3",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.3/Resona.ipa",
-      "size": 27933469,
+      "version": "0.8.4",
+      "versionDate": "2026-10-28T00:30:15Z",
+      "versionDescription": "- Docs: progress round 3 - points 7 and 8, limitations, test list\n- PlaylistTools: import GRDB for statement arguments\n- Lyrics: sync with AI (WhisperKit, on-device) + forced alignment\n- Smart downloads (optional, off by default)\n- Docs: progress round 3 - points 4 to 6\n- Playlist tools: automatic playlists, save, split, remove duplicates\n- Lyrics: on-device translation into German\n- Player: 'Most replayed' wave and 'Jump to the drop'",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.4/Resona.ipa",
+      "size": 28660320,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
