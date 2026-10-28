@@ -15,9 +15,9 @@ Entscheidungen, offene Fragen und bekannte Einschränkungen pro Punkt.
 | 1 | Crossfade A/B (zwei gleichwertige mpv-Instanzen) | fertig (experimentell, Standard aus) |
 | 2 | Sleep-Timer Fade-out | fertig |
 | 3 | Tastatur-Kürzel (iPad) | fertig |
-| 4 | „Zum Drop springen“ (Most replayed) | offen |
-| 5 | Lyrics-Übersetzung (Translation-Framework) | offen |
-| 6 | Playlist-Werkzeuge | offen |
+| 4 | „Zum Drop springen“ (Most replayed) | fertig |
+| 5 | Lyrics-Übersetzung (Translation-Framework) | fertig |
+| 6 | Playlist-Werkzeuge | fertig (Aufteilen ohne Genre/Stimmung, s. u.) |
 | 7 | Smart Downloads (Standard aus) | offen |
 | 8 | KI-Synchronisation (WhisperKit) | offen |
 
@@ -62,7 +62,47 @@ Push-Rhythmus: nach jedem 2.–3. fertigen Punkt (jeder Push auf main = Release)
   weil der Player beim Auslösen evtl. noch nicht existiert).
 - ⌘2 = Suche-Tab (Reihenfolge der Leiste: Start, Suche, Bibliothek).
 
+### 4. Zum Drop springen
+- Quelle: `next`-Antwort des WEB-Clients (www.youtube.com) →
+  `frameworkUpdates.entityBatchUpdate.mutations[].payload.macroMarkersListEntity`
+  (`MARKER_TYPE_HEATMAP`, 100 Segmente mit `intensityScoreNormalized`); älteres
+  Format `heatMarkers` wird auch gelesen. Vorab hier per curl geprüft
+  (dQw4w9WgXcQ → 100 Segmente). ArchiveTune hat das nicht; Format wie yt-dlp.
+- Cache pro Song im Speicher (auch „keine Daten“).
+- Drop = Maximum ohne die ersten 6 % (alle starten am Anfang → dort oft 1,0) und
+  die letzten 3 %, Start 3 s davor.
+- Welle hinter dem Fortschrittsbalken (Cover-Farbe, ~35 → 8 % Deckkraft),
+  Blitz-Button neben Shuffle/Wiederholen und im Player-Menü – nur mit Daten.
+
+### 5. Lyrics-Übersetzung
+- Sprache per NaturalLanguage (dominante Sprache, Konfidenz > 0,5). Deutsch oder
+  Anbieter-Übersetzung vorhanden (≥ 75 % der Zeilen) → keine Übersetzung.
+- Übersetzung on-device per `.translationTask` (Translation-Framework). iOS fragt
+  beim ersten Mal nach dem Sprachdownload (System-Dialog).
+- Einstellung: Aus / Nur auf Wunsch (Standard) / Immer; „Nur auf Wunsch“ =
+  Schalter „Ins Deutsche übersetzen“ im Songtext-Menü (pro Song, bis App-Neustart).
+- Cache pro Song (Text → Übersetzung) unter Caches/lyrics-translations.
+- Anzeige wie Anbieter-Übersetzungen klein/gedimmt unter der Zeile; wird einmal pro
+  Song gesetzt → keine Höhenänderung während des Abspielens.
+
+### 6. Playlist-Werkzeuge
+- Automatische Playlists aus der lokalen `event`-Tabelle (SQL-Aggregation),
+  nutzen die normale Playlist-Seite (Abspielen, Shuffle, Download) und im
+  „…“-Menü „Bei YouTube Music speichern“.
+- Aufteilen: **YouTube Music liefert pro Song weder Genre noch Stimmung noch Tempo**
+  (auch nicht über die Künstlerseite). Statt zu raten, gruppiere ich nach
+  vorhandenen Daten: Künstler / Album / Sprache (erkannt am Titel). Kleine Gruppen
+  (< 3 Songs) → „Mehr“, max. 8 Gruppen. Gruppen umbenennbar, Songs per Drag & Drop
+  oder Kontextmenü verschiebbar, „Erstellen“ legt echte Playlists im Konto an.
+- Duplikate: nur für synchronisierte Playlists (braucht die `setVideoId` der
+  Einträge aus der lokalen DB). Gleiche Video-ID ODER gleicher Titel + Hauptkünstler;
+  der erste Eintrag bleibt.
+
 ## Offene Fragen an dich
+
+- Aufteilen nach Stimmung/Genre: Soll ich dafür eine externe Quelle nutzen
+  (z. B. Last.fm-Tags des Künstlers über deine Last.fm-Anbindung)? Das wäre ein
+  zusätzlicher Netzwerkaufruf pro Künstler, daher nicht ungefragt eingebaut.
 
 ## Bekannte Einschränkungen
 
@@ -88,4 +128,22 @@ Push-Rhythmus: nach jedem 2.–3. fertigen Punkt (jeder Push auf main = Release)
 - ⌘ gedrückt halten: Übersicht zeigt die Kürzel.
 - Leertaste, ←/→ (±10 s), ⌘←/⌘→, ↑/↓ (Lautstärke), ⌘F, ⌘L, ⌘K, ⌘1/2/3, Esc.
 - Im Suchfeld tippen: Leertaste/Pfeile müssen normal im Text wirken.
+
+### 4. Zum Drop
+- Bekannten Song mit vielen Views abspielen: Welle hinter dem Fortschrittsbalken,
+  Blitz-Button neben Shuffle/Wiederholen → springt kurz vor die meistgehörte Stelle.
+- Song ohne Daten (z. B. sehr neu/wenig Views): kein Blitz-Button, keine Welle.
+
+### 5. Übersetzung
+- Englischen Song öffnen, Songtext-Menü → „Ins Deutsche übersetzen“: iOS fragt
+  ggf. nach dem Sprachdownload, danach kleine deutsche Zeilen unter dem Text.
+- Einstellung „Immer“: neue fremdsprachige Songs werden automatisch übersetzt.
+- Deutscher Song: kein Übersetzen-Effekt.
+
+### 6. Playlist-Werkzeuge
+- Bibliothek → „Automatische Playlists“: alle vier öffnen, abspielen, herunterladen,
+  „…“ → „Bei YouTube Music speichern“ → Playlist erscheint im Konto.
+- Eigene Playlist → „…“ → „Playlist aufteilen“: Gruppierung umschalten, Song in
+  andere Gruppe ziehen, Gruppe umbenennen, „Erstellen“.
+- Playlist mit doppeltem Song → „Duplikate entfernen“.
 
