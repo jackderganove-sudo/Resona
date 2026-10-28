@@ -195,6 +195,13 @@ if ! grep -q "fk_libavcodec.xcframework" "$local_pbx"; then
         "$local_pbx"
 fi
 
+# Simulator tests (scripts/simulator_tests.sh) only need the prepared
+# dependencies; they build the Debug app themselves and never get secrets.
+if [ "${PREPARE_ONLY:-0}" = "1" ]; then
+    echo "Dependencies prepared (PREPARE_ONLY)."
+    exit 0
+fi
+
 cd "$BUILD_DIR"
 
 XCODEBUILD_ACTION="${XCODEBUILD_ACTION:-build}"

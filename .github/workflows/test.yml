@@ -1,0 +1,97 @@
+name: Simulator tests
+
+# Unit + UI tests on the iPad simulator, crossfade measurement. Never
+# releases anything; no secrets are used (Last.fm keys stay out, no
+# YouTube login).
+on:
+  push:
+    # wip: test runs before anything reaches main (no release there).
+    branches: [main, wip]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+concurrency:
+  group: resona-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FFMPEG_KIT_TAG: v9.0.0
+
+jobs:
+  test:
+    name: iPad simulator tests
+    runs-on: macos-latest
+    timeout-minutes: 150
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Ruby (xcodeproj gem)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Python (analysis)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Tools
+        run: |
+          gem install xcodeproj --no-document
+          python3 -m pip install --quiet numpy matplotlib
+          xcodebuild -version
+          xcrun simctl list runtimes | grep -i ios || true
+
+      # Same cache as the release build (device + arm64 simulator slices).
+      - name: Restore ffmpeg-kit XCFrameworks
+        id: ffmpeg-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: build/ffmpeg-kit-xcframeworks
+          key: ffmpeg-kit-${{ env.FFMPEG_KIT_TAG }}-arm64+sim-openssl-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Run simulator tests
+        run: |
+          chmod +x ./build_ipa.sh ./scripts/simulator_tests.sh
+          ./scripts/simulator_tests.sh
+        env:
+          FFMPEG_KIT_TAG: ${{ env.FFMPEG_KIT_TAG }}
+
+      - name: Save ffmpeg-kit XCFrameworks
+        if: always() && steps.ffmpeg-cache.outputs.cache-hit != 'true' && hashFiles('build/ffmpeg-kit-xcframeworks/**') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: build/ffmpeg-kit-xcframeworks
+          key: ffmpeg-kit-${{ env.FFMPEG_KIT_TAG }}-arm64+sim-openssl-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Upload screenshots, video, crossfade
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-${{ github.run_number }}
+          path: |
+            build/test-output/screenshots
+            build/test-output/crossfade
+            build/test-output/ui-tests.mp4
+            build/test-output/logs
+            build/test-output/test-summary.json
+            build/test-output/test-list.json
+          if-no-files-found: warn
+
+      - name: Upload xcresult
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult-${{ github.run_number }}
+          path: build/test-output/Resona.xcresult
+          if-no-files-found: ignore
