@@ -126,33 +126,22 @@ final class AILyricsSync {
             try Task.checkCancellation()
             let samples = try AudioProcessor.loadAudioAsFloatArray(fromPath: wav.path)
             let audioSeconds = Double(samples.count) / 16_000
+            log.info("AISYNC wav \(Int(audioSeconds)) s (song \(Int(duration)) s), 16 kHz mono")
 
-            // 3) Transcription with word timestamps.
+            // 3) Transcription with word timestamps (whole song).
             phase = .transcribing(0)
             let language = LyricsLanguage.detect(texts.map { LyricLine(text: $0, startTime: nil) })
-            let options = DecodingOptions(
-                language: language,
-                detectLanguage: language == nil,
-                wordTimestamps: true,
-                chunkingStrategy: .vad
-            )
-            let total = max(30, audioSeconds)
-            let results = try await pipe.transcribe(audioArray: samples, decodeOptions: options, callback: { progress in
-                let done = min(0.99, Double(progress.windowId + 1) * 30 / total)
+            let words = try await Self.transcribe(samples: samples, pipe: pipe, language: language) { done in
                 Task { @MainActor in
                     if case .transcribing = AILyricsSync.shared.phase { AILyricsSync.shared.phase = .transcribing(done) }
                 }
-                return Task.isCancelled ? false : nil
-            })
+            }
             try Task.checkCancellation()
-            let words = results.flatMap(\.segments).flatMap { $0.words ?? [] }
-                .map { RecognizedWord(text: $0.word, start: Double($0.start), end: Double($0.end)) }
-            log.info("AISYNC transcribed \(words.count) words (lang=\(language ?? "auto"), audio=\(Int(audioSeconds)) s)")
 
             // 4) Forced alignment onto the known lyrics.
             phase = .aligning
             let aligned = LyricsAligner.align(lines: texts, recognized: words, duration: max(duration, audioSeconds))
-            log.info("AISYNC matched \(Int(aligned.matchedRatio * 100)) % of lyric words")
+            log.info("AISYNC matched \(Int(aligned.matchedRatio * 100)) % of \(texts.count) lines' words")
             guard aligned.matchedRatio >= 0.3 else {
                 throw SyncError.message(String(format: String(localized: "Only %d %% of the words were recognized — not reliable enough."), Int(aligned.matchedRatio * 100)))
             }
@@ -169,6 +158,39 @@ final class AILyricsSync {
             log.error("AISYNC failed: \(error)")
             phase = .failed(error.localizedDescription)
         }
+    }
+
+    /// Whisper over the WHOLE song with word timestamps.
+    /// • noSpeechThreshold off: with it WhisperKit skips an entire 30 s
+    ///   window when the "no speech" probability is high — typical for
+    ///   singing over loud music (only a fraction of the words came back).
+    /// • compression-ratio limit raised: repeated choruses are not
+    ///   hallucinations.
+    /// Logs words per 30 s window (counts and times only, never text).
+    nonisolated static func transcribe(samples: [Float], pipe: WhisperKit, language: String?,
+                                       progress: @escaping @Sendable (Double) -> Void) async throws -> [RecognizedWord] {
+        let audioSeconds = Double(samples.count) / 16_000
+        var options = DecodingOptions(
+            language: language,
+            detectLanguage: language == nil,
+            wordTimestamps: true,
+            chunkingStrategy: .vad
+        )
+        options.noSpeechThreshold = nil
+        options.compressionRatioThreshold = 3.0
+        let total = max(30, audioSeconds)
+        let results = try await pipe.transcribe(audioArray: samples, decodeOptions: options, callback: { report in
+            progress(min(0.99, Double(report.windowId + 1) * 30 / total))
+            return nil
+        })
+        let segments = results.flatMap(\.segments)
+        let words = segments.flatMap { $0.words ?? [] }
+            .map { RecognizedWord(text: $0.word, start: Double($0.start), end: Double($0.end)) }
+            .sorted { $0.start < $1.start }
+        var buckets = [Int](repeating: 0, count: max(1, Int(ceil(audioSeconds / 30))))
+        for word in words { buckets[min(buckets.count - 1, max(0, Int(word.start / 30)))] += 1 }
+        Log.player.info("AISYNC transcribed \(words.count) words in \(segments.count) segments / \(results.count) results (lang=\(language ?? "auto"), audio=\(Int(audioSeconds)) s, last word at \(Int(words.last?.start ?? 0)) s); words per 30 s: \(buckets.map(String.init).joined(separator: " "))")
+        return words
     }
 
     private enum SyncError: Error { case message(String) }
@@ -192,32 +214,74 @@ final class AILyricsSync {
         return folder
     }
 
+    /// Whole pipeline on a local audio file (tests): convert, load model
+    /// (downloaded on first use, no Wi-Fi check), transcribe.
+    nonisolated static func transcribeFile(_ path: String, variant: String, language: String?) async throws
+        -> (words: [RecognizedWord], audioSeconds: Double) {
+        let wav = FileManager.default.temporaryDirectory.appendingPathComponent("aisync-test-\(UUID().uuidString).wav")
+        defer { try? FileManager.default.removeItem(at: wav) }
+        try await convertToWhisperWAV(input: path, output: wav)
+        let samples = try AudioProcessor.loadAudioAsFloatArray(fromPath: wav.path)
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("whisperkit", isDirectory: true)
+        try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        let folder = try await WhisperKit.download(variant: variant, downloadBase: base)
+        let pipe = try await WhisperKit(WhisperKitConfig(modelFolder: folder.path, verbose: false, download: false))
+        let words = try await transcribe(samples: samples, pipe: pipe, language: language) { _ in }
+        return (words, Double(samples.count) / 16_000)
+    }
+
     /// Local download or stream → temporary 16 kHz mono WAV (ffmpeg).
     private static func prepareAudio(videoId: String) async throws -> URL {
         var input: String?
+        var source = "download"
         if let local = await DownloadManager.shared.localURL(for: videoId) {
             input = local.path
         } else if let cached = await StreamCache.shared.get(videoId: videoId) {
             input = cached.streamUrl
+            source = "stream (cached)"
         } else {
             var request = StreamResolveRequest.playback(videoId: videoId)
             request.options.audioQuality = await MainActor.run { SettingsStore.shared.audioQuality }
             let result = try await StreamFallback.resolveFirstValid(request, using: InnerTubeClient.tropShared, providers: .tropLive)
             input = result.streamUrl
+            source = "stream (resolved)"
         }
         guard let input else { throw SyncError.message(String(localized: "No audio source found.")) }
+        Log.player.info("AISYNC audio source: \(source)")
         let output = FileManager.default.temporaryDirectory.appendingPathComponent("aisync-\(videoId).wav")
+        try await convertToWhisperWAV(input: input, output: output)
+        return output
+    }
+
+    /// ffmpeg → 16 kHz mono 16-bit WAV. Same network options as the
+    /// download (CA bundle — ffmpeg-kit's OpenSSL has no system trust store
+    /// —, user agent, timeout): without them HTTPS streams failed with
+    /// "The audio could not be converted."
+    nonisolated static func convertToWhisperWAV(input: String, output: URL) async throws {
         try? FileManager.default.removeItem(at: output)
-        let arguments = ["-y", "-i", input, "-vn", "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", output.path]
+        var arguments = ["-y"]
+        if input.hasPrefix("http") {
+            arguments += ["-rw_timeout", "30000000"]
+            if let caPath = Bundle.main.path(forResource: "cacert", ofType: "pem") {
+                arguments += ["-cafile", caPath]
+            }
+            arguments += ["-headers", "User-Agent: Mozilla/5.0\r\n"]
+        }
+        arguments += ["-i", input, "-vn", "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", output.path]
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             FFmpegKit.execute(withArgumentsAsync: arguments) { session in
                 if ReturnCode.isSuccess(session?.getReturnCode()) {
                     continuation.resume()
                 } else {
+                    let code = session?.getReturnCode()?.getValue() ?? -1
+                    let tail = (session?.getOutput() ?? "").split(separator: "\n").suffix(3).joined(separator: " | ")
+                    Log.player.error("AISYNC ffmpeg failed rc=\(code): \(tail)")
                     continuation.resume(throwing: SyncError.message(String(localized: "The audio could not be converted.")))
                 }
             }
         }
-        return output
+        let bytes = (try? output.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        Log.player.info("AISYNC wav written: \(bytes / 32_000) s (\(bytes) bytes)")
     }
 }

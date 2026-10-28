@@ -75,6 +75,35 @@ if [ $BUILD_STATUS -ne 0 ]; then
     exit $BUILD_STATUS
 fi
 
+step "Synthetic speech for the AI sync test (macOS say, generated sentences)"
+SPEECH_DIR="$OUT/speech"
+mkdir -p "$SPEECH_DIR"
+python3 - "$SPEECH_DIR/lines.txt" <<'PY'
+# Generated sentences only — no songs, no lyrics. Deterministic.
+import random, sys
+random.seed(7)
+subjects = ["the green bicycle", "a quiet teacher", "my neighbor", "the small robot", "an old sailor",
+            "the yellow train", "a careful painter", "the morning bus", "our tired dog", "the bright lamp"]
+verbs = ["carries", "follows", "watches", "repairs", "paints", "finds", "builds", "cleans", "opens", "moves"]
+objects = ["seven wooden boxes", "the heavy window", "a paper garden", "four silver keys", "the empty market",
+           "a long letter", "the broken fence", "two warm blankets", "the narrow bridge", "a basket of apples"]
+places = ["near the harbor", "after lunch", "in the library", "before sunrise", "on the hill",
+          "behind the station", "during the storm", "across the river", "at the corner", "under the tower"]
+lines = []
+for _ in range(60):
+    lines.append(f"{random.choice(subjects).capitalize()} {random.choice(verbs)} {random.choice(objects)} {random.choice(places)}.")
+open(sys.argv[1], "w").write("\n".join(lines) + "\n")
+PY
+if say -r 165 -f "$SPEECH_DIR/lines.txt" -o "$SPEECH_DIR/speech.aiff" 2> "$OUT/logs/say.log"; then
+    SPEECH_SECONDS="$(afinfo "$SPEECH_DIR/speech.aiff" | awk '/estimated duration/ {print $3}')"
+    echo "speech: ${SPEECH_SECONDS} s, $(wc -l < "$SPEECH_DIR/lines.txt") lines"
+    export TEST_RUNNER_RESONA_SPEECH_AUDIO="$SPEECH_DIR/speech.aiff"
+    export TEST_RUNNER_RESONA_SPEECH_TEXT="$SPEECH_DIR/lines.txt"
+    export TEST_RUNNER_RESONA_SPEECH_SECONDS="$SPEECH_SECONDS"
+else
+    echo "say failed — AI sync test will be skipped"; cat "$OUT/logs/say.log"
+fi
+
 step "Unit + UI tests (video + console)"
 xcrun simctl io "$UDID" recordVideo --codec=h264 --force "$OUT/ui-tests.mp4" > "$OUT/logs/video.log" 2>&1 &
 VIDEO_PID=$!
