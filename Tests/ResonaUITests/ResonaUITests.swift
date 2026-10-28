@@ -103,6 +103,23 @@ final class ResonaUITests: XCTestCase {
             snap("lyrics")   // shown in the app; not embedded in docs/
             closeOverlay()
         }
+        // Lyrics again, closed by swiping down on the header / top bar.
+        if tap("player.pill.quote.bubble") {
+            sleep(3)
+            if let close = app.buttons.matching(identifier: "lyrics.close").allElementsBoundByIndex.first(where: { $0.isHittable }) {
+                let start = close.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: -220, dy: 0))
+                start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 520)))
+                sleep(2)
+                snap("lyrics-closed-by-swipe")
+                if !element("player.pill.list.bullet").waitForExistence(timeout: 4) {
+                    softFail("swipe down did not close the lyrics")
+                    closeOverlay()
+                }
+            } else {
+                softFail("lyrics close button not visible")
+                closeOverlay()
+            }
+        }
         // Queue.
         if tap("player.pill.list.bullet") {
             sleep(2)

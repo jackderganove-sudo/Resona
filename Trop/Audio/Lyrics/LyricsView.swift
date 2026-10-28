@@ -27,6 +27,10 @@ struct LyricsView<ProgressSlider: View>: View {
     @State private var isSplit = false
     @State private var chromeResting = false
     @State private var chromeWakeToken = 0
+    /// Swipe-down-to-close: how far the view follows the finger.
+    @State private var dismissOffset: CGFloat = 0
+    @State private var isDismissDragging = false
+    @State private var viewHeight: CGFloat = 800
     /// Cover morph with the player (matchedGeometryEffect).
     var coverNamespace: Namespace.ID?
 
@@ -80,6 +84,10 @@ struct LyricsView<ProgressSlider: View>: View {
                 UIApplication.shared.isIdleTimerDisabled = value
                 wakeChrome()
             }
+            .onChange(of: geo.size.height, initial: true) { _, height in viewHeight = height }
+            .overlay(alignment: .top) { dismissHandle }
+            .offset(y: dismissOffset)
+            .opacity(1 - min(0.35, Double(dismissOffset / max(1, viewHeight)) * 0.8))
         }
         .simultaneousGesture(swipeBackGesture)
         .simultaneousGesture(TapGesture().onEnded { wakeChrome() }, including: .all)
@@ -128,8 +136,10 @@ struct LyricsView<ProgressSlider: View>: View {
                 .background {
                     ResonaGlassBackground(shape: RoundedRectangle(cornerRadius: M3Shape.extraLarge, style: .continuous))
                 }
+                .contentShape(Rectangle())
+                .gesture(dismissGesture)
                 .padding(.horizontal, 12)
-                .padding(.top, 8)
+                .padding(.top, 14)
 
             lyricsBody
                 .layoutPriority(1)
@@ -190,6 +200,9 @@ struct LyricsView<ProgressSlider: View>: View {
                     }
                     .accessibilityIdentifier("lyrics.close")
                 }
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .gesture(dismissGesture)
                 .opacity(chromeResting ? 0 : 1)
                 .allowsHitTesting(!chromeResting)
                 lyricsBody
@@ -271,6 +284,47 @@ struct LyricsView<ProgressSlider: View>: View {
                 showLyricsMenu = true
             }
         }
+    }
+
+    // MARK: Swipe down to close
+
+    /// Grab handle at the top edge; dragging it (or the header / top bar,
+    /// never the scrolling lyrics) pulls the view down.
+    private var dismissHandle: some View {
+        Capsule()
+            .fill(.white.opacity(isDismissDragging ? 0.6 : 0.35))
+            .frame(width: 40, height: 5)
+            .padding(.top, 5)
+            .frame(maxWidth: .infinity)
+            .frame(height: 22, alignment: .top)
+            .contentShape(Rectangle())
+            .gesture(dismissGesture)
+            .accessibilityHidden(true)
+    }
+
+    /// Follows the finger; closes beyond 25 % of the height or on a fast
+    /// downward flick, otherwise springs back.
+    private var dismissGesture: some Gesture {
+        DragGesture(minimumDistance: 8, coordinateSpace: .global)
+            .onChanged { value in
+                if !isDismissDragging {
+                    guard value.translation.height > 0,
+                          value.translation.height > abs(value.translation.width) * 1.3 else { return }
+                    isDismissDragging = true
+                }
+                dismissOffset = max(0, value.translation.height)
+            }
+            .onEnded { value in
+                guard isDismissDragging else { return }
+                isDismissDragging = false
+                let flick = value.predictedEndTranslation.height - value.translation.height > 220
+                if dismissOffset > viewHeight * 0.25 || (flick && dismissOffset > 30) {
+                    Log.player.info("UI lyrics closed by swipe (\(Int(dismissOffset)) pt)")
+                    withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
+                } else {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { dismissOffset = 0 }
+                }
+            }
     }
 
     private var swipeBackGesture: some Gesture {
