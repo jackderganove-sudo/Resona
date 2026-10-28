@@ -438,6 +438,13 @@ extension PlayerController {
             mpv_set_option_string(mpv, "ao", "null")
         }
         mpv_set_option_string(mpv, "keep-open", "no")
+        // One fixed output format for every song and both crossfade
+        // instances: with gapless-audio mpv then keeps its audio output open
+        // across files. A format change re-creates it, and on iOS the
+        // shutdown deactivates the shared AVAudioSession (dropouts).
+        mpv_set_option_string(mpv, "audio-samplerate", "48000")
+        mpv_set_option_string(mpv, "audio-channels", "stereo")
+        mpv_set_option_string(mpv, "audio-format", "float")
         mpv_set_option_string(mpv, "cache", "yes")
         mpv_set_option_string(mpv, "cache-secs", "120")
         mpv_set_option_string(mpv, "demuxer-max-bytes", "200M")
@@ -963,11 +970,18 @@ extension PlayerController {
 // MARK: - Audio session / interruption handling
 
 extension PlayerController {
+    /// Exactly the configuration mpv's iOS audio output sets on every init
+    /// (category playback, mode moviePlayback, no options with
+    /// audio-exclusive): a different mode/policy here made every output
+    /// start and every resume reconfigure the session — each switch
+    /// briefly interrupts all running audio (crossfade dropouts).
     func assertAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {
-            if session.category != .playback || session.mode != .default {
-                try session.setCategory(.playback, mode: .default, policy: .longFormAudio)
+            if session.category != .playback || session.mode != .moviePlayback
+                || session.routeSharingPolicy != .default || !session.categoryOptions.isEmpty {
+                Log.player.info("AUDIO session reconfigure (was \(session.category.rawValue)/\(session.mode.rawValue))")
+                try session.setCategory(.playback, mode: .moviePlayback, policy: .default, options: [])
             }
             try session.setActive(true)
         } catch {
@@ -1342,10 +1356,13 @@ extension PlayerController {
             var zero = Double(0)
             mpv_set_property(spare, "volume", MPV_FORMAT_DOUBLE, &zero)
             self._spare = spare
-            Log.player.info("CROSSFADE spare instance ready")
             let thread = Thread { [weak self] in self?.eventLoop(spare) }
             thread.name = "com.686udjie.PlayerController.eventLoop.spare"
             thread.start()
+            // Warm-up: open its audio output now (silence, paused, volume 0)
+            // so that doesn't happen inside the audible fade later.
+            Self.parkOnSilence(spare)
+            Log.player.info("CROSSFADE \(Self.stamp()) spare instance ready + warmed up (silence, paused)")
         }
     }
 
@@ -1354,8 +1371,13 @@ extension PlayerController {
     func swapToSpareInstance() -> OpaquePointer? {
         mpvAccessQueue.sync {
             guard let spare = _spare, let current = _mpv else { return nil }
+            // The fading instance must not unload at its end (that would
+            // shut its audio output down → session deactivated).
+            mpv_set_property_string(current, "keep-open", "yes")
+            mpv_set_property_string(spare, "keep-open", "no")
             _mpv = spare
             _spare = current
+            Log.player.info("CROSSFADE \(Self.stamp()) swap: new active = former spare, old keeps playing (keep-open)")
             Log.player.info("CROSSFADE swapped active instance")
             return current
         }
@@ -1376,41 +1398,65 @@ extension PlayerController {
         }
     }
 
-    /// Quiet, clean stop of the faded-out instance, then make sure the
-    /// active one keeps sounding.
-    ///
-    /// On the device mpv's iOS audio output deactivates the shared
-    /// AVAudioSession when it shuts down (ao_audiounit uninit →
-    /// setActive(NO)) — stopping the old instance silenced the NEW one as
-    /// well ("plop", then nothing until pause/play re-activated the session
-    /// and restarted the AudioUnit). The simulator (ao=null) has no session,
-    /// so this only showed on the iPad.
+    /// Faded-out instance: silent, paused, then parked on a silent file —
+    /// never stopped. Stopping shut its audio output down, and mpv's iOS
+    /// output deactivates the shared AVAudioSession on shutdown, which
+    /// silenced the new song too (round 5 needed re-activation + an
+    /// AudioUnit restart → audible dropouts). Parked, the output stays
+    /// open and is reused by the next crossfade.
     func retireFadedInstance(_ handle: OpaquePointer) async {
         setVolume(0, onInstance: handle)
         // Audio already buffered at the old volume drains first.
         try? await Task.sleep(for: .milliseconds(120))
         mpvAccessQueue.async {
-            var yes: Int32 = 1
-            mpv_set_property(handle, "pause", MPV_FORMAT_FLAG, &yes)
+            Self.parkOnSilence(handle)
+            Log.player.info("CROSSFADE \(Self.stamp()) old instance paused + parked on silence (output stays open)")
         }
-        try? await Task.sleep(for: .milliseconds(40))
-        stopInstance(handle)
-        // Wait until its audio output is really shut down.
-        let deadline = CACurrentMediaTime() + 1.5
-        while CACurrentMediaTime() < deadline, !instanceIsIdle(handle) {
-            try? await Task.sleep(for: .milliseconds(10))
+        // Watchdog only: nothing above should touch the active instance.
+        try? await Task.sleep(for: .milliseconds(400))
+        logActiveAudioState("CROSSFADE \(Self.stamp()) active after retire")
+        if desiredPlaying, await !activeAdvances(within: 0.3) {
+            Log.player.error("CROSSFADE \(Self.stamp()) active instance stalled → revive")
+            await reviveActiveAudio(reason: "active instance stalled after retire")
+            try? await Task.sleep(for: .milliseconds(1200))
+            await verifyActiveAudioRuns()
+        } else {
+            Log.player.info("CROSSFADE \(Self.stamp()) active instance runs")
         }
-        // Session back on at once; the AudioUnit is only restarted when the
-        // active instance really stalled (a pause → play would otherwise be
-        // a small gap of its own).
-        assertAudioSession()
-        logActiveAudioState("CROSSFADE after old stop")
-        if desiredPlaying, await !activeAdvances(within: 0.2) {
-            await reviveActiveAudio(reason: "active instance stalled after old stop")
-        }
-        // Watchdog: the active instance's clock must run.
-        try? await Task.sleep(for: .milliseconds(1500))
-        await verifyActiveAudioRuns()
+    }
+
+    /// Paused, volume 0, keep-open, a short silent file loaded: the
+    /// instance holds no stream but keeps its audio output open.
+    nonisolated static func parkOnSilence(_ handle: OpaquePointer) {
+        var yes: Int32 = 1
+        mpv_set_property(handle, "pause", MPV_FORMAT_FLAG, &yes)
+        var zero = Double(0)
+        mpv_set_property(handle, "volume", MPV_FORMAT_DOUBLE, &zero)
+        mpv_set_property_string(handle, "keep-open", "yes")
+        _ = ["loadfile", silenceURL.path, "replace"].withUnsafeCArg { mpv_command(handle, $0) }
+    }
+
+    /// 1 s of silence (48 kHz stereo float WAV — the fixed output format).
+    nonisolated static let silenceURL: URL = {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("resona-silence.wav")
+        let rate = 48_000, channels = 2, frames = rate
+        var data = Data()
+        func append<T>(_ value: T) { withUnsafeBytes(of: value) { data.append(contentsOf: $0) } }
+        let bytes = frames * channels * 4
+        data.append(contentsOf: Array("RIFF".utf8)); append(UInt32(36 + bytes).littleEndian)
+        data.append(contentsOf: Array("WAVEfmt ".utf8)); append(UInt32(16).littleEndian)
+        append(UInt16(3).littleEndian); append(UInt16(channels).littleEndian)   // IEEE float
+        append(UInt32(rate).littleEndian); append(UInt32(rate * channels * 4).littleEndian)
+        append(UInt16(channels * 4).littleEndian); append(UInt16(32).littleEndian)
+        data.append(contentsOf: Array("data".utf8)); append(UInt32(bytes).littleEndian)
+        data.append(Data(count: bytes))
+        try? data.write(to: url)
+        return url
+    }()
+
+    /// Seconds with ms for crossfade logs (which step happened when).
+    nonisolated static func stamp() -> String {
+        String(format: "t=%.3f", CACurrentMediaTime())
     }
 
     private func activeAdvances(within seconds: Double) async -> Bool {

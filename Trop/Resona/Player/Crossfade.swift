@@ -14,7 +14,9 @@
 //  3. As soon as the new song's audio runs: equal-power crossfade (new sin,
 //     old cos — as audible amplitudes, i.e. through mpv's cubic volume
 //     curve) over the chosen length (bounded by what's left of the old
-//     song). Then the old instance is stopped and becomes the spare.
+//     song). Then the old instance is paused and parked on a silent file
+//     (never stopped: its audio output stays open, see
+//     PlayerController.retireFadedInstance) and becomes the spare.
 //
 //  Skip / pause / seek during the fade abort cleanly: the old instance stops
 //  at once and the new one plays at full volume. Not used for manual skips,
@@ -107,7 +109,7 @@ final class CrossfadeEngine {
         }
         fading = old
         let oldTimes = player.playbackTimes(ofInstance: old)
-        log.info("CROSSFADE start id=\(videoId) length=\(length)s old pos=\(fmt(oldTimes.position)) dur=\(fmt(oldTimes.duration))")
+        log.info("CROSSFADE \(PlayerController.stamp()) start id=\(videoId) length=\(length)s old pos=\(fmt(oldTimes.position)) dur=\(fmt(oldTimes.duration))")
         np.playNext(automatic: true)
         let nextId = np.videoId
         func newValid() -> Bool { np.videoId == nextId && np.lastManualSkipTime == skipMark }
@@ -128,7 +130,7 @@ final class CrossfadeEngine {
         let now = player.playbackTimes(ofInstance: old)
         let remaining = max(0.3, now.duration - now.position - 0.1)
         let fade = min(length, remaining)
-        log.info("CROSSFADE fading over \(fmt(fade))s (old remaining \(fmt(remaining))s, new pos \(fmt(player.currentTime)))")
+        log.info("CROSSFADE \(PlayerController.stamp()) fading over \(fmt(fade))s (old remaining \(fmt(remaining))s, new pos \(fmt(player.currentTime)))")
         var lastLog = CACurrentMediaTime()
         let completed = await ramp(duration: fade, while: { newValid() && np.isPlaying }) { t in
             // mpv's software volume is cubic (amplitude = (volume/100)³), so
@@ -145,7 +147,7 @@ final class CrossfadeEngine {
                 self.log.info("CROSSFADE ramp t=\(self.fmt(t)) new=\(self.fmt(base * mainGain, 1)) old=\(self.fmt(oldVolume, 1)) oldPos=\(self.fmt(o.position)) newPos=\(self.fmt(player.currentTime))")
             }
         }
-        log.info(completed ? "CROSSFADE finished" : "CROSSFADE aborted (skip/pause)")
+        log.info("CROSSFADE \(PlayerController.stamp()) " + (completed ? "finished" : "aborted (skip/pause)"))
         finish()
     }
 
