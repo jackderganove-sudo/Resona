@@ -32,10 +32,19 @@ struct DownloadSettingsView: View {
                 SettingsToggleRow("Auto-Download on Like", icon: "heart.fill", isOn: $settings.autoDownloadOnLike)
                 SettingsToggleRow("Auto-Download New Episodes", icon: "antenna.radiowaves.left.and.right", isOn: $settings.autoDownloadNewEpisodes)
                 SettingsToggleRow("Remove songs deleted from playlists", icon: "minus.circle", isOn: $settings.removeDeletedPlaylistSongs)
+                SettingsToggleRow("Smart downloads", icon: "sparkles", isOn: $settings.smartDownloadsEnabled)
+                if settings.smartDownloadsEnabled {
+                    M3DropdownRow(
+                        selection: $settings.smartDownloadsLimitGB,
+                        options: [(1.0, "1 GB"), (2.0, "2 GB"), (5.0, "5 GB"), (10.0, "10 GB")]
+                    ) {
+                        Label("Smart download limit", systemImage: "externaldrive")
+                    }
+                }
             } header: {
                 Text("Preferences")
             } footer: {
-                Text("Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically.")
+                Text("Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically. Smart downloads (off by default) keep your most played songs of the last 30 days and your liked songs offline on Wi-Fi up to the limit; songs you downloaded yourself are never removed automatically.")
             }
 
             M3Section {
@@ -78,6 +87,12 @@ struct DownloadSettingsView: View {
         .task {
             await refreshStats()
             await refreshCacheSizes()
+        }
+        .onChange(of: settings.smartDownloadsEnabled) { _, enabled in
+            if enabled { SmartDownloads.shared.refreshIfDue(force: true) }
+        }
+        .onChange(of: settings.smartDownloadsLimitGB) { _, _ in
+            SmartDownloads.shared.refreshIfDue(force: true)
         }
         .confirmationDialog("Delete all downloads?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
             Button("Delete all downloads", role: .destructive) {

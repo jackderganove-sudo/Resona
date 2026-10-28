@@ -97,7 +97,10 @@ struct ContentView: View {
         .onChange(of: scenePhase, initial: true) { _, phase in
             // Downloaded playlists: new songs are fetched in the foreground
             // (at most every 4 h).
-            if phase == .active { PlaylistDownloadRefresher.shared.refreshIfDue() }
+            if phase == .active {
+                PlaylistDownloadRefresher.shared.refreshIfDue()
+                SmartDownloads.shared.refreshIfDue()
+            }
         }
         .animation(M3Motion.defaultSpatial, value: updates.available)
         .animation(M3Motion.defaultSpatial, value: updates.bannerDismissed)

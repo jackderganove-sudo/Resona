@@ -79,6 +79,9 @@ final class DownloadManager: ObservableObject {
         Task { await reload() }
     }
 
+    /// Songs queued by Smart Downloads (marked as smart once completed).
+    var smartPending = Set<String>()
+
     var isOnWiFi: Bool {
         // Until the first path update arrives, don't block downloads.
         guard let currentPath else { return true }
@@ -265,6 +268,11 @@ extension DownloadManager {
 
     func download(song: SongItem) async {
         let videoId = song.videoId
+        let isSmart = smartPending.remove(videoId) != nil
+        if !isSmart { SmartDownloadStore.shared.unmark([videoId]) }
+        defer {
+            if isSmart, case .completed = downloads[videoId] { SmartDownloadStore.shared.mark(videoId) }
+        }
         if case .downloading = downloads[videoId] {
             Log.downloadManager.debug("Download already in progress for \(videoId)")
             return
@@ -691,7 +699,13 @@ extension DownloadManager {
 extension DownloadManager {
     /// Queues songs for download (skips ones already downloaded, queued or
     /// in progress); at most `maxConcurrentDownloads` run at once.
-    func enqueue(_ songs: [SongItem]) {
+    func enqueue(_ songs: [SongItem], smart: Bool = false) {
+        if smart {
+            smartPending.formUnion(songs.map(\.videoId))
+        } else {
+            // A manual download of a smart song makes it a manual one.
+            SmartDownloadStore.shared.unmark(songs.map(\.videoId))
+        }
         for song in songs {
             switch state(for: song.videoId) {
             case .completed, .queued, .downloading: continue

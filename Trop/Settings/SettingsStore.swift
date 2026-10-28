@@ -305,6 +305,16 @@ final class SettingsStore {
         didSet { Self.defaults.set(sleepFadeSeconds, forKey: Keys.sleepFadeSeconds) }
     }
 
+    /// Smart downloads (off by default): most played + liked, on Wi-Fi.
+    var smartDownloadsEnabled: Bool {
+        didSet { Self.defaults.set(smartDownloadsEnabled, forKey: Keys.smartDownloadsEnabled) }
+    }
+
+    /// Storage limit for smart downloads in GB.
+    var smartDownloadsLimitGB: Double {
+        didSet { Self.defaults.set(smartDownloadsLimitGB, forKey: Keys.smartDownloadsLimitGB) }
+    }
+
     /// Crossfade length between songs in seconds (0 = off).
     var crossfadeSeconds: Double {
         didSet { Self.defaults.set(crossfadeSeconds, forKey: Keys.crossfadeSeconds) }
@@ -459,6 +469,8 @@ final class SettingsStore {
         static let crossfadeSeconds = "resona.crossfadeSeconds"
         static let sleepFadeSeconds = "resona.sleepFadeSeconds"
         static let lyricsTranslationMode = "resona.lyricsTranslationMode"
+        static let smartDownloadsEnabled = "resona.smartDownloadsEnabled"
+        static let smartDownloadsLimitGB = "resona.smartDownloadsLimitGB"
         static let removeDeletedPlaylistSongs = "resona.removeDeletedPlaylistSongs"
         static let lyricsAnimationStyle = "resona.lyricsAnimationStyle"
         static let playerLayoutStyle = "resona.playerLayoutStyle"
@@ -534,6 +546,8 @@ final class SettingsStore {
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)
         sleepFadeSeconds = Self.load(Keys.sleepFadeSeconds, default: 30.0)
+        smartDownloadsEnabled = Self.load(Keys.smartDownloadsEnabled, default: false)
+        smartDownloadsLimitGB = Self.load(Keys.smartDownloadsLimitGB, default: 2.0)
         lyricsTranslationMode = Self.loadEnum(Keys.lyricsTranslationMode, default: LyricsTranslationMode.onRequest)
         removeDeletedPlaylistSongs = Self.load(Keys.removeDeletedPlaylistSongs, default: false)
         lyricsAnimationStyle = Self.loadEnum(Keys.lyricsAnimationStyle, default: LyricsAnimationStyle.karaoke)

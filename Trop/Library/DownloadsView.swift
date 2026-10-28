@@ -124,6 +124,19 @@ struct DownloadsView: View {
                     onTap: { playSong(song) },
                     onNavigate: { pendingRoute = $0 }
                 )
+                .overlay(alignment: .trailing) {
+                    if SmartDownloadStore.shared.isSmart(song.videoId) {
+                        // Smart downloads are labelled (managed automatically).
+                        Label("Smart", systemImage: "sparkles")
+                            .labelStyle(.iconOnly)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.m3Primary)
+                            .padding(6)
+                            .background(.m3PrimaryContainer, in: Circle())
+                            .padding(.trailing, 56)
+                            .accessibilityLabel(Text("Smart download"))
+                    }
+                }
 
             }
         }

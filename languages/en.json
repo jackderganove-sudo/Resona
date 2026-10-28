@@ -654,5 +654,10 @@
   "Creating %lld/%lld…": "Creating %lld/%lld…",
   "Unknown artist": "Unknown artist",
   "Singles": "Singles",
-  "Other": "Other"
+  "Other": "Other",
+  "Smart downloads": "Smart downloads",
+  "Smart download limit": "Smart download limit",
+  "Smart": "Smart",
+  "Smart download": "Smart download",
+  "Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically. Smart downloads (off by default) keep your most played songs of the last 30 days and your liked songs offline on Wi-Fi up to the limit; songs you downloaded yourself are never removed automatically.": "Auto-download saves liked songs for offline playback. Wi-Fi Only blocks downloads on cellular data. Downloaded playlists are checked for new songs when you open the app (at most every 4 hours); other playlists are never downloaded automatically. Smart downloads (off by default) keep your most played songs of the last 30 days and your liked songs offline on Wi-Fi up to the limit; songs you downloaded yourself are never removed automatically."
 }
