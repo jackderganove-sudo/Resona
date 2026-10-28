@@ -250,6 +250,10 @@ struct LyricsStage<Accessory: View>: View {
                     .font(.system(size: max(12, fontSize * 0.55), weight: .semibold))
                     .foregroundStyle(.white.opacity(isActive ? 0.8 : 0.6))
                     .multilineTextAlignment(alignment.multilineTextAlignment)
+                    // Full height, never "…": wraps completely (fixed per
+                    // song, so rows don't change height later).
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if settings.lyricsTranslationMode != .off, let translation = line.translation, !translation.isEmpty,
                !Self.sameText(translation, line.text) {
@@ -257,6 +261,10 @@ struct LyricsStage<Accessory: View>: View {
                     .font(.system(size: max(13, fontSize * 0.55), weight: .medium))
                     .foregroundStyle(.white.opacity(isActive ? 0.75 : 0.55))
                     .multilineTextAlignment(alignment.multilineTextAlignment)
+                    // Full height, never "…": wraps completely (fixed per
+                    // song, so rows don't change height later).
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let background = line.backgroundText, !background.isEmpty {
                 // Background vocals (TTML x-bg): small, softer, italic.
@@ -265,6 +273,10 @@ struct LyricsStage<Accessory: View>: View {
                     .italic()
                     .foregroundStyle(.white.opacity(isActive ? 0.7 : 0.5))
                     .multilineTextAlignment(alignment.multilineTextAlignment)
+                    // Full height, never "…": wraps completely (fixed per
+                    // song, so rows don't change height later).
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             accessory(index)
             if let pause = gap(after: index) {
