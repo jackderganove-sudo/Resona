@@ -97,6 +97,48 @@ final class LyricsTimingTests: XCTestCase {
         XCTAssertEqual(LyricsService.tempoAdjusted(plain, played: 100, original: 300, isSpeedVariant: true).lines, plain)
     }
 
+    // MARK: Tempo check with diagnosis
+
+    private func query(played: Double, variant: Bool) -> LyricsQuery {
+        LyricsQuery(title: "Platzhalter", artist: "Testkanal", album: nil, duration: played, isSpeedVariant: variant)
+    }
+
+    func testCheckTempoAppliesFactorWithKnownOriginal() async {
+        let checked = await LyricsService.checkTempo(synced(40), query: query(played: 230, variant: true),
+                                                     knownOriginal: 200, source: "test")
+        XCTAssertEqual(checked.info.outcome, .applied)
+        XCTAssertEqual(checked.info.factor ?? 0, 1.15, accuracy: 0.0001)
+        XCTAssertEqual(checked.info.original, 200)
+        XCTAssertEqual(checked.info.source, "test")
+        XCTAssertTrue(checked.info.isRelevant)
+        XCTAssertEqual(checked.lines.last?.startTime ?? 0, 166 * 1.15, accuracy: 0.0001)
+    }
+
+    func testCheckTempoReasons() async {
+        let same = await LyricsService.checkTempo(synced(40), query: query(played: 201, variant: true), knownOriginal: 200, source: nil)
+        XCTAssertEqual(same.info.outcome, .sameLength)
+        let far = await LyricsService.checkTempo(synced(40), query: query(played: 500, variant: true), knownOriginal: 200, source: nil)
+        XCTAssertEqual(far.info.outcome, .implausible)
+        let unknown = await LyricsService.checkTempo(synced(40), query: query(played: 0, variant: true), knownOriginal: nil, source: nil)
+        XCTAssertEqual(unknown.info.outcome, .unknownLength)
+        let normal = await LyricsService.checkTempo(synced(40), query: query(played: 200, variant: false), knownOriginal: nil, source: nil)
+        XCTAssertEqual(normal.info.outcome, .notNeeded)
+        XCTAssertFalse(normal.info.isRelevant, "normal songs show no tempo note")
+    }
+
+    func testLyricsOverlapMatchesSameTextOnly() {
+        let lines = [
+            LyricLine(text: "la la erste Zeile hier", startTime: 1),
+            LyricLine(text: "zweite Zeile mit Wort Wort", startTime: 4),
+            LyricLine(text: "dritte Reihe ganz am Ende", startTime: 8)
+        ]
+        let sameSongLRC = "[00:01.00] La la, erste Zeile hier!\n[00:04.00] Zweite Zeile mit Wort-Wort\n[00:08.00] Dritte Reihe ganz am Ende"
+        XCTAssertEqual(LyricsService.lyricsOverlap(lines, candidateText: sameSongLRC), 1, accuracy: 0.001)
+        let otherSong = "[00:01.00] ganz andere Silben\n[00:04.00] nichts davon passt hier"
+        XCTAssertEqual(LyricsService.lyricsOverlap(lines, candidateText: otherSong), 0, accuracy: 0.001)
+        XCTAssertEqual(LyricsService.lyricsOverlap(lines, candidateText: ""), 0)
+    }
+
     // MARK: "Fake synced" → plain
 
     func testAllTimesZeroBecomePlainText() {

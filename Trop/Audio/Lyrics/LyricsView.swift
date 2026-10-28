@@ -421,18 +421,35 @@ struct LyricsView<ProgressSlider: View>: View {
         .padding(.top, 8)
     }
 
-    /// "Adjusted to slowed version (0.84×)" when timestamps were scaled.
+    /// Tempo check result for slowed / sped-up versions (or when the timing
+    /// didn't fit), e.g. "Tempo adjusted ×1.15 (original 3:12)" or "Tempo not
+    /// adjusted: original length not found". Factor > 1 = slowed.
     private var tempoNote: String? {
         let id = np.videoId
-        let factor = LyricsSongAdjustments.shared.tempo(for: id) ?? id.flatMap { LyricsState.shared.autoTempo[$0] }
-        guard let factor, abs(factor - 1) > 0.005 else { return nil }
-        let value = String(format: "%.2f×", factor)
-        if LyricsSongAdjustments.shared.tempo(for: id) != nil {
-            return String(format: String(localized: "Tempo set manually (%@)"), value)
+        if let manual = LyricsSongAdjustments.shared.tempo(for: id), abs(manual - 1) > 0.005 {
+            return String(format: String(localized: "Tempo set manually (%@)"), String(format: "%.2f×", manual))
         }
-        return factor < 1
-            ? String(format: String(localized: "Adjusted to slowed version (%@)"), value)
-            : String(format: String(localized: "Adjusted to sped-up version (%@)"), value)
+        guard let id, let info = LyricsState.shared.tempoInfo[id], info.isRelevant else { return nil }
+        func clock(_ seconds: Double?) -> String {
+            guard let seconds, seconds > 0 else { return "?" }
+            let total = Int(seconds.rounded())
+            return String(format: "%d:%02d", total / 60, total % 60)
+        }
+        let factor = info.factor.map { String(format: "%.2f×", $0) } ?? "–"
+        switch info.outcome {
+        case .applied:
+            return String(format: String(localized: "Tempo adjusted %@ (original %@, this version %@)"), factor, clock(info.original), clock(info.played))
+        case .sameLength:
+            return String(localized: "Tempo not adjusted: same length as the original")
+        case .noOriginal:
+            return String(localized: "Tempo not adjusted: original length not found")
+        case .implausible:
+            return String(format: String(localized: "Tempo not adjusted: lengths too different (original %@, this version %@)"), clock(info.original), clock(info.played))
+        case .unknownLength:
+            return String(localized: "Tempo not checked: song length unknown")
+        case .notNeeded:
+            return String(localized: "Tempo not adjusted")
+        }
     }
 
     @ViewBuilder

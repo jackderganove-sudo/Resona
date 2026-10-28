@@ -685,5 +685,11 @@
   "Genre and mood come from Last.fm tags (YouTube Music has none). Rename groups, drag songs between them, then create the playlists.": "Genre and mood come from Last.fm tags (YouTube Music has none). Rename groups, drag songs between them, then create the playlists.",
   "Loading Last.fm tags… %d/%d": "Loading Last.fm tags… %d/%d",
   "Lyrics in other languages are translated into German on the device (Apple Translation); translations from the lyrics source (e.g. Better Lyrics, YouLyPlus) are preferred. \"On request\": switch it on per song in the lyrics menu. Hiding the controls only affects full-screen lyrics on the iPad in landscape; the screen stays on either way.": "Lyrics in other languages are translated into German on the device (Apple Translation); translations from the lyrics source (e.g. Better Lyrics, YouLyPlus) are preferred. \"On request\": switch it on per song in the lyrics menu. Hiding the controls only affects full-screen lyrics on the iPad in landscape; the screen stays on either way.",
-  "Hide controls automatically": "Hide controls automatically"
+  "Hide controls automatically": "Hide controls automatically",
+  "Tempo adjusted %@ (original %@, this version %@)": "Tempo adjusted %@ (original %@, this version %@)",
+  "Tempo not adjusted: same length as the original": "Tempo not adjusted: same length as the original",
+  "Tempo not adjusted: original length not found": "Tempo not adjusted: original length not found",
+  "Tempo not adjusted: lengths too different (original %@, this version %@)": "Tempo not adjusted: lengths too different (original %@, this version %@)",
+  "Tempo not checked: song length unknown": "Tempo not checked: song length unknown",
+  "Tempo not adjusted": "Tempo not adjusted"
 }
