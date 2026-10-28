@@ -23,6 +23,11 @@ Entscheidungen, offene Fragen und bekannte Einschränkungen pro Punkt.
 
 Push-Rhythmus: nach jedem 2.–3. fertigen Punkt (jeder Push auf main = Release).
 
+**Abschluss:** alle 8 Punkte umgesetzt, jeder Build grün.
+- v0.8.3 – Punkte 1–3 (Crossfade A/B experimentell, Sleep-Timer-Fade, Tastatur-Kürzel)
+- v0.8.4 – Punkte 4–8 (Zum Drop, Übersetzung, Playlist-Werkzeuge, Smart Downloads,
+  KI-Synchronisation)
+
 ## Entscheidungen
 
 ### 1. Crossfade
