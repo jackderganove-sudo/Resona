@@ -138,16 +138,37 @@ final class ResonaUITests: XCTestCase {
             closeOverlay()
         }
         snap("player-after-sheets")
-        if !tap("player.collapse") { app.swipeDown() }
-        sleep(2)
+        collapsePlayerIfOpen()
+    }
+
+    /// Back to the tabs: chevron if there is one (portrait), otherwise the
+    /// player's own swipe-down gesture; the mini player must be visible.
+    private func collapsePlayerIfOpen() {
+        for _ in 0..<2 {
+            if app.buttons["miniplayer"].exists, app.buttons["miniplayer"].isHittable { return }
+            let chevron = app.buttons["player.collapse"]
+            if chevron.exists, chevron.isHittable {
+                chevron.tap()
+            } else {
+                let window = app.windows.firstMatch
+                window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.25))
+                    .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
+            }
+            sleep(2)
+        }
+        if !(app.buttons["miniplayer"].exists && app.buttons["miniplayer"].isHittable) {
+            softFail("player could not be collapsed")
+            snap("player-not-collapsed")
+        }
     }
 
     private func artistAndAlbum() {
+        collapsePlayerIfOpen()
         guard tap("tab.search") else { return }
         // Results of the earlier search are still there (search path).
         let artist = app.descendants(matching: .any).matching(identifier: "result.artist").firstMatch
         if artist.waitForExistence(timeout: 8) {
-            artist.tap()
+            tapTolerant(artist)
             sleep(5)
             snap("artist")
             scrollDown()
@@ -164,7 +185,7 @@ final class ResonaUITests: XCTestCase {
             album = app.descendants(matching: .any).matching(identifier: "result.album").firstMatch
         }
         if album.waitForExistence(timeout: 4) {
-            album.tap()
+            tapTolerant(album)
             sleep(5)
             snap("album")
             back()
@@ -175,17 +196,21 @@ final class ResonaUITests: XCTestCase {
         }
         let playlist = app.descendants(matching: .any).matching(identifier: "result.playlist").firstMatch
         if playlist.waitForExistence(timeout: 3) {
-            playlist.tap()
+            tapTolerant(playlist)
             sleep(5)
             snap("playlist")
+            collapsePlayerIfOpen()
             back()
             sleep(2)
         }
     }
 
     private func settings() {
-        guard tap("tab.home"), tap("account.menu") else { return }
-        sleep(1)
+        collapsePlayerIfOpen()
+        guard tap("tab.home") else { return }
+        sleep(2)
+        guard tap("account.menu") else { return }
+        _ = app.buttons["menu.gearshape"].waitForExistence(timeout: 4)
         snap("account-menu")
         guard tap("menu.gearshape") else { return }
         sleep(2)
@@ -206,6 +231,17 @@ final class ResonaUITests: XCTestCase {
     }
 
     // MARK: Helpers
+
+    /// Taps an element that may be partly off screen: scrolls once, then
+    /// taps its centre by coordinate (no hard "not hittable" failure).
+    private func tapTolerant(_ element: XCUIElement) {
+        if !element.isHittable { scrollDown() }
+        if element.isHittable {
+            element.tap()
+        } else {
+            element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
+    }
 
     /// First hittable button with this id, polling once per second.
     private func visibleButton(_ identifier: String, attempts: Int) -> XCUIElement? {
