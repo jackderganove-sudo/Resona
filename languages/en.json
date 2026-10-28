@@ -710,5 +710,13 @@
   "Sync word by word instead": "Sync word by word instead",
   "Calibrated: tempo %@, offset %@ (%d anchor points). The lyrics stay as they are.": "Calibrated: tempo %@, offset %@ (%d anchor points). The lyrics stay as they are.",
   "Only %d %% of the lyrics are sung in this song — maybe a remix or the wrong lyrics?": "Only %d %% of the lyrics are sung in this song — maybe a remix or the wrong lyrics?",
-  "Hide most-replayed curve": "Hide most-replayed curve"
+  "Hide most-replayed curve": "Hide most-replayed curve",
+  "This version": "This version",
+  "Word-synced": "Word-synced",
+  "Line-synced": "Line-synced",
+  "Text only": "Text only",
+  "Per YouTube upload — finds remixes and edits": "Per YouTube upload — finds remixes and edits",
+  "Lyrics database, also per YouTube upload and its variants": "Lyrics database, also per YouTube upload and its variants",
+  "LRC files (line-synced)": "LRC files (line-synced)",
+  "Large catalogue, line-synced": "Large catalogue, line-synced"
 }

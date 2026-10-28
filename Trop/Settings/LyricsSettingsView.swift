@@ -166,6 +166,10 @@ struct LyricsSettingsView: View {
         case "spotify": "Requires Spotify sign-in"
         case "paxsenix": "Requires an API key (below)"
         case "youtube": "Plain text only (fallback)"
+        case "simpmusic": "Per YouTube upload — finds remixes and edits"
+        case "unison": "Lyrics database, also per YouTube upload and its variants"
+        case "megalobiz": "LRC files (line-synced)"
+        case "qqmusic": "Large catalogue, line-synced"
         default: nil
         }
     }
@@ -176,6 +180,7 @@ struct LyricsSettingsView: View {
         case "spotify": "dot.radiowaves.left.and.right"
         case "youtube": "play.rectangle"
         case "paxsenix": "key"
+        case "simpmusic", "unison": "play.square.stack"
         default: "music.note"
         }
     }

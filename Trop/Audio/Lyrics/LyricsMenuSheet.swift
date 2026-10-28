@@ -705,20 +705,38 @@ struct SearchLyricsSheet: View {
         } label: {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(result.previewText)
-                        .font(.callout)
-                        .foregroundStyle(.m3OnSurface)
-                        .lineLimit(isExpanded ? nil : 2)
-                    HStack(spacing: 4) {
+                    // Provider · sync type · duration, then title — artist.
+                    HStack(spacing: 6) {
                         Text(result.providerName)
-                            .font(.caption.weight(.medium))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.m3OnSurface)
+                        Text(syncLabel(result.quality))
+                            .font(.caption2.weight(.medium))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.white.opacity(0.12), in: Capsule())
                             .foregroundStyle(.m3OnSurfaceVariant)
-                        if result.isSynced {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .font(.caption2)
+                        if let duration = result.duration, duration > 0 {
+                            Text(String(format: "%d:%02d", Int(duration) / 60, Int(duration) % 60))
+                                .font(.caption2.monospacedDigit())
                                 .foregroundStyle(.m3OnSurfaceVariant)
                         }
+                        if result.exactVersion {
+                            Label("This version", systemImage: "checkmark.seal")
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.m3Primary)
+                        }
                     }
+                    if result.title != nil || result.artist != nil {
+                        Text([result.title, result.artist].compactMap { $0 }.joined(separator: " — "))
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(.m3OnSurface)
+                            .lineLimit(2)
+                    }
+                    Text(result.previewText)
+                        .font(.callout)
+                        .foregroundStyle(.m3OnSurfaceVariant)
+                        .lineLimit(isExpanded ? nil : 2)
                 }
                 Spacer()
                 Button {
@@ -733,6 +751,14 @@ struct SearchLyricsSheet: View {
                 .buttonStyle(.borderless)
             }
             .padding(.vertical, 4)
+        }
+    }
+
+    private func syncLabel(_ quality: LyricsQuality) -> LocalizedStringKey {
+        switch quality {
+        case .wordSynced: return "Word-synced"
+        case .lineSynced: return "Line-synced"
+        case .plain: return "Text only"
         }
     }
 
@@ -756,11 +782,15 @@ struct SearchLyricsSheet: View {
         hasSearched = false
         results = []
         Task {
+            // Video id: sources keyed by the upload (SimpMusic, Unison) find
+            // exactly this version.
             let query = LyricsQuery(
                 title: queryTitle,
                 artist: queryArtist,
                 album: nil,
-                duration: duration
+                duration: duration,
+                videoId: videoId.isEmpty ? nil : videoId,
+                versionHint: LyricsService.versionHint(raw)
             )
             results = await LyricsManager.shared.searchAll(query: query)
             isSearching = false
@@ -779,8 +809,12 @@ struct SearchLyricsSheet: View {
         }
     }
 
+    /// Saves the pick; a calibration of the previous lyrics no longer fits,
+    /// and "Calibrate with AI" is offered for synced picks.
     private func select(_ result: LyricsManager.LyricSearchResult) {
         let raw = LyricsParsing.serializeLines(result.lines)
+        LyricsCalibrationStore.shared.set(nil, for: videoId)
+        if result.isSynced { LyricsState.shared.calibrationOffer.insert(videoId) }
         Task {
             await LyricsService.shared.saveCustom(videoId: videoId, rawText: raw, providerName: result.providerName)
         }

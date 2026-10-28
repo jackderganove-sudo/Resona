@@ -203,6 +203,8 @@ final class LyricsState {
     var autoTempo: [String: Double] = [:]
     /// Outcome of the tempo check per video id (shown under the label).
     var tempoInfo: [String: LyricsTempoInfo] = [:]
+    /// Songs where "Calibrate with AI" is offered (lyrics picked by hand).
+    var calibrationOffer: Set<String> = []
 
     private init() {}
 }
@@ -515,8 +517,19 @@ actor LyricsService {
             album: cleaned.album,
             duration: duration > 0 ? duration : 0,
             videoId: videoId,
-            isSpeedVariant: Self.isSpeedVariant(title)
+            isSpeedVariant: Self.isSpeedVariant(title),
+            versionHint: Self.versionHint(title)
         )
+    }
+
+    /// "(NovaX Remix)", "- Radio Edit", "[Live]" … → "novax remix" etc.
+    static func versionHint(_ title: String) -> String? {
+        let pattern = #"[\(\[\-–—]\s*([^\)\]\-–—]*\b(remix|edit|mix|version|bootleg|flip|vip|rework|live|acoustic|cover|instrumental|extended)\b[^\)\]]*)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
+        let ns = title as NSString
+        guard let match = regex.firstMatch(in: title, range: NSRange(location: 0, length: ns.length)) else { return nil }
+        let hint = ns.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespaces).lowercased()
+        return hint.isEmpty ? nil : hint
     }
 
     // MARK: Slowed / sped-up variants

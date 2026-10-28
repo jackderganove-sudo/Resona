@@ -44,6 +44,10 @@ enum LyricsProviderRegistry {
         NeteaseProvider(),
         KugouProvider(),
         GeniusProvider(),
+        SimpMusicLyricsProvider(),
+        UnisonLyricsProvider(),
+        QQMusicLyricsProvider(),
+        MegalobizLyricsProvider(),
         YouTubeMusicLyricsProvider()
     ]
 
@@ -51,12 +55,16 @@ enum LyricsProviderRegistry {
     static let defaultOrder: [String] = [
         "betterlyrics",
         "youlyplus",
+        "simpmusic",
+        "unison",
         "lrclib",
         "musixmatch",
         "spotify",
         "paxsenix",
         "netease",
         "kugou",
+        "qqmusic",
+        "megalobiz",
         "genius",
         "youtube"
     ]
@@ -76,6 +84,13 @@ actor LyricsManager {
         let lines: [LyricLine]
         let providerName: String
         let sortOrder: Int
+        var title: String? = nil
+        var artist: String? = nil
+        var duration: Double? = nil
+        var exactVersion = false
+        var score: Double = 0
+
+        var quality: LyricsQuality { LyricsQuality.of(lines) }
 
         var previewText: String {
             lines.prefix(2).map(\.text).joined(separator: "\n")
@@ -100,19 +115,57 @@ actor LyricsManager {
             .filter { !disabled.contains($0.id) }
             .enumerated().map { ($1, $0) }
 
-        return await withTaskGroup(of: (Int, LyricSearchResult)?.self) { group in
+        // Every candidate of every provider (several per source), best first.
+        return await withTaskGroup(of: [LyricSearchResult].self) { group in
             for (provider, index) in providers {
                 group.addTask {
-                    guard let lines = try? await provider.fetch(query: query), !lines.isEmpty else { return nil }
-                    return (index, LyricSearchResult(lines: lines, providerName: provider.name, sortOrder: index))
+                    guard let candidates = try? await Self.withTimeout(seconds: 8, work: { try await provider.search(query: query) }) else { return [] }
+                    return candidates.filter { !$0.lines.isEmpty }.map { candidate in
+                        let lines = LyricLine.normalizedTiming(candidate.lines)
+                        return LyricSearchResult(lines: lines, providerName: provider.name, sortOrder: index,
+                                                 title: candidate.title, artist: candidate.artist, duration: candidate.duration,
+                                                 exactVersion: candidate.exactVersion,
+                                                 score: Self.score(quality: LyricsQuality.of(lines), order: index, candidate: candidate, query: query))
+                    }
                 }
             }
-            var results: [(Int, LyricSearchResult)] = []
-            for await item in group {
-                if let item { results.append(item) }
-            }
-            return results.sorted { $0.0 < $1.0 }.map(\.1)
+            var results: [LyricSearchResult] = []
+            for await batch in group { results += batch }
+            return results.sorted { $0.score > $1.score }
         }
+    }
+
+    /// Ranking: quality (word > line > text) first; a synced result for
+    /// exactly this upload (video id) beats the original's lyrics of the
+    /// same quality — and for remixes / edits / slowed even word-synced
+    /// ones; title naming the version, matching duration and artist add a
+    /// little; the user's order breaks ties.
+    static func score(quality: LyricsQuality, order: Int, candidate: LyricsCandidate, query: LyricsQuery) -> Double {
+        var score = Double(quality.rawValue) * 10 - Double(order) * 0.01
+        if candidate.exactVersion {
+            // Remix / edit / slowed: the original's lyrics are likely wrong.
+            let variant = query.versionHint != nil || query.isSpeedVariant
+            score += quality == .plain ? 2 : (variant ? 12 : 6)
+        }
+        func norm(_ s: String) -> String { s.lowercased().filter { $0.isLetter || $0.isNumber || $0 == " " } }
+        if let hint = query.versionHint, let title = candidate.title {
+            let words = norm(hint).split(separator: " ").filter { $0.count >= 3 && !["remix", "edit", "mix", "version"].contains($0) }
+            let candidateTitle = norm(title)
+            if !words.isEmpty, words.allSatisfy({ candidateTitle.contains($0) }) {
+                score += 8   // e.g. "… (NovaX Remix)"
+            } else if candidateTitle.contains("remix") || candidateTitle.contains("edit") {
+                score += 2
+            }
+        }
+        if let duration = candidate.duration, duration > 0, query.duration > 0 {
+            let difference = abs(duration - query.duration)
+            if difference <= 3 { score += 2 } else if difference > 15 { score -= 6 }
+        }
+        if let artist = candidate.artist, !query.artist.isEmpty,
+           norm(artist).contains(norm(query.artist)) || norm(query.artist).contains(norm(artist)) {
+            score += 2
+        }
+        return score
     }
 
     private struct ProviderHit: Sendable {
@@ -120,6 +173,7 @@ actor LyricsManager {
         let lines: [LyricLine]
         let providerName: String
         let quality: LyricsQuality
+        let score: Double
     }
 
     /// Per-provider time budget; slower providers are simply skipped.
@@ -138,17 +192,23 @@ actor LyricsManager {
             return (index, provider)
         }
         guard !candidates.isEmpty else { throw LyricsError.notFound }
-        let firstOrder = candidates.map(\.index).min() ?? 0
 
         let results = await withTaskGroup(of: ProviderHit?.self) { group in
             for (index, provider) in candidates {
                 group.addTask {
                     do {
-                        let lines = LyricLine.normalizedTiming(try await Self.withTimeout(seconds: Self.providerTimeout) {
-                            try await provider.fetch(query: query)
-                        })
-                        guard !lines.isEmpty, Self.plausible(lines, duration: query.duration) else { return nil }
-                        return ProviderHit(order: index, lines: lines, providerName: provider.name, quality: LyricsQuality.of(lines))
+                        let candidates = try await Self.withTimeout(seconds: Self.providerTimeout) {
+                            try await provider.search(query: query)
+                        }
+                        // Best plausible candidate of this provider.
+                        let hits: [ProviderHit] = candidates.compactMap { candidate in
+                            let lines = LyricLine.normalizedTiming(candidate.lines)
+                            guard !lines.isEmpty, Self.plausible(lines, duration: query.duration) else { return nil }
+                            let quality = LyricsQuality.of(lines)
+                            return ProviderHit(order: index, lines: lines, providerName: provider.name, quality: quality,
+                                               score: Self.score(quality: quality, order: index, candidate: candidate, query: query))
+                        }
+                        return hits.max { $0.score < $1.score }
                     } catch {
                         return nil
                     }
@@ -158,17 +218,15 @@ actor LyricsManager {
             for await item in group {
                 guard let item else { continue }
                 collected.append(item)
-                // Nothing can beat word-synced lyrics from the top provider.
-                if item.quality == .wordSynced, item.order == firstOrder {
+                // Unbeatable: word-synced lyrics for exactly this upload.
+                if item.quality == .wordSynced, item.score >= 26 {
                     group.cancelAll()
                     break
                 }
             }
             return collected
         }
-        guard let best = results.max(by: { a, b in
-            a.quality != b.quality ? a.quality < b.quality : a.order > b.order
-        }) else {
+        guard let best = results.max(by: { $0.score < $1.score }) else {
             throw LyricsError.notFound
         }
         return (best.lines, best.providerName)

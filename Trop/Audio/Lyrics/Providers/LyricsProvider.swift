@@ -18,8 +18,22 @@ struct LyricsQuery: Sendable {
     /// Slowed / sped-up / nightcore upload: lyrics come from the original
     /// and their timestamps are scaled to this version's length.
     var isSpeedVariant: Bool = false
+    /// Words naming the version from the raw title ("novax remix", "radio
+    /// edit", "live" …), nil for a plain title. Results for exactly this
+    /// version are preferred.
+    var versionHint: String? = nil
 
     var durationSeconds: Int { Int(duration) }
+}
+
+/// One lyrics result with what the source tells about it.
+struct LyricsCandidate: Sendable {
+    let lines: [LyricLine]
+    var title: String? = nil
+    var artist: String? = nil
+    var duration: Double? = nil
+    /// Found for exactly this YouTube upload (video id).
+    var exactVersion: Bool = false
 }
 
 /// Common interface implemented by every lyrics source.
@@ -27,6 +41,14 @@ protocol LyricsProvider: Sendable {
     var id: String { get }
     var name: String { get }
     func fetch(query: LyricsQuery) async throws -> [LyricLine]
+    /// All candidates (several for sources that list matches).
+    func search(query: LyricsQuery) async throws -> [LyricsCandidate]
+}
+
+extension LyricsProvider {
+    func search(query: LyricsQuery) async throws -> [LyricsCandidate] {
+        [LyricsCandidate(lines: try await fetch(query: query))]
+    }
 }
 
 enum LyricsParsing {

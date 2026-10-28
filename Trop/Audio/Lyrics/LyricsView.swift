@@ -436,10 +436,9 @@ struct LyricsView<ProgressSlider: View>: View {
     @ViewBuilder
     private var calibrationOffer: some View {
         if let id = np.videoId, isSynced, !isUserMadeLyrics,
-           LyricsState.shared.tempoInfo[id]?.isVariant == true,
+           calibrationWanted(id),
            LyricsCalibrationStore.shared.calibration(for: id) == nil,
-           LyricsSongAdjustments.shared.tempo(for: id) == nil,
-           settings.aiCalibrationMode != .off {
+           LyricsSongAdjustments.shared.tempo(for: id) == nil {
             let engine = AILyricsSync.shared
             if engine.videoId == id, engine.isRunning {
                 Text("Calibrating the tempo with AI…")
@@ -461,6 +460,12 @@ struct LyricsView<ProgressSlider: View>: View {
                 .disabled(engine.isRunning)
             }
         }
+    }
+
+    /// Slowed / sped-up song (unless switched off), or lyrics picked by hand.
+    private func calibrationWanted(_ id: String) -> Bool {
+        if LyricsState.shared.calibrationOffer.contains(id) { return true }
+        return LyricsState.shared.tempoInfo[id]?.isVariant == true && settings.aiCalibrationMode != .off
     }
 
     /// "Automatically on Wi-Fi": calibrate a detected slowed / sped-up song
