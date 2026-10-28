@@ -295,21 +295,42 @@ struct LyricsMenuSheet: View {
                         .foregroundStyle(settings.accentColor)
                 }
             }
-            ExpressiveSlider(
-                value: Binding(
-                    get: { current },
-                    set: { adjustments.setTempo(($0 * 100).rounded() / 100, for: id) }
-                ),
-                range: 0.6...1.5,
-                trackHeight: 10,
-                handleHeight: 28,
-                activeColor: settings.accentColor,
-                inactiveColor: Color.white.opacity(0.15)
-            )
-            .frame(height: 30)
+            HStack(spacing: 10) {
+                tempoStepButton("minus", delta: -0.01, current: current, id: id)
+                ExpressiveSlider(
+                    value: Binding(
+                        get: { current },
+                        set: { adjustments.setTempo(($0 * 100).rounded() / 100, for: id) }
+                    ),
+                    range: 0.6...1.5,
+                    trackHeight: 10,
+                    handleHeight: 28,
+                    activeColor: settings.accentColor,
+                    inactiveColor: Color.white.opacity(0.15)
+                )
+                .frame(height: 30)
+                tempoStepButton("plus", delta: 0.01, current: current, id: id)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+
+    /// Fine tuning in 0.01 steps (the slider is too coarse for that).
+    private func tempoStepButton(_ systemName: String, delta: Double, current: Double, id: String?) -> some View {
+        Button {
+            let next = min(1.5, max(0.6, ((current + delta) * 100).rounded() / 100))
+            LyricsSongAdjustments.shared.setTempo(next, for: id)
+        } label: {
+            Image(systemName: systemName)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.m3OnSurface)
+                .frame(width: 36, height: 36)
+                .background(Color.white.opacity(0.12), in: Circle())
+        }
+        .buttonStyle(.expressive(scale: 0.85))
+        .buttonRepeatBehavior(.enabled)
+        .accessibilityLabel(Text(delta > 0 ? "Tempo +0.01" : "Tempo −0.01"))
     }
 
     private var offsetRow: some View {

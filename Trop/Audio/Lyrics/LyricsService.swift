@@ -612,26 +612,58 @@ actor LyricsService {
             return norm(name) == wantedTitle && !isSpeedVariant(name)
         }
 
+        var found: (seconds: TimeInterval, source: String, artist: String)?
         let byArtist = await search([URLQueryItem(name: "track_name", value: title), URLQueryItem(name: "artist_name", value: artist)])
         let candidates = byArtist.filter { item in
             let by = norm(item["artistName"] as? String ?? "")
             return sameTitle(item) && (wantedArtist.isEmpty || by.contains(wantedArtist) || wantedArtist.contains(by))
         }
         let pick = candidates.first { ($0["syncedLyrics"] as? String)?.isEmpty == false } ?? candidates.first
-        if let seconds = duration(of: pick) { return (seconds, "LRCLIB title+artist") }
+        if let seconds = duration(of: pick) {
+            found = (seconds, "LRCLIB title+artist", pick?["artistName"] as? String ?? artist)
+        } else if let lines, !lines.isEmpty {
+            let byTitle = await search([URLQueryItem(name: "track_name", value: title)])
+            let matching = byTitle.filter(sameTitle).compactMap { item -> (item: [String: Any], overlap: Double)? in
+                let text = (item["syncedLyrics"] as? String) ?? (item["plainLyrics"] as? String) ?? ""
+                let overlap = lyricsOverlap(lines, candidateText: text)
+                return overlap >= 0.6 ? (item, overlap) : nil
+            }
+            .sorted { $0.overlap > $1.overlap }
+            if let best = matching.first, let seconds = duration(of: best.item) {
+                found = (seconds, String(format: "LRCLIB title+lyrics (%.0f %%)", best.overlap * 100),
+                         best.item["artistName"] as? String ?? artist)
+            }
+        }
+        guard let found else { return (nil, nil) }
 
-        guard let lines, !lines.isEmpty else { return (nil, nil) }
-        let byTitle = await search([URLQueryItem(name: "track_name", value: title)])
-        let matching = byTitle.filter(sameTitle).compactMap { item -> (item: [String: Any], overlap: Double)? in
-            let text = (item["syncedLyrics"] as? String) ?? (item["plainLyrics"] as? String) ?? ""
-            let overlap = lyricsOverlap(lines, candidateText: text)
-            return overlap >= 0.6 ? (item, overlap) : nil
+        // Cross-check with the original's AUDIO track on YouTube Music (the
+        // slowed upload is usually made from that master; LRCLIB lengths
+        // come from other releases). Used when the two agree within 6 %.
+        if let audio = await youTubeMusicAudioLength(title: title, artist: found.artist) {
+            Log.player.info("LYRICS tempo original length: LRCLIB \(Int(found.seconds)) s, YouTube Music audio \(Int(audio)) s")
+            if abs(audio - found.seconds) <= found.seconds * 0.06 {
+                return (audio, "YouTube Music audio (\(found.source) \(Int(found.seconds)) s)")
+            }
         }
-        .sorted { $0.overlap > $1.overlap }
-        if let best = matching.first, let seconds = duration(of: best.item) {
-            return (seconds, String(format: "LRCLIB title+lyrics (%.0f %%)", best.overlap * 100))
+        return (found.seconds, found.source)
+    }
+
+    /// Length of the original song's audio track ("Topic" / ATV) on
+    /// YouTube Music — not a video version, not a slowed upload.
+    private static func youTubeMusicAudioLength(title: String, artist: String) async -> TimeInterval? {
+        func norm(_ s: String) -> String { s.lowercased().filter { $0.isLetter || $0.isNumber } }
+        guard let json = try? await InnerTubeClient.tropShared.search(query: "\(title) \(artist)", params: nil, client: .webRemix) else { return nil }
+        let wantedTitle = norm(title), wantedArtist = norm(artist)
+        let songs = SearchParser.parseSearchResults(from: json).flatMap(\.items).compactMap { item -> SongItem? in
+            if case .song(let song) = item { return song }
+            return nil
         }
-        return (nil, nil)
+        let match = songs.first { song in
+            norm(song.title) == wantedTitle && !isSpeedVariant(song.title) && song.duration > 0
+                && song.musicVideoType == "MUSIC_VIDEO_TYPE_ATV"
+                && song.artists.contains { norm($0.name).contains(wantedArtist) || wantedArtist.contains(norm($0.name)) }
+        }
+        return match.map { TimeInterval($0.duration) }
     }
 
     /// Share (0…1) of the first lyric lines that appear in `candidateText`
