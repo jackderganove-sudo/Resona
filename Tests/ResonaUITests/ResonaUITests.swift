@@ -197,11 +197,16 @@ final class ResonaUITests: XCTestCase {
 
     @discardableResult
     private func tap(_ identifier: String, timeout: TimeInterval = 6) -> Bool {
-        let target = element(identifier)
+        var target = element(identifier)
         guard target.waitForExistence(timeout: timeout) else {
             softFail("\(identifier) not found")
             snap("missing-\(identifier)")
             return false
+        }
+        if !target.isHittable,
+           let visible = app.descendants(matching: .any).matching(identifier: identifier).allElementsBoundByIndex
+               .first(where: { $0.isHittable }) {
+            target = visible
         }
         if !target.isHittable {
             // Covered (sheet) or off screen: tap its centre anyway.
@@ -217,8 +222,9 @@ final class ResonaUITests: XCTestCase {
     /// on the sheet / a tap outside of a popover.
     private func closeOverlay() {
         for id in ["lyrics.close", "overlay.close"] {
-            let button = element(id)
-            if button.exists, button.isHittable {
+            // Several layouts may carry the id; take the visible one.
+            let candidates = app.descendants(matching: .any).matching(identifier: id).allElementsBoundByIndex
+            if let button = candidates.first(where: { $0.exists && $0.isHittable }) {
                 button.tap()
                 sleep(1)
                 return

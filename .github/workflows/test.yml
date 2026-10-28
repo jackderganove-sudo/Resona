@@ -74,7 +74,7 @@ jobs:
           path: build/ffmpeg-kit-xcframeworks
           key: ffmpeg-kit-${{ env.FFMPEG_KIT_TAG }}-arm64+sim-openssl-${{ runner.os }}-${{ runner.arch }}
 
-      - name: Upload screenshots, video, crossfade
+      - name: Upload screenshots, crossfade, logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -82,11 +82,18 @@ jobs:
           path: |
             build/test-output/screenshots
             build/test-output/crossfade
-            build/test-output/ui-tests.mp4
             build/test-output/logs
             build/test-output/test-summary.json
             build/test-output/test-list.json
           if-no-files-found: warn
+
+      - name: Upload video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-video-${{ github.run_number }}
+          path: build/test-output/ui-tests.mp4
+          if-no-files-found: ignore
 
       - name: Upload xcresult
         if: always()
