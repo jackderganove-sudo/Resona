@@ -186,10 +186,26 @@ final class ResonaUITests: XCTestCase {
         sleep(1)
         let jumpAgain = menuItem(jump)
         XCTAssertTrue(jumpAgain.waitForExistence(timeout: 3))
+        let before = elapsedSeconds()
         jumpAgain.tap()
-        let toast = app.staticTexts.matching(NSPredicate(format: "label IN {'Zum Drop gesprungen', 'Jumped to the drop'}")).firstMatch
-        XCTAssertTrue(toast.waitForExistence(timeout: 3), "[\(prefix)] jump to the drop happened (toast)")
+        sleep(1)
         snap("drop-jumped")
+        // The jump moves the position by much more than the second waited.
+        if let before, let after = elapsedSeconds() {
+            XCTAssertGreaterThan(abs(after - before), 4, "[\(prefix)] jump to the drop moved the position (\(before) → \(after) s)")
+        } else {
+            XCTFail("[\(prefix)] elapsed time label not found")
+        }
+    }
+
+    /// The player's elapsed time ("m:ss", the smaller of the two labels).
+    private func elapsedSeconds() -> Int? {
+        let labels = app.staticTexts.allElementsBoundByIndex.compactMap { element -> Int? in
+            let parts = element.label.split(separator: ":")
+            guard parts.count == 2, let m = Int(parts[0]), let s = Int(parts[1]), parts[1].count == 2 else { return nil }
+            return m * 60 + s
+        }
+        return labels.min()
     }
 
     /// Back to the tabs: chevron if there is one (portrait), otherwise the

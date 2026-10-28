@@ -4,7 +4,7 @@ Laut Gerätetest: KI-Kalibrierung für Slowed perfekt.
 
 | # | Punkt | Status |
 |---|-------|--------|
-| 1 | Drop-Menü: Kurven-Eintrag ausgegraut + leere Zeile mit Häkchen | in Arbeit |
+| 1 | Drop-Menü: Kurven-Eintrag ausgegraut + leere Zeile mit Häkchen | erledigt, im Simulator nachgewiesen (Screenshots in docs/test-report.md) |
 | 2 | Mehr Lyrics-Anbieter, Remix-Bevorzugung, Trefferliste in der Suche, danach KI-Kalibrierung anbieten | umgesetzt (a7508c0) |
 
 ## 1 Drop-Menü

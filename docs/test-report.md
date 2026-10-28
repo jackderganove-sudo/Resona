@@ -142,6 +142,28 @@ Test-Infrastruktur, die nötig war, um den Rundgang stabil zu bekommen:
 Screenshots mit Songtexten bleiben bewusst nur im CI-Artefakt und werden hier
 nicht eingebunden.
 
+## Drop-Menü (Runde 8) – Nachweis im Simulator
+
+Langer Druck auf den Blitz-Button (UI-Test, Hoch- und Querformat):
+- Beide Einträge haben Text und sind aktiv; es gibt keine leere Zeile.
+- „Meistgehört-Kurve ausblenden“ entfernt die Welle hinter dem
+  Fortschrittsbalken. Danach heißt der Eintrag „… anzeigen“ und blendet sie
+  wieder ein.
+- „Zum Drop springen“ springt (Position 1:31 → 1:53).
+
+| Menü offen | Kurve ausgeblendet | Eintrag danach |
+|---|---|---|
+| ![Menü offen](test-report/drop-menue-offen.jpg) | ![Kurve aus](test-report/drop-kurve-aus.jpg) | ![Anzeigen](test-report/drop-menue-anzeigen.jpg) |
+
+![Menü im Querformat](test-report/drop-menue-quer.jpg)
+
+Ursache:
+- Version 0.8.7: Der Button-Stil des Players wurde an die Menüeinträge
+  vererbt.
+- Version 0.8.8: Der `Toggle` übernahm den app-weiten eigenen Toggle-Stil.
+
+Jetzt gibt es nur schlichte Buttons mit wechselndem Text.
+
 ## Am Gerät gefunden und behoben (Runden 5–6)
 
 - **Crossfade:**
