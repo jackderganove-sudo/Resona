@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.7",
+          "buildVersion": "65",
+          "date": "2026-10-28T15:38:52Z",
+          "localizedDescription": "- Docs: round 6 progress\n- Crossfade dropouts: audio session identical to mpv's iOS output (no mode/policy flip-flop), fixed 48 kHz stereo float output so outputs stay open across files, faded instance parked on silence instead of stopped (no setActive(NO)), spare warmed up on creation, timestamped logs; revive only as watchdog\n- AI sync: larger model tried automatically below 30 %, aligner more tolerant (phonetic similarity for longer words, sung spellings, digits as words, threshold 0.5); tests\n- AI lyrics: outlier anchors dropped (longest non-decreasing run) and interpolated, strictly increasing word/line times; lyrics never jump backwards (monotonic timing on load); tests with scrambled times\n- Slowed: cross-check the original length with the original's YouTube Music audio track (used when within 6 % of LRCLIB, both logged); tempo fine tuning ±0.01 in the lyrics menu\n- Most-replayed curve can be switched off: long press on the drop button (menu) or Settings → Playback; default on",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.7/Resona.ipa",
+          "size": 28750021,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.6",
           "buildVersion": "64",
           "date": "2026-10-28T14:24:38Z",
@@ -73,11 +82,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.6",
-      "versionDate": "2026-10-28T14:24:38Z",
-      "versionDescription": "- UI tests: close lyrics that are already open, wait for the close button, safe attachment names; export: always .png, rotation errors don't abort\n- Docs: round 5 progress\n- AI sync: ffmpeg with CA bundle/user agent/timeout for streams, no-speech window skipping off (singing), whole-song diagnostics per 30 s; end-to-end test on synthetic say speech\n- Crossfade (device): clean stop of the faded instance (volume 0, drain, pause, stop), re-activate the audio session that mpv's iOS audio output deactivates on shutdown, restart the active AudioUnit only if it stalled, watchdog with ao-reload, audio state logs\n- Slowed lyrics: tempo diagnosis (logged, shown under 'Lyrics from'), original length also via title + lyrics match (re-uploads credited to the channel), hand-picked/refetched provider lyrics get the check too, cache v3; fix inverted slowed/sped-up note\n- Lyrics: swipe down on handle/header to close (follows the finger, 25 % or flick, springs back); UI test for it\n- Lyrics: translation, background vocals and romanization wrap fully (were truncated with …)\n- UI tests: no automatic update check (banner covered the account menu)\n- Full-screen lyrics: controls always visible, auto-hide as opt-in setting; title and artist left-aligned\n- UI tests: lyrics close diagnostics (app log + per-attempt screenshots), wake landscape chrome; test.yml inputs for single tests / skipping crossfade",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.6/Resona.ipa",
-      "size": 28731675,
+      "version": "0.8.7",
+      "versionDate": "2026-10-28T15:38:52Z",
+      "versionDescription": "- Docs: round 6 progress\n- Crossfade dropouts: audio session identical to mpv's iOS output (no mode/policy flip-flop), fixed 48 kHz stereo float output so outputs stay open across files, faded instance parked on silence instead of stopped (no setActive(NO)), spare warmed up on creation, timestamped logs; revive only as watchdog\n- AI sync: larger model tried automatically below 30 %, aligner more tolerant (phonetic similarity for longer words, sung spellings, digits as words, threshold 0.5); tests\n- AI lyrics: outlier anchors dropped (longest non-decreasing run) and interpolated, strictly increasing word/line times; lyrics never jump backwards (monotonic timing on load); tests with scrambled times\n- Slowed: cross-check the original length with the original's YouTube Music audio track (used when within 6 % of LRCLIB, both logged); tempo fine tuning ±0.01 in the lyrics menu\n- Most-replayed curve can be switched off: long press on the drop button (menu) or Settings → Playback; default on",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.7/Resona.ipa",
+      "size": 28750021,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
