@@ -693,5 +693,21 @@
   "Tempo not checked: song length unknown": "Tempo not checked: song length unknown",
   "Tempo not adjusted": "Tempo not adjusted",
   "Show most-replayed curve": "Show most-replayed curve",
-  "A soft wave behind the progress bar shows which parts of the song are replayed most. Long-press the lightning button in the player for the same switch.": "A soft wave behind the progress bar shows which parts of the song are replayed most. Long-press the lightning button in the player for the same switch."
+  "A soft wave behind the progress bar shows which parts of the song are replayed most. Long-press the lightning button in the player for the same switch.": "A soft wave behind the progress bar shows which parts of the song are replayed most. Long-press the lightning button in the player for the same switch.",
+  "Lyrics transcribed with AI": "Lyrics transcribed with AI",
+  "Calibrating the tempo with AI…": "Calibrating the tempo with AI…",
+  "AI calibration: only %d reliable anchor points — the calculated tempo stays.": "AI calibration: only %d reliable anchor points — the calculated tempo stays.",
+  "Calibrate tempo with AI": "Calibrate tempo with AI",
+  "Tempo calibrated with AI: %@, %@ (%d anchor points)": "Tempo calibrated with AI: %@, %@ (%d anchor points)",
+  "AI tempo calibration (slowed / sped up)": "AI tempo calibration (slowed / sped up)",
+  "Ask": "Ask",
+  "Automatically on Wi-Fi": "Automatically on Wi-Fi",
+  "The song is transcribed on this device (WhisperKit). Synced lyrics are kept and only their tempo and offset are fitted to this recording; if that doesn't fit, they are synced word by word.": "The song is transcribed on this device (WhisperKit). Synced lyrics are kept and only their tempo and offset are fitted to this recording; if that doesn't fit, they are synced word by word.",
+  "Only sync the matching lines": "Only sync the matching lines",
+  "Create lyrics from the audio": "Create lyrics from the audio",
+  "Search other lyrics": "Search other lyrics",
+  "Calibrate with AI": "Calibrate with AI",
+  "Sync word by word instead": "Sync word by word instead",
+  "Calibrated: tempo %@, offset %@ (%d anchor points). The lyrics stay as they are.": "Calibrated: tempo %@, offset %@ (%d anchor points). The lyrics stay as they are.",
+  "Only %d %% of the lyrics are sung in this song — maybe a remix or the wrong lyrics?": "Only %d %% of the lyrics are sung in this song — maybe a remix or the wrong lyrics?"
 }

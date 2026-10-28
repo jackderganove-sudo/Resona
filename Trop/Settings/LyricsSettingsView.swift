@@ -60,6 +60,7 @@ struct LyricsSettingsView: View {
                 SettingsToggleRow("Show romanization", icon: "globe", isOn: $settings.romanizeCurrentTrack)
                 SettingsToggleRow("Hide controls automatically", icon: "rectangle.and.hand.point.up.left", isOn: $settings.lyricsAutoHideControls)
                 SettingsPickerRow("AI sync model", icon: "wand.and.stars", selection: $settings.aiSyncModel)
+                SettingsPickerRow("AI tempo calibration (slowed / sped up)", icon: "metronome", selection: $settings.aiCalibrationMode)
             } header: {
                 Text("Display")
             } footer: {

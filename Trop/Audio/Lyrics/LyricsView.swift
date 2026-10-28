@@ -124,6 +124,9 @@ struct LyricsView<ProgressSlider: View>: View {
         .onChange(of: LyricsSongAdjustments.shared.tempo(for: np.videoId)) { _, _ in
             Task { await loadLyrics() }
         }
+        .onChange(of: LyricsCalibrationStore.shared.calibration(for: np.videoId)) { _, _ in
+            Task { await loadLyrics() }
+        }
     }
 
     // MARK: - Layouts
@@ -409,16 +412,69 @@ struct LyricsView<ProgressSlider: View>: View {
 
     private func providerLabel(_ provider: String) -> some View {
         VStack(alignment: settings.lyricsAlignment.textAlignment.horizontal, spacing: 2) {
-            Text("Lyrics from \(provider)")
+            Text(provider == AILyricsSync.transcribedProviderName ? String(localized: "Lyrics transcribed with AI") : String(format: String(localized: "Lyrics from %@"), provider))
             if let note = tempoNote {
                 Text(note)
             }
+            calibrationOffer
         }
         .font(.poppins(12, weight: .medium))
         .foregroundStyle(.white.opacity(0.5))
         .frame(maxWidth: .infinity, alignment: settings.lyricsAlignment.textAlignment)
         .padding(.horizontal, 28)
         .padding(.top, 8)
+    }
+
+    /// Lyrics made for this recording (AI-synced, self-synced, edited,
+    /// transcribed): never calibrated.
+    private var isUserMadeLyrics: Bool {
+        LyricsService.userMadeProviders.contains(LyricsState.shared.providerName ?? "")
+    }
+
+    /// Slowed / sped-up song without AI calibration yet: offer it (or show
+    /// its state while it runs / when it failed).
+    @ViewBuilder
+    private var calibrationOffer: some View {
+        if let id = np.videoId, isSynced, !isUserMadeLyrics,
+           LyricsState.shared.tempoInfo[id]?.isVariant == true,
+           LyricsCalibrationStore.shared.calibration(for: id) == nil,
+           LyricsSongAdjustments.shared.tempo(for: id) == nil,
+           settings.aiCalibrationMode != .off {
+            let engine = AILyricsSync.shared
+            if engine.videoId == id, engine.isRunning {
+                Text("Calibrating the tempo with AI…")
+            } else if engine.videoId == id, case .calibrationFailed(let anchors) = engine.phase {
+                Text(String(format: String(localized: "AI calibration: only %d reliable anchor points — the calculated tempo stays."), anchors))
+            } else {
+                Button {
+                    engine.start(videoId: id, lines: lines, duration: np.duration, mode: .calibrate)
+                } label: {
+                    Label("Calibrate tempo with AI", systemImage: "wand.and.stars")
+                        .font(.poppins(12, weight: .semibold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(.white.opacity(0.14), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.white.opacity(0.85))
+                .padding(.top, 4)
+                .disabled(engine.isRunning)
+            }
+        }
+    }
+
+    /// "Automatically on Wi-Fi": calibrate a detected slowed / sped-up song
+    /// once per session.
+    private func autoCalibrateIfWanted(videoId: String) {
+        let engine = AILyricsSync.shared
+        guard settings.aiCalibrationMode == .automaticOnWiFi, isSynced, !isUserMadeLyrics,
+              LyricsState.shared.tempoInfo[videoId]?.isVariant == true,
+              LyricsCalibrationStore.shared.calibration(for: videoId) == nil,
+              LyricsSongAdjustments.shared.tempo(for: videoId) == nil,
+              !engine.isRunning, !engine.autoCalibrated.contains(videoId),
+              DownloadManager.shared.isOnWiFi else { return }
+        Log.player.info("AISYNC automatic tempo calibration for \(videoId)")
+        engine.start(videoId: videoId, lines: lines, duration: np.duration, mode: .calibrate)
     }
 
     /// Tempo check result for slowed / sped-up versions (or when the timing
@@ -428,6 +484,12 @@ struct LyricsView<ProgressSlider: View>: View {
         let id = np.videoId
         if let manual = LyricsSongAdjustments.shared.tempo(for: id), abs(manual - 1) > 0.005 {
             return String(format: String(localized: "Tempo set manually (%@)"), String(format: "%.2f×", manual))
+        }
+        if let calibration = LyricsCalibrationStore.shared.calibration(for: id), !isUserMadeLyrics {
+            return String(format: String(localized: "Tempo calibrated with AI: %@, %@ (%d anchor points)"),
+                          String(format: "%.3f×", calibration.factor),
+                          String(format: "%+.1f s", calibration.offset),
+                          calibration.anchors)
         }
         guard let id, let info = LyricsState.shared.tempoInfo[id], info.isRelevant else { return nil }
         func clock(_ seconds: Double?) -> String {
@@ -741,7 +803,15 @@ struct LyricsView<ProgressSlider: View>: View {
             let manual = LyricsSongAdjustments.shared.tempo(for: videoId)
             let auto = LyricsState.shared.autoTempo[videoId] ?? 1
             let base = withoutMarkers.isEmpty ? result : withoutMarkers
-            let timed = manual.map { LyricLine.scaled(base, by: $0 / auto) } ?? base
+            let timed: [LyricLine]
+            if let manual {
+                timed = LyricLine.scaled(base, by: manual / auto)
+            } else if let calibration = LyricsCalibrationStore.shared.calibration(for: videoId), !isUserMadeLyrics {
+                // AI calibration: provider times (original) → this recording.
+                timed = LyricLine.monotonicTiming(TempoCalibrator.apply(LyricLine.scaled(base, by: 1 / auto), calibration))
+            } else {
+                timed = base
+            }
             let fresh = LyricLine.stable(timed)
             let unchanged = fresh.count == lines.count && zip(fresh, lines).allSatisfy { $0.sameContent(as: $1) }
             if !unchanged {
@@ -749,6 +819,7 @@ struct LyricsView<ProgressSlider: View>: View {
             }
             loadedVideoId = videoId
             prepareTranslation()
+            autoCalibrateIfWanted(videoId: videoId)
             instrumentalGaps = detectGaps(in: result)
             updateActiveLine()
             await rebuildRomanization()

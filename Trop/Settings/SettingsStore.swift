@@ -327,6 +327,11 @@ final class SettingsStore {
     }
 
     /// WhisperKit model for "Sync with AI".
+    /// Slowed / sped-up songs: calibrate the lyrics tempo with AI.
+    var aiCalibrationMode: AICalibrationMode {
+        didSet { Self.defaults.set(aiCalibrationMode.rawValue, forKey: Keys.aiCalibrationMode) }
+    }
+
     var aiSyncModel: AISyncModel {
         didSet { Self.defaults.set(aiSyncModel.rawValue, forKey: Keys.aiSyncModel) }
     }
@@ -489,6 +494,7 @@ final class SettingsStore {
         static let lyricsTranslationMode = "resona.lyricsTranslationMode"
         static let smartDownloadsEnabled = "resona.smartDownloadsEnabled"
         static let aiSyncModel = "resona.aiSyncModel"
+        static let aiCalibrationMode = "resona.aiCalibrationMode"
         static let smartDownloadsLimitGB = "resona.smartDownloadsLimitGB"
         static let removeDeletedPlaylistSongs = "resona.removeDeletedPlaylistSongs"
         static let lyricsAnimationStyle = "resona.lyricsAnimationStyle"
@@ -569,6 +575,7 @@ final class SettingsStore {
         sleepFadeSeconds = Self.load(Keys.sleepFadeSeconds, default: 30.0)
         smartDownloadsEnabled = Self.load(Keys.smartDownloadsEnabled, default: false)
         aiSyncModel = Self.loadEnum(Keys.aiSyncModel, default: AISyncModel.fast)
+        aiCalibrationMode = Self.loadEnum(Keys.aiCalibrationMode, default: AICalibrationMode.ask)
         smartDownloadsLimitGB = Self.load(Keys.smartDownloadsLimitGB, default: 2.0)
         lyricsTranslationMode = Self.loadEnum(Keys.lyricsTranslationMode, default: LyricsTranslationMode.onRequest)
         removeDeletedPlaylistSongs = Self.load(Keys.removeDeletedPlaylistSongs, default: false)

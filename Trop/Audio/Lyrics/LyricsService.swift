@@ -430,9 +430,10 @@ actor LyricsService {
     // MARK: Tempo bookkeeping
 
     /// Lyrics timed to this very recording: never scaled.
-    /// (= "Manual", AILyricsSync.providerName, LyricsSyncSheet.providerName;
+    /// (= "Manual", AILyricsSync.providerName, LyricsSyncSheet.providerName,
+    /// AILyricsSync.transcribedProviderName;
     /// literals because those types are main-actor isolated.)
-    static let userMadeProviders: Set<String> = ["Manual", "AI-synced", "Self-synced"]
+    static let userMadeProviders: Set<String> = ["Manual", "AI-synced", "Self-synced", "AI-transcribed"]
 
     private static func customTempoKey(_ videoId: String) -> String { "lyrics.customTempoInfo.\(videoId)" }
 
