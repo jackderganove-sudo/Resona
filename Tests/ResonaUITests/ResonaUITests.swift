@@ -102,26 +102,20 @@ final class ResonaUITests: XCTestCase {
             snap("player-lyrics-were-open")
         }
 
-        // Lyrics (in landscape the full-screen lyrics layout).
+        // Lyrics (in landscape the full-screen lyrics layout), closed by
+        // swiping down on the header / top bar — by coordinates: element
+        // queries inside the animated lyrics view take very long.
         if tap("player.pill.quote.bubble") {
             sleep(5)
             snap("lyrics")   // shown in the app; not embedded in docs/
-            closeOverlay()
-        }
-        // Lyrics again, closed by swiping down on the header / top bar.
-        if tap("player.pill.quote.bubble") {
-            sleep(3)
-            if let close = visibleButton("lyrics.close", attempts: 5) {
-                let start = close.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: -220, dy: 0))
-                start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 520)))
-                sleep(2)
-                snap("lyrics-closed-by-swipe")
-                if !element("player.pill.list.bullet").waitForExistence(timeout: 4) {
-                    softFail("swipe down did not close the lyrics")
-                    closeOverlay()
-                }
-            } else {
-                softFail("lyrics close button not visible")
+            let window = app.windows.firstMatch
+            let x: CGFloat = prefix == "landscape" ? 0.72 : 0.3
+            let start = window.coordinate(withNormalizedOffset: CGVector(dx: x, dy: 0.075))
+            start.press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: x, dy: 0.75)))
+            sleep(2)
+            snap("lyrics-after-swipe")
+            if !app.buttons["player.pill.list.bullet"].waitForExistence(timeout: 4) {
+                softFail("swipe down did not close the lyrics")
                 closeOverlay()
             }
         }
