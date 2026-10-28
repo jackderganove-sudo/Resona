@@ -159,7 +159,9 @@ if manifest.exists():
                     except Exception as error:
                         print("rotate failed:", target.name, error)
                 tour += 1
-            else:
+            elif not (name.lower().endswith(".mp4") or str(file).lower().endswith(".mp4")):
+                # XCTest's automatic screen recordings are skipped (≈ 1 GB;
+                # the whole run is recorded separately as ui-tests.mp4).
                 shutil.copy(file, other / name)
                 rest += 1
 print(f"{tour} tour screenshots, {rest} other attachments exported")
