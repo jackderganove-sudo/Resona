@@ -18,8 +18,8 @@ Entscheidungen, offene Fragen und bekannte Einschränkungen pro Punkt.
 | 4 | „Zum Drop springen“ (Most replayed) | fertig |
 | 5 | Lyrics-Übersetzung (Translation-Framework) | fertig |
 | 6 | Playlist-Werkzeuge | fertig (Aufteilen ohne Genre/Stimmung, s. u.) |
-| 7 | Smart Downloads (Standard aus) | offen |
-| 8 | KI-Synchronisation (WhisperKit) | offen |
+| 7 | Smart Downloads (Standard aus) | fertig |
+| 8 | KI-Synchronisation (WhisperKit) | fertig (auf dem Gerät ungetestet, s. u.) |
 
 Push-Rhythmus: nach jedem 2.–3. fertigen Punkt (jeder Push auf main = Release).
 
@@ -98,6 +98,42 @@ Push-Rhythmus: nach jedem 2.–3. fertigen Punkt (jeder Push auf main = Release)
   Einträge aus der lokalen DB). Gleiche Video-ID ODER gleicher Titel + Hauptkünstler;
   der erste Eintrag bleibt.
 
+### 7. Smart Downloads
+- Schalter (Standard AUS) + Limit 1/2/5/10 GB (Standard 2 GB) in den
+  Download-Einstellungen. Läuft beim Öffnen/Zurückkehren (max. alle 4 h) und direkt
+  nach dem Einschalten bzw. Ändern des Limits – immer nur im WLAN.
+- Reihenfolge: meistgehört 30 Tage, dann „Gefällt mir“ (neueste zuerst).
+  Neue Songs mit 5 MB geschätzt; Smart Downloads über dem Limit bzw. nicht mehr
+  gewünscht werden gelöscht (älteste zuerst).
+- Abgrenzung manuell/smart zentral im DownloadManager: Nur was ausdrücklich als
+  „smart“ in die Warteschlange kommt, wird als Smart Download markiert. JEDER andere
+  Download-Weg (Menüs, Playlists/Alben, Auto-Download bei „Gefällt mir“) markiert
+  den Song als manuell – auch wenn er vorher smart war. Manuelle Downloads und
+  Playlists werden nie automatisch gelöscht.
+- Kennzeichnung: kleines Funkel-Symbol in der Download-Liste.
+
+### 8. KI-Synchronisation
+- WhisperKit 1.1.x („argmax-oss-swift“, einzige Abhängigkeit swift-argument-parser)
+  per SPM. Build in CI grün, IPA nur ~0,7 MB größer (27,9 → 28,6 MB). Modelle
+  werden NICHT gebündelt: erster Gebrauch lädt sie (nur im WLAN) nach
+  Application Support. „Schnell“ = whisper base (~150 MB), „Genau“ = whisper small
+  (~500 MB). Die Größen sind ungefähre Angaben der Modell-Repos.
+- Audio: Download-Datei oder aufgelöster Stream → ffmpeg (schon in der App) →
+  16 kHz mono WAV (Temp-Datei, wird danach gelöscht). Slowed/Sped-up: direkt auf
+  dem Audio der Variante, keine Skalierung.
+- Transkription mit Wort-Zeitstempeln, VAD-Chunking, Sprache aus dem Songtext
+  (NaturalLanguage) vorgegeben.
+- Forced Alignment (eigener `LyricsAligner`): Normalisierung (Groß/Klein, Akzente,
+  Satzzeichen, Apostrophe), globale Ausrichtung (Needleman-Wunsch/DTW-artig) mit
+  Fuzzy-Ähnlichkeit (Levenshtein ≥ 0,55), zusätzliche erkannte Wörter (Ad-libs)
+  sind billig zu überspringen, nicht gefundene Songtext-Wörter werden zwischen den
+  Nachbarn nach Wortlänge interpoliert, Zeilenstart = erstes Wort.
+  Unter 30 % erkannter Wörter wird abgebrochen (statt Unsinn zu speichern).
+- Ergebnis: wort-synchroner eigener Songtext „AI-synced“ (Vorrang vor Anbietern),
+  „Zurücksetzen“ im Songtext-Menü, nachkorrigierbar per „Selbst synchronisieren“
+  (dabei gehen die Wort-Zeiten verloren, nur Zeilen-Zeiten werden neu gesetzt).
+- Läuft weiter, wenn das Sheet geschlossen wird (solange die App offen ist), abbrechbar.
+
 ## Offene Fragen an dich
 
 - Aufteilen nach Stimmung/Genre: Soll ich dafür eine externe Quelle nutzen
@@ -105,6 +141,20 @@ Push-Rhythmus: nach jedem 2.–3. fertigen Punkt (jeder Push auf main = Release)
   zusätzlicher Netzwerkaufruf pro Künstler, daher nicht ungefragt eingebaut.
 
 ## Bekannte Einschränkungen
+
+- **Nichts davon konnte ich auf einem Gerät testen** (kein Mac/iPhone). Alles ist in
+  GitHub Actions kompiliert; Klang, Timing, Gesten und die KI-Genauigkeit musst du
+  prüfen. Die gewünschte Genauigkeits-Doku für die KI-Synchronisation (Pop, Rap,
+  Phonk/Brazilian Funk, Slowed) kann ich deshalb nicht liefern – bitte mit den
+  Testfällen unten ausprobieren; die App meldet nach jedem Lauf „X % der Wörter
+  erkannt“, das ist die Kennzahl.
+- Crossfade: experimentell und standardmäßig aus, bis du es auf dem Gerät bestätigst.
+- Erwartung KI-Sync (aus Whisper-Erfahrung, nicht gemessen): Pop/klarer Gesang gut;
+  Rap schnell, aber meist ausreichend; Phonk/Brazilian Funk mit verzerrten/
+  gepitchten Vocals und Portugiesisch eher schwach (kann an der 30-%-Grenze
+  scheitern); Slowed meist ok, da auf dem Variant-Audio gearbeitet wird.
+- Lyrics-Übersetzung: iOS lädt die Sprachpakete beim ersten Mal (System-Dialog).
+- Aufteilen nach Stimmung/Genre: mangels Daten nicht möglich (siehe Frage oben).
 
 ## Testliste
 
@@ -146,4 +196,21 @@ Push-Rhythmus: nach jedem 2.–3. fertigen Punkt (jeder Push auf main = Release)
 - Eigene Playlist → „…“ → „Playlist aufteilen“: Gruppierung umschalten, Song in
   andere Gruppe ziehen, Gruppe umbenennen, „Erstellen“.
 - Playlist mit doppeltem Song → „Duplikate entfernen“.
+
+### 7. Smart Downloads
+- Download-Einstellungen → „Smart Downloads“ an, Limit 1 GB, im WLAN: meistgehörte
+  und „Gefällt mir“-Songs werden geladen, Funkel-Symbol in der Download-Liste.
+- Limit auf 1 GB senken, wenn schon mehr da ist: älteste Smart Downloads verschwinden,
+  selbst geladene Songs/Playlists bleiben.
+- Einen Smart-Download-Song manuell herunterladen → Funkel-Symbol verschwindet.
+
+### 8. KI-Synchronisation
+- Songtext-Einstellungen → „KI-Modell“: Schnell. Im WLAN einen Song mit nur
+  Text/Zeilen-Sync öffnen → Songtext-Menü → „Mit KI synchronisieren“ → Starten.
+  Modell-Download mit Fortschritt, dann „Song wird angehört …“, danach „Fertig – X %“.
+- Testfälle: 1 englischer Pop-Song, 1 Rap-Song, 1 Phonk/Brazilian-Funk-Song,
+  1 Slowed-Song – jeweils X % notieren und prüfen, ob die Wörter mitlaufen.
+- Sheet schließen während des Laufs → läuft weiter; „Abbrechen“ stoppt.
+- Songtext-Menü → „Zurücksetzen“ → wieder Anbieter-Songtext.
+- Im Mobilfunk: Meldung „nur im WLAN“.
 
