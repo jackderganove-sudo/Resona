@@ -212,15 +212,27 @@ final class ResonaUITests: XCTestCase {
         return true
     }
 
-    /// Escape (hardware keyboard → app's escape handling), then a swipe
-    /// down on the sheet as fallback.
+    /// Close button of the overlay (lyrics, queue, player menu), otherwise
+    /// Escape (hardware keyboard → app's escape handling), then a swipe down
+    /// on the sheet / a tap outside of a popover.
     private func closeOverlay() {
+        for id in ["lyrics.close", "overlay.close"] {
+            let button = element(id)
+            if button.exists, button.isHittable {
+                button.tap()
+                sleep(1)
+                return
+            }
+        }
         app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
         sleep(1)
         if element("player.collapse").isHittable { return }
         let window = app.windows.firstMatch
         window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12))
             .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
+        sleep(1)
+        if element("player.collapse").isHittable { return }
+        window.coordinate(withNormalizedOffset: CGVector(dx: 0.03, dy: 0.5)).tap()
         sleep(1)
     }
 

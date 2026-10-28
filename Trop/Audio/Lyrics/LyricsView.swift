@@ -185,6 +185,7 @@ struct LyricsView<ProgressSlider: View>: View {
                     M3IconButton(systemName: "xmark", kind: .onDark, size: 44, iconSize: 16, accessibility: "Close lyrics") {
                         withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
                     }
+                    .accessibilityIdentifier("lyrics.close")
                 }
                 .opacity(chromeResting ? 0 : 1)
                 .allowsHitTesting(!chromeResting)
@@ -258,6 +259,7 @@ struct LyricsView<ProgressSlider: View>: View {
             M3IconButton(systemName: "xmark", kind: .onDark, size: 40, iconSize: 15, accessibility: "Close lyrics") {
                 withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
             }
+            .accessibilityIdentifier("lyrics.close")
             M3IconButton(systemName: "ellipsis", kind: .onDark, size: 40, iconSize: 15, accessibility: "Lyrics options") {
                 showLyricsMenu = true
             }

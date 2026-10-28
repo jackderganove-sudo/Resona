@@ -172,6 +172,7 @@ struct FullPlayerView: View {
                         showSongMenu = false
                     }
                 }
+                .accessibilityIdentifier("overlay.close")
             }
             .padding(.horizontal, 10)
             .padding(.top, 10)
