@@ -173,7 +173,17 @@ struct PlayerMenuSheet: View {
 
     // MARK: - Quick Actions
 
+    /// "Most replayed" peak of this song (loaded on appear).
+    @State private var dropTime: Double?
+
     private var actionGrid: some View {
+        actionTiles
+            .task(id: song.videoId) {
+                dropTime = await MostReplayedService.shared.heatmap(for: song.videoId)?.dropTime
+            }
+    }
+
+    private var actionTiles: some View {
         M3ActionTileGrid(tiles: [
             M3ActionTile(icon: "dot.radiowaves.left.and.right", title: "Start Radio") { startRadio() },
             M3ActionTile(icon: "text.badge.plus", title: "Add to playlist") { showPlaylistPicker = true },
@@ -182,13 +192,19 @@ struct PlayerMenuSheet: View {
                 dismiss()
             },
             M3ActionTile(icon: "slider.vertical.3", title: "Equalizer") { showEqualizer = true },
+            M3ActionTile(icon: "bolt.fill", title: "Jump to the drop") {
+                guard let dropTime else { return }
+                PlayerController.shared.seek(to: dropTime)
+                PlayerController.shared.updateNowPlayingProgress()
+                dismiss()
+            },
             M3ActionTile(icon: pin.isPinned ? "pin.slash" : "pin", title: pin.isPinned ? "Unpin" : "Pin") {
                 Task { await pin.toggle(song: song) }
             },
             M3ActionTile(icon: "arrow.up.forward.app", title: "Open in YouTube Music") {
                 if let url = URL(string: song.webUrl) { openURL(url) }
             }
-        ])
+        ].filter { $0.icon != "bolt.fill" || dropTime != nil })
     }
 
     private var separator: some View {

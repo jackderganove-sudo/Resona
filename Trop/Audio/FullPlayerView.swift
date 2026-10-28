@@ -26,6 +26,8 @@ struct FullPlayerView: View {
     @State private var editingProgress: Double = 0
     @State private var isEditingSlider = false
     @State private var showLyrics = false
+    /// "Most replayed" heatmap of the current song (nil = no data).
+    @State private var heatmap: Heatmap?
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// iPad landscape: sheets become a side panel.
     @State private var sidePanelMode = false
@@ -119,6 +121,13 @@ struct FullPlayerView: View {
             preloadLyrics()
         }
         .onChange(of: np.queueIndex) { _, _ in np.preloadNeighborArtwork() }
+        .task(id: np.videoId) {
+            heatmap = nil
+            guard let id = np.videoId else { return }
+            let loaded = await MostReplayedService.shared.heatmap(for: id)
+            guard id == np.videoId else { return }
+            withAnimation(M3Motion.defaultEffects) { heatmap = loaded }
+        }
         .onReceive(AppRouter.shared.$pendingLyrics) { pending in
             guard pending else { return }
             AppRouter.shared.pendingLyrics = false
@@ -512,7 +521,26 @@ struct FullPlayerView: View {
                 .foregroundStyle(.white.opacity(0.9))
                 .padding(.horizontal, 4)
             }
+            // "Most replayed" as a soft wave rising behind the bar.
+            .background(alignment: .top) {
+                if let heatmap, !compact {
+                    HeatmapWave(heatmap: heatmap, color: playerAccentColor)
+                        .frame(height: 26)
+                        .offset(y: -18)
+                        .transition(.opacity)
+                }
+            }
         }
+    }
+
+    private var playerAccentColor: Color { ThemeStore.shared.dark.primary }
+
+    /// Jump just before the most replayed part.
+    private func jumpToDrop() {
+        guard let time = heatmap?.dropTime, np.duration > 0 else { return }
+        player.seek(to: min(time, np.duration - 5))
+        player.updateNowPlayingProgress()
+        showToast("Jumped to the drop")
     }
 
     // MARK: Toggles + bottom row
@@ -525,6 +553,12 @@ struct FullPlayerView: View {
             }
             PlayerRoundToggle(systemName: np.isRepeatOn ? "repeat.1" : "repeat", isOn: np.isRepeatOn, label: "Repeat") {
                 np.isRepeatOn.toggle()
+            }
+            if heatmap?.dropTime != nil {
+                PlayerRoundToggle(systemName: "bolt.fill", isOn: false, label: "Jump to the drop") {
+                    jumpToDrop()
+                }
+                .transition(.scale.combined(with: .opacity))
             }
             PlayerAirPlayButton()
         }
