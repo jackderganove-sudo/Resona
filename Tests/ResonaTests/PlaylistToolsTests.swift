@@ -14,6 +14,11 @@ final class PlaylistToolsTests: XCTestCase {
     private let db = DatabaseService.shared
     private let day: TimeInterval = 24 * 3600
 
+    /// Test rows must not show up in the UI tests that run afterwards.
+    override func tearDown() async throws {
+        await db.deleteTestRows(prefix: "t4-")
+    }
+
     private func song(_ id: String, _ title: String, artist: String, album: String? = nil) -> SongEntity {
         SongEntity.merging(existing: nil, id: id, title: title, artistName: artist, albumName: album,
                            duration: 180, thumbnailUrl: nil)
@@ -62,15 +67,17 @@ final class PlaylistToolsTests: XCTestCase {
         // Same title + artist as #2 under another video id (re-upload).
         try await db.insertOrReplace(song(prefix + "3", "Platzhalter Zwei", artist: "Testband"))
         try await db.insertOrReplace(song(prefix + "4", "Platzhalter Zwei", artist: "Andere Band"))
-        let entries: [(String, String)] = [("1", "s1"), ("2", "s2"), ("1", "s3"), ("3", "s4"), ("4", "s5")]
+        // The same video id twice cannot be stored (UNIQUE playlist_id +
+        // song_id in playlist_song_map), so only re-uploads are found.
+        let entries: [(String, String)] = [("1", "s1"), ("2", "s2"), ("3", "s4"), ("4", "s5")]
         for (position, entry) in entries.enumerated() {
             try await db.insert(PlaylistSongMap(id: nil, playlistId: playlist, songId: prefix + entry.0,
                                                 position: position, setVideoId: entry.1))
         }
         let duplicates = await PlaylistTools.duplicates(in: playlist)
-        XCTAssertEqual(duplicates.map(\.setVideoId), ["s3", "s4"],
-                       "second occurrence of #1 and the re-upload of #2; same title by another artist stays")
-        XCTAssertEqual(duplicates.map(\.songId), [prefix + "1", prefix + "3"])
+        XCTAssertEqual(duplicates.map(\.setVideoId), ["s4"],
+                       "the re-upload of #2 is a duplicate; same title by another artist stays")
+        XCTAssertEqual(duplicates.map(\.songId), [prefix + "3"])
     }
 
     func testNoDuplicatesInEmptyPlaylist() async {

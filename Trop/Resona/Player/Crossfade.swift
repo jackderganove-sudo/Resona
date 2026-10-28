@@ -12,7 +12,8 @@
 //     normalization all follow the active instance automatically.
 //  2. The old song keeps playing on the previous instance until its end.
 //  3. As soon as the new song's audio runs: equal-power crossfade (new sin,
-//     old cos) over the chosen length (bounded by what's left of the old
+//     old cos — as audible amplitudes, i.e. through mpv's cubic volume
+//     curve) over the chosen length (bounded by what's left of the old
 //     song). Then the old instance is stopped and becomes the spare.
 //
 //  Skip / pause / seek during the fade abort cleanly: the old instance stops
@@ -130,8 +131,12 @@ final class CrossfadeEngine {
         log.info("CROSSFADE fading over \(fmt(fade))s (old remaining \(fmt(remaining))s, new pos \(fmt(player.currentTime)))")
         var lastLog = CACurrentMediaTime()
         let completed = await ramp(duration: fade, while: { newValid() && np.isPlaying }) { t in
-            let mainGain = sin(t * .pi / 2)
-            let oldVolume = base * cos(t * .pi / 2)
+            // mpv's software volume is cubic (amplitude = (volume/100)³), so
+            // the volume values are the cube roots of the wanted amplitudes:
+            // that way the audible amplitudes really are sin/cos and the
+            // power sum stays constant (measured: −6 dB dip without this).
+            let mainGain = Self.volumeFactor(forAmplitude: sin(t * .pi / 2))
+            let oldVolume = base * Self.volumeFactor(forAmplitude: cos(t * .pi / 2))
             player.crossfadeGain = mainGain
             player.setVolume(oldVolume, onInstance: old)
             if CACurrentMediaTime() - lastLog > 0.5 {
@@ -142,6 +147,12 @@ final class CrossfadeEngine {
         }
         log.info(completed ? "CROSSFADE finished" : "CROSSFADE aborted (skip/pause)")
         finish()
+    }
+
+    /// Factor for mpv's `volume` that yields `amplitude` (0…1) after mpv's
+    /// cubic volume curve.
+    nonisolated static func volumeFactor(forAmplitude amplitude: Double) -> Double {
+        cbrt(min(1, max(0, amplitude)))
     }
 
     /// ~60 Hz ramp; `body` gets 0…1. Returns false when `valid` failed.

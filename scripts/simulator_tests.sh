@@ -83,20 +83,44 @@ kill -INT $VIDEO_PID 2>/dev/null; wait $VIDEO_PID 2>/dev/null
 step "Export screenshots"
 xcrun xcresulttool export attachments --path "$OUT/Resona.xcresult" --output-path "$OUT/attachments" >/dev/null 2>&1 || true
 python3 - "$OUT/attachments" "$OUT/screenshots" <<'PY'
+# Tour screenshots → screenshots/<name>.png (landscape ones rotated upright:
+# XCUIScreen delivers the raw portrait framebuffer); everything else XCTest
+# attached (debug descriptions, automatic screenshots) → screenshots/other/
+# with file-system-safe names (artifact upload rejects quotes etc.).
 import json, re, shutil, sys
 from pathlib import Path
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
 src, dst = Path(sys.argv[1]), Path(sys.argv[2])
+other = dst / "other"
+other.mkdir(parents=True, exist_ok=True)
 manifest = src / "manifest.json"
-count = 0
+tour = rest = 0
 if manifest.exists():
     for test in json.loads(manifest.read_text()):
         for a in test.get("attachments", []):
+            file = src / a["exportedFileName"]
+            if not file.exists():
+                continue
             name = a.get("suggestedHumanReadableName") or a["exportedFileName"]
             name = re.sub(r"_\d+_[0-9A-Fa-f-]{36}", "", name)
-            if (src / a["exportedFileName"]).exists():
-                shutil.copy(src / a["exportedFileName"], dst / name)
-                count += 1
-print(f"{count} screenshots exported")
+            name = re.sub(r'[^A-Za-z0-9._ -]+', "_", name).strip() or a["exportedFileName"]
+            if re.match(r"(portrait|landscape)-\d\d-", name):
+                target = dst / name
+                if not target.suffix:
+                    target = target.with_suffix(".png")
+                shutil.copy(file, target)
+                if Image and name.startswith("landscape-"):
+                    with Image.open(target) as im:
+                        if im.height > im.width:
+                            im.rotate(90, expand=True).save(target)
+                tour += 1
+            else:
+                shutil.copy(file, other / name)
+                rest += 1
+print(f"{tour} tour screenshots, {rest} other attachments exported")
 PY
 xcrun xcresulttool get test-results summary --path "$OUT/Resona.xcresult" --compact > "$OUT/test-summary.json" 2>/dev/null || true
 xcrun xcresulttool get test-results tests --path "$OUT/Resona.xcresult" --compact > "$OUT/test-list.json" 2>/dev/null || true

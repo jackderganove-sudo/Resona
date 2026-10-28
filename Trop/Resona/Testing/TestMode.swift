@@ -31,3 +31,19 @@ enum TestMode {
     nonisolated(unsafe) static var localOverride: [String: URL] = [:]
     #endif
 }
+
+#if DEBUG
+import GRDB
+
+extension DatabaseService {
+    /// Removes rows the unit tests inserted (ids with `prefix`).
+    func deleteTestRows(prefix: String) async {
+        let pattern = prefix + "%"
+        try? await dbPool.write { db in
+            try db.execute(sql: "DELETE FROM event WHERE song_id LIKE ?", arguments: [pattern])
+            try db.execute(sql: "DELETE FROM playlist_song_map WHERE playlist_id LIKE ? OR song_id LIKE ?", arguments: [pattern, pattern])
+            try db.execute(sql: "DELETE FROM song WHERE id LIKE ?", arguments: [pattern])
+        }
+    }
+}
+#endif

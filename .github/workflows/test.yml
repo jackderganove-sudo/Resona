@@ -48,7 +48,7 @@ jobs:
       - name: Tools
         run: |
           gem install xcodeproj --no-document
-          python3 -m pip install --quiet numpy matplotlib
+          python3 -m pip install --quiet numpy matplotlib pillow
           xcodebuild -version
           xcrun simctl list runtimes | grep -i ios || true
 

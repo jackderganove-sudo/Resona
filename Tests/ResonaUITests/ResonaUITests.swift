@@ -81,8 +81,11 @@ final class ResonaUITests: XCTestCase {
         // Play the first song.
         let song = app.descendants(matching: .any).matching(identifier: "result.song").firstMatch
         if song.waitForExistence(timeout: 10) {
-            song.tap()
-            sleep(6)
+            // Tap the title (the row's own button), not the container centre.
+            let title = song.staticTexts.firstMatch
+            (title.exists ? title : song).tap()
+            _ = element("miniplayer").waitForExistence(timeout: 20)
+            sleep(2)
             snap("playing-miniplayer")
         } else {
             softFail("no song result")
@@ -90,7 +93,7 @@ final class ResonaUITests: XCTestCase {
     }
 
     private func player() {
-        guard tap("miniplayer", timeout: 10) else { return }
+        guard tap("miniplayer", timeout: 15) else { return }
         sleep(3)
         snap("player")
 
@@ -135,6 +138,7 @@ final class ResonaUITests: XCTestCase {
             snap("artist-scrolled")
             back()
             sleep(2)
+            snap("after-artist-back")
         } else {
             softFail("no artist result")
         }
@@ -151,6 +155,7 @@ final class ResonaUITests: XCTestCase {
             sleep(2)
         } else {
             softFail("no album result")
+            snap("missing-album")
         }
         let playlist = app.descendants(matching: .any).matching(identifier: "result.playlist").firstMatch
         if playlist.waitForExistence(timeout: 3) {
