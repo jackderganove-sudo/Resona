@@ -1,0 +1,528 @@
+{
+ "responseContext": {
+  "visitorData": "x"
+ },
+ "contents": {
+  "twoColumnWatchNextResults": {}
+ },
+ "frameworkUpdates": {
+  "entityBatchUpdate": {
+   "mutations": [
+    {
+     "entityKey": "a",
+     "type": "ENTITY_MUTATION_TYPE_REPLACE",
+     "payload": {
+      "macroMarkersListEntity": {
+       "externalVideoId": "abc",
+       "markersList": {
+        "markerType": "MARKER_TYPE_HEATMAP",
+        "markers": [
+         {
+          "startMillis": "0",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 1.0
+         },
+         {
+          "startMillis": "2000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "4000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "6000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "8000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "10000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "12000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "14000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "16000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "18000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "20000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "22000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "24000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "26000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "28000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "30000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "32000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "34000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "36000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "38000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "40000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "42000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "44000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "46000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "48000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "50000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "52000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "54000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "56000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "58000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "60000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "62000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "64000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "66000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "68000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "70000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "72000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "74000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "76000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "78000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "80000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "82000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "84000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "86000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "88000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "90000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "92000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "94000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "96000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "98000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "100000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "102000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "104000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "106000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "108000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "110000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "112000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "114000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "116000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "118000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.7
+         },
+         {
+          "startMillis": "120000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.95
+         },
+         {
+          "startMillis": "122000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.8
+         },
+         {
+          "startMillis": "124000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "126000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "128000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "130000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "132000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "134000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "136000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "138000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "140000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "142000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "144000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "146000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "148000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "150000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "152000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "154000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "156000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "158000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "160000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "162000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "164000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "166000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "168000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "170000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "172000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "174000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "176000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "178000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "180000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "182000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "184000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "186000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "188000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "190000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "192000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "194000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 0.2
+         },
+         {
+          "startMillis": "196000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 1.0
+         },
+         {
+          "startMillis": "198000",
+          "durationMillis": "2000",
+          "intensityScoreNormalized": 1.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}

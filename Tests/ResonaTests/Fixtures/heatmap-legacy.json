@@ -1,0 +1,373 @@
+{
+ "playerOverlays": {
+  "playerOverlayRenderer": {
+   "decoratedPlayerBarRenderer": {
+    "decoratedPlayerBarRenderer": {
+     "playerBar": {
+      "multiMarkersPlayerBarRenderer": {
+       "markersMap": [
+        {
+         "key": "HEATSEEKER",
+         "value": {
+          "heatMarkers": [
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 0,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.1
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 1500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.11
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 3000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.12000000000000001
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 4500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.13
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 6000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.14
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 7500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.15000000000000002
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 9000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.16
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 10500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.17
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 12000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.18
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 13500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.19
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 15000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.2
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 16500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.21000000000000002
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 18000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.22
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 19500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.23
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 21000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.24000000000000002
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 22500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.25
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 24000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.26
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 25500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.27
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 27000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.28
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 28500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.29000000000000004
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 30000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.30000000000000004
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 31500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.31
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 33000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.32
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 34500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.33
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 36000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.33999999999999997
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 37500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.35
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 39000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.36
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 40500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.37
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 42000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.38
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 43500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.39
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 45000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 1.0
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 46500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.41000000000000003
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 48000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.42000000000000004
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 49500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.43000000000000005
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 51000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.44000000000000006
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 52500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.45000000000000007
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 54000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.45999999999999996
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 55500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.47
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 57000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.48
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 58500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.49
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 60000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.5
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 61500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.51
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 63000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.52
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 64500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.53
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 66000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.54
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 67500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.55
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 69000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.56
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 70500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.5700000000000001
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 72000,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.58
+            }
+           },
+           {
+            "heatMarkerRenderer": {
+             "timeRangeStartMillis": 73500,
+             "markerDurationMillis": 1500,
+             "heatMarkerIntensityScoreNormalized": 0.59
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     }
+    }
+   }
+  }
+ }
+}

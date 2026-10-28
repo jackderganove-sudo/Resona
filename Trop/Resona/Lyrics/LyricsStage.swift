@@ -33,6 +33,25 @@ enum LyricsTiming {
     static let scrollAnimation = Animation.spring(response: 0.5, dampingFraction: 0.78)
     /// Back to the current line after manual scrolling.
     static let resumeDelay: Duration = .seconds(3)
+
+    /// Last line whose start time has passed (binary search; lines are sorted).
+    static func activeIndex(in lines: [LyricLine], at t: TimeInterval) -> Int {
+        // Before the first timed line: intro (no active line yet).
+        if let first = lines.lazy.compactMap(\.startTime).first, t < first { return -1 }
+        var lo = 0, hi = lines.count - 1, result = 0
+        while lo <= hi {
+            let mid = (lo + hi) / 2
+            if let start = lines[mid].startTime, start <= t {
+                result = mid
+                lo = mid + 1
+            } else if lines[mid].startTime == nil {
+                lo = mid + 1
+            } else {
+                hi = mid - 1
+            }
+        }
+        return result
+    }
 }
 
 struct LyricsStage<Accessory: View>: View {

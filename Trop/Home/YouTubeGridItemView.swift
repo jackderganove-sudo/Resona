@@ -105,6 +105,8 @@ struct YouTubeListItemView: View {
                 onTap: onTap,
                 onNavigate: onNavigate
             )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("result.song")
         } else {
             HStack(spacing: 16) {
                 AsyncImageView(url: item.thumbnailUrl)
@@ -139,6 +141,20 @@ struct YouTubeListItemView: View {
             .contentShape(Rectangle())
             .onTapGesture(perform: onTap)
             .modifier(M3TapHighlight())
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("result.\(kind)")
+        }
+    }
+
+    /// UI-test identifier suffix.
+    private var kind: String {
+        switch item {
+        case .song: return "song"
+        case .album: return "album"
+        case .artist: return "artist"
+        case .playlist: return "playlist"
+        case .podcast: return "podcast"
+        case .episode: return "episode"
         }
     }
 

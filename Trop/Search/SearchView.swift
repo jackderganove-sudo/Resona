@@ -354,6 +354,7 @@ struct SearchView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("result.artist")
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
 
@@ -391,6 +392,7 @@ struct SearchView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("result.artist")
                     }
                 }
             }
@@ -415,6 +417,7 @@ struct SearchView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("result.album")
                     }
                 }
             }

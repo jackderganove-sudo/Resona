@@ -70,6 +70,28 @@ enum PlaylistTools {
         return result
     }
 
+    /// Buckets songs by `key` (order of first appearance). Groups with
+    /// fewer than 3 songs are merged into "More"; at most 7 named groups,
+    /// biggest first.
+    static func splitGroups(_ songs: [SongItem], title: String, key: (SongItem) -> String) -> [(name: String, songs: [SongItem])] {
+        var buckets: [String: [SongItem]] = [:]
+        var order: [String] = []
+        for song in songs {
+            let k = key(song)
+            if buckets[k] == nil { order.append(k) }
+            buckets[k, default: []].append(song)
+        }
+        let big = order.filter { (buckets[$0]?.count ?? 0) >= 3 }
+            .sorted { (buckets[$0]?.count ?? 0) > (buckets[$1]?.count ?? 0) }
+        let kept = Array(big.prefix(7))
+        var result = kept.map { (name: "\(title) – \($0)", songs: buckets[$0] ?? []) }
+        let rest = order.filter { !kept.contains($0) }.flatMap { buckets[$0] ?? [] }
+        if !rest.isEmpty {
+            result.append((name: "\(title) – " + String(localized: "More"), songs: rest))
+        }
+        return result
+    }
+
     static func remove(_ duplicates: [Duplicate], from playlistId: String) async {
         for duplicate in duplicates {
             try? await SyncBridge.mutations.removeFromPlaylist(playlistId: playlistId, songId: duplicate.songId, setVideoId: duplicate.setVideoId)
@@ -257,23 +279,8 @@ struct PlaylistSplitSheet: View {
                 return Locale.current.localizedString(forLanguageCode: code) ?? String(localized: "Other")
             }
         }
-        var buckets: [String: [SongItem]] = [:]
-        var order: [String] = []
-        for song in playlist.songs {
-            let k = key(song)
-            if buckets[k] == nil { order.append(k) }
-            buckets[k, default: []].append(song)
-        }
-        // Small groups (< 3 songs) are merged into "More"; at most 8 groups.
-        let big = order.filter { (buckets[$0]?.count ?? 0) >= 3 }
-            .sorted { (buckets[$0]?.count ?? 0) > (buckets[$1]?.count ?? 0) }
-        let kept = Array(big.prefix(7))
-        var result = kept.map { SplitGroup(name: "\(playlist.title) – \($0)", songs: buckets[$0] ?? []) }
-        let rest = order.filter { !kept.contains($0) }.flatMap { buckets[$0] ?? [] }
-        if !rest.isEmpty {
-            result.append(SplitGroup(name: "\(playlist.title) – " + String(localized: "More"), songs: rest))
-        }
-        groups = result
+        groups = PlaylistTools.splitGroups(playlist.songs, title: playlist.title, key: key)
+            .map { SplitGroup(name: $0.name, songs: $0.songs) }
     }
 
     private func create() {

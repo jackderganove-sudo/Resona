@@ -325,6 +325,7 @@ private struct M3BackButtonModifier: ViewModifier {
                     }
                     .buttonStyle(.expressive(scale: 0.88))
                     .accessibilityLabel(Text("Back"))
+                    .accessibilityIdentifier("nav.back")
                 }
             }
     }

@@ -430,25 +430,40 @@ actor LyricsService {
                 (lines, provider) = retry
             }
         }
-        guard played > 0, let last = lines.compactMap(\.startTime).max() else { return (lines, provider, nil) }
-
-        let mismatch = last > played + 3
-        guard query.isSpeedVariant || mismatch else { return (lines, provider, nil) }
-        if original == nil {
+        if original == nil, needsOriginalDuration(lines, played: played, isSpeedVariant: query.isSpeedVariant) {
             original = await originalDuration(title: query.title, artist: query.artist)
         }
+        let adjusted = tempoAdjusted(lines, played: played, original: original, isSpeedVariant: query.isSpeedVariant)
+        return (adjusted.lines, provider, adjusted.tempo)
+    }
+
+    /// True when the result has to be checked against the original length.
+    static func needsOriginalDuration(_ lines: [LyricLine], played: TimeInterval, isSpeedVariant: Bool) -> Bool {
+        guard played > 0, let last = lines.compactMap(\.startTime).max() else { return false }
+        return isSpeedVariant || last > played + 3
+    }
+
+    /// Pure tempo decision (unit-tested): scale by played / original when
+    /// that is a plausible speed change (0.6-1.5×, more than 2 % off);
+    /// timestamps that run past the song with no usable original length
+    /// are dropped (plain text) rather than shown wrongly.
+    static func tempoAdjusted(_ lines: [LyricLine], played: TimeInterval, original: TimeInterval?,
+                              isSpeedVariant: Bool) -> (lines: [LyricLine], tempo: Double?) {
+        guard played > 0, let last = lines.compactMap(\.startTime).max() else { return (lines, nil) }
+        let mismatch = last > played + 3
+        guard isSpeedVariant || mismatch else { return (lines, nil) }
         if let original, original > 0 {
             let factor = played / original
             if (0.6...1.5).contains(factor), abs(factor - 1) > 0.02 {
-                return (LyricLine.scaled(lines, by: factor), provider, factor)
+                return (LyricLine.scaled(lines, by: factor), factor)
             }
-            if abs(factor - 1) <= 0.02 { return (lines, provider, nil) }
+            if abs(factor - 1) <= 0.02 { return (lines, nil) }
         }
         // Can't tell how to scale: show the text without wrong timing.
         if mismatch {
-            return (lines.map { LyricLine(text: $0.text, startTime: nil, backgroundText: $0.backgroundText) }, provider, nil)
+            return (lines.map { LyricLine(text: $0.text, startTime: nil, backgroundText: $0.backgroundText) }, nil)
         }
-        return (lines, provider, nil)
+        return (lines, nil)
     }
 
     /// Length of the ORIGINAL recording via LRCLIB search: entries whose
