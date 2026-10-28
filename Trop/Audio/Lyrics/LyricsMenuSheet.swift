@@ -17,6 +17,9 @@ struct LyricsMenuSheet: View {
     @State private var showEditSheet = false
     @State private var showSearchSheet = false
     @State private var showSyncSheet = false
+    @State private var showAISync = false
+    /// Current lyrics aren't word-synced yet → offer AI sync.
+    @State private var canAISync = false
     @State private var isSelfSynced = false
 
     var body: some View {
@@ -29,6 +32,10 @@ struct LyricsMenuSheet: View {
                 MenuCard {
                         if settings.lyricsTranslationMode == .onRequest {
                             translateRow
+                            Divider()
+                        }
+                        if canAISync || AILyricsSync.shared.isRunning {
+                            aiSyncRow
                             Divider()
                         }
                         syncRow
@@ -80,12 +87,21 @@ struct LyricsMenuSheet: View {
         .sheet(isPresented: $showOffsetEditor) {
             LyricsOffsetSheet()
         }
+        .sheet(isPresented: $showAISync) {
+            AISyncSheet(videoId: np.videoId ?? "", duration: np.duration)
+        }
+        .task(id: np.videoId) {
+            guard let id = np.videoId else { return }
+            let lines = await LyricsService.shared.currentLines(videoId: id)
+            canAISync = !lines.isEmpty && LyricsQuality.of(lines) != .wordSynced
+        }
         .sheet(isPresented: $showSyncSheet) {
             LyricsSyncSheet(videoId: np.videoId ?? "", songTitle: np.title)
         }
         .task(id: np.videoId) {
             guard let id = np.videoId else { return }
-            isSelfSynced = await LyricsService.shared.customProvider(videoId: id) == LyricsSyncSheet.providerName
+            let provider = await LyricsService.shared.customProvider(videoId: id)
+            isSelfSynced = provider == LyricsSyncSheet.providerName || provider == AILyricsSync.providerName
         }
         .sheet(isPresented: $showEditSheet) {
             EditLyricsSheet(videoId: np.videoId ?? "", songTitle: np.title)
@@ -184,6 +200,38 @@ struct LyricsMenuSheet: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+
+    /// "Sync with AI" (WhisperKit) — shows progress while running.
+    private var aiSyncRow: some View {
+        Button {
+            showAISync = true
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "wand.and.stars")
+                    .font(.system(size: 18))
+                    .foregroundStyle(settings.accentColor)
+                    .frame(width: 26)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Sync with AI")
+                        .font(.body)
+                        .foregroundStyle(.m3OnSurface)
+                    if AILyricsSync.shared.isRunning {
+                        Text("Running…")
+                            .font(.footnote)
+                            .foregroundStyle(.m3OnSurfaceVariant)
+                    }
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.m3OnSurfaceVariant)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     /// "Sync yourself" (tap along) — or reset self-synced lyrics.

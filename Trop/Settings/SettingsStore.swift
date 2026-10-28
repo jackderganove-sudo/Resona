@@ -315,6 +315,11 @@ final class SettingsStore {
         didSet { Self.defaults.set(smartDownloadsLimitGB, forKey: Keys.smartDownloadsLimitGB) }
     }
 
+    /// WhisperKit model for "Sync with AI".
+    var aiSyncModel: AISyncModel {
+        didSet { Self.defaults.set(aiSyncModel.rawValue, forKey: Keys.aiSyncModel) }
+    }
+
     /// Crossfade length between songs in seconds (0 = off).
     var crossfadeSeconds: Double {
         didSet { Self.defaults.set(crossfadeSeconds, forKey: Keys.crossfadeSeconds) }
@@ -470,6 +475,7 @@ final class SettingsStore {
         static let sleepFadeSeconds = "resona.sleepFadeSeconds"
         static let lyricsTranslationMode = "resona.lyricsTranslationMode"
         static let smartDownloadsEnabled = "resona.smartDownloadsEnabled"
+        static let aiSyncModel = "resona.aiSyncModel"
         static let smartDownloadsLimitGB = "resona.smartDownloadsLimitGB"
         static let removeDeletedPlaylistSongs = "resona.removeDeletedPlaylistSongs"
         static let lyricsAnimationStyle = "resona.lyricsAnimationStyle"
@@ -547,6 +553,7 @@ final class SettingsStore {
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)
         sleepFadeSeconds = Self.load(Keys.sleepFadeSeconds, default: 30.0)
         smartDownloadsEnabled = Self.load(Keys.smartDownloadsEnabled, default: false)
+        aiSyncModel = Self.loadEnum(Keys.aiSyncModel, default: AISyncModel.fast)
         smartDownloadsLimitGB = Self.load(Keys.smartDownloadsLimitGB, default: 2.0)
         lyricsTranslationMode = Self.loadEnum(Keys.lyricsTranslationMode, default: LyricsTranslationMode.onRequest)
         removeDeletedPlaylistSongs = Self.load(Keys.removeDeletedPlaylistSongs, default: false)

@@ -58,6 +58,7 @@ struct LyricsSettingsView: View {
                 SettingsPickerRow("Animation", icon: "sparkles", selection: $settings.lyricsAnimationStyle)
                 SettingsPickerRow("Translation", icon: "character.bubble", selection: $settings.lyricsTranslationMode)
                 SettingsToggleRow("Show romanization", icon: "globe", isOn: $settings.romanizeCurrentTrack)
+                SettingsPickerRow("AI sync model", icon: "wand.and.stars", selection: $settings.aiSyncModel)
             } header: {
                 Text("Display")
             } footer: {
