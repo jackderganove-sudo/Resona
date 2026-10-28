@@ -263,10 +263,21 @@ final class ResonaUITests: XCTestCase {
                     // in the animated lyrics view.
                     let candidates = app.buttons.matching(identifier: id).allElementsBoundByIndex
                     if let button = visibleButton(id, attempts: 3) {
-                        XCTContext.runActivity(named: "tap \(id) (attempt \(attempt))") { _ in button.tap() }
+                        let frame = button.frame
+                        XCTContext.runActivity(named: "tap \(id) at \(Int(frame.midX)),\(Int(frame.midY)) (attempt \(attempt))") { _ in
+                            button.tap()
+                        }
                         sleep(2)
                         snap("after-close-\(id)")
-                        if !button.exists || !button.isHittable { return }
+                        if visibleButton(id, attempts: 1) == nil { return }
+                        // Still there: pull the view down from the button's bar.
+                        if id == "lyrics.close", let again = visibleButton(id, attempts: 1) {
+                            let start = again.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: -160, dy: 0))
+                            start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 500)))
+                            sleep(2)
+                            snap("after-close-swipe")
+                            if visibleButton(id, attempts: 1) == nil { return }
+                        }
                     } else if !candidates.isEmpty {
                         XCTContext.runActivity(named: "\(id): \(candidates.count) found, none hittable") { _ in }
                     }
