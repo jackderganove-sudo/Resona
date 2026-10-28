@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.5",
+          "buildVersion": "63",
+          "date": "2026-10-28T12:40:57Z",
+          "localizedDescription": "- Simulator tests: retry package resolution; test report draft with crossfade diagrams\n- UI tests: query buttons only (any-type query timed out in the lyrics view)\n- UI tests: tap the visible element when an id exists twice; video as its own artifact\n- UI tests: close buttons of lyrics/queue/menu overlays get identifiers\n- UI tests: local test tone instead of YouTube stream (CI IPs get a bot check), artist back button id; crossfade analysis: continuous clock, instance role swap, pause handling\n- Equalizer: preset chips wrap instead of being cut off at the column edge\n- Crossfade: equal power through mpv's cubic volume curve (measured -6 dB dip); test fixes: cleanup, song tap, export names, landscape rotation\n- Docs: round 4 progress [skip ci]\n- Split playlist: genre/mood grouping from Last.fm tags (cached, API key only), tests\n- Simulator test workflow: iPad sim build, unit+UI tests, video, screenshots, crossfade measurement\n- Unit + UI tests (placeholder texts only), testable tempo/scroll/split helpers, result identifiers\n- Test hooks: accessibility identifiers, TestMode (ao=null), DEBUG crossfade harness\n- Docs: progress file for round 4 [skip ci]\n- CI: don't build/release for documentation-only pushes [skip ci]\n- Docs: round 3 finished (v0.8.3, v0.8.4)",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.5/Resona.ipa",
+          "size": 28692121,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.4",
           "buildVersion": "61",
           "date": "2026-10-28T00:30:15Z",
@@ -55,11 +64,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.4",
-      "versionDate": "2026-10-28T00:30:15Z",
-      "versionDescription": "- Docs: progress round 3 - points 7 and 8, limitations, test list\n- PlaylistTools: import GRDB for statement arguments\n- Lyrics: sync with AI (WhisperKit, on-device) + forced alignment\n- Smart downloads (optional, off by default)\n- Docs: progress round 3 - points 4 to 6\n- Playlist tools: automatic playlists, save, split, remove duplicates\n- Lyrics: on-device translation into German\n- Player: 'Most replayed' wave and 'Jump to the drop'",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.4/Resona.ipa",
-      "size": 28660320,
+      "version": "0.8.5",
+      "versionDate": "2026-10-28T12:40:57Z",
+      "versionDescription": "- Simulator tests: retry package resolution; test report draft with crossfade diagrams\n- UI tests: query buttons only (any-type query timed out in the lyrics view)\n- UI tests: tap the visible element when an id exists twice; video as its own artifact\n- UI tests: close buttons of lyrics/queue/menu overlays get identifiers\n- UI tests: local test tone instead of YouTube stream (CI IPs get a bot check), artist back button id; crossfade analysis: continuous clock, instance role swap, pause handling\n- Equalizer: preset chips wrap instead of being cut off at the column edge\n- Crossfade: equal power through mpv's cubic volume curve (measured -6 dB dip); test fixes: cleanup, song tap, export names, landscape rotation\n- Docs: round 4 progress [skip ci]\n- Split playlist: genre/mood grouping from Last.fm tags (cached, API key only), tests\n- Simulator test workflow: iPad sim build, unit+UI tests, video, screenshots, crossfade measurement\n- Unit + UI tests (placeholder texts only), testable tempo/scroll/split helpers, result identifiers\n- Test hooks: accessibility identifiers, TestMode (ao=null), DEBUG crossfade harness\n- Docs: progress file for round 4 [skip ci]\n- CI: don't build/release for documentation-only pushes [skip ci]\n- Docs: round 3 finished (v0.8.3, v0.8.4)",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.5/Resona.ipa",
+      "size": 28692121,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
