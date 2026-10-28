@@ -96,6 +96,11 @@ final class ResonaUITests: XCTestCase {
         guard tap("miniplayer", timeout: 15) else { return }
         sleep(3)
         snap("player")
+        // The player may come up with the lyrics already open.
+        if visibleButton("lyrics.close", attempts: 2) != nil {
+            closeOverlay()
+            snap("player-lyrics-were-open")
+        }
 
         // Lyrics (in landscape the full-screen lyrics layout).
         if tap("player.pill.quote.bubble") {
@@ -106,7 +111,7 @@ final class ResonaUITests: XCTestCase {
         // Lyrics again, closed by swiping down on the header / top bar.
         if tap("player.pill.quote.bubble") {
             sleep(3)
-            if let close = app.buttons.matching(identifier: "lyrics.close").allElementsBoundByIndex.first(where: { $0.isHittable }) {
+            if let close = visibleButton("lyrics.close", attempts: 5) {
                 let start = close.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: -220, dy: 0))
                 start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 520)))
                 sleep(2)
@@ -208,6 +213,18 @@ final class ResonaUITests: XCTestCase {
 
     // MARK: Helpers
 
+    /// First hittable button with this id, polling once per second.
+    private func visibleButton(_ identifier: String, attempts: Int) -> XCUIElement? {
+        for attempt in 0..<attempts {
+            if attempt > 0 { sleep(1) }
+            if let button = app.buttons.matching(identifier: identifier).allElementsBoundByIndex
+                .first(where: { $0.exists && $0.isHittable }) {
+                return button
+            }
+        }
+        return nil
+    }
+
     private func element(_ identifier: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: identifier).firstMatch
     }
@@ -245,7 +262,7 @@ final class ResonaUITests: XCTestCase {
                     // Buttons only: a query over every element type times out
                     // in the animated lyrics view.
                     let candidates = app.buttons.matching(identifier: id).allElementsBoundByIndex
-                    if let button = candidates.first(where: { $0.exists && $0.isHittable }) {
+                    if let button = visibleButton(id, attempts: 3) {
                         XCTContext.runActivity(named: "tap \(id) (attempt \(attempt))") { _ in button.tap() }
                         sleep(2)
                         snap("after-close-\(id)")
@@ -294,7 +311,8 @@ final class ResonaUITests: XCTestCase {
     private func snap(_ name: String) {
         step += 1
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        attachment.name = String(format: "%@-%02d-%@", prefix, step, name)
+        let safe = name.replacingOccurrences(of: ".", with: "-")
+        attachment.name = String(format: "%@-%02d-%@", prefix, step, safe)
         attachment.lifetime = .keepAlways
         add(attachment)
     }

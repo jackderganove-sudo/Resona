@@ -148,14 +148,16 @@ if manifest.exists():
             name = re.sub(r"_\d+_[0-9A-Fa-f-]{36}", "", name)
             name = re.sub(r'[^A-Za-z0-9._ -]+', "_", name).strip() or a["exportedFileName"]
             if re.match(r"(portrait|landscape)-\d\d-", name):
-                target = dst / name
-                if not target.suffix:
-                    target = target.with_suffix(".png")
+                # Always .png (names may contain dots, e.g. "player.sleep").
+                target = dst / (name if name.endswith(".png") else name + ".png")
                 shutil.copy(file, target)
                 if Image and name.startswith("landscape-"):
-                    with Image.open(target) as im:
-                        if im.height > im.width:
-                            im.rotate(90, expand=True).save(target)
+                    try:
+                        with Image.open(target) as im:
+                            if im.height > im.width:
+                                im.rotate(90, expand=True).save(target, format="PNG")
+                    except Exception as error:
+                        print("rotate failed:", target.name, error)
                 tour += 1
             else:
                 shutil.copy(file, other / name)
