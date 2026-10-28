@@ -245,6 +245,32 @@ struct PlayerRoundToggle: View {
     }
 }
 
+/// "Jump to the drop": tap jumps, long press opens a small menu that also
+/// switches the most-replayed curve behind the progress bar.
+struct PlayerDropButton: View {
+    @Binding var showCurve: Bool
+    let jump: () -> Void
+
+    var body: some View {
+        Menu {
+            Button("Jump to the drop", systemImage: "bolt.fill", action: jump)
+            Toggle("Show most-replayed curve", systemImage: "waveform.path.ecg", isOn: $showCurve)
+        } label: {
+            Image(systemName: "bolt.fill")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.6))
+                .frame(width: 44, height: 44)
+                .background(.white.opacity(0.1), in: Circle())
+        } primaryAction: {
+            jump()
+        }
+        .menuStyle(.button)
+        .buttonStyle(.expressive(scale: 0.86))
+        .accessibilityLabel(Text("Jump to the drop"))
+        .accessibilityIdentifier("player.toggle.bolt.fill")
+    }
+}
+
 // MARK: - Title row action
 
 struct PlayerActionButton: View {

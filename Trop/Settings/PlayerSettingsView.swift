@@ -58,6 +58,14 @@ struct PlayerSettingsView: View {
             }
 
             M3Section {
+                SettingsToggleRow("Show most-replayed curve", icon: "waveform.path.ecg", isOn: $settings.showMostReplayedCurve)
+            } header: {
+                Text("Player")
+            } footer: {
+                Text("A soft wave behind the progress bar shows which parts of the song are replayed most. Long-press the lightning button in the player for the same switch.")
+            }
+
+            M3Section {
                 SettingsToggleRow("Swipe Artwork to Skip", icon: "hand.draw", isOn: $settings.artworkSwipeNavigation)
             } header: {
                 Text("Gestures")

@@ -256,6 +256,11 @@ final class SettingsStore {
         didSet { Self.defaults.set(audioNormalization, forKey: Keys.audioNormalization) }
     }
 
+    /// "Most replayed" wave behind the player's progress bar.
+    var showMostReplayedCurve: Bool {
+        didSet { Self.defaults.set(showMostReplayedCurve, forKey: Keys.showMostReplayedCurve) }
+    }
+
     /// iPad full-screen lyrics: fade out title/controls after 5 s without
     /// touch (off by default — controls always visible).
     var lyricsAutoHideControls: Bool {
@@ -476,6 +481,7 @@ final class SettingsStore {
         static let animatedPlayerBackground = "resona.animatedPlayerBackground"
         static let lyricsLineChangeAdjustMs = "resona.lyricsLineChangeAdjustMs"
         static let lyricsAutoHideControls = "resona.lyricsAutoHideControls"
+        static let showMostReplayedCurve = "resona.showMostReplayedCurve"
         static let playerBackgroundBrightness = "resona.playerBackgroundBrightness"
         static let showAudioDetails = "resona.showAudioDetails"
         static let crossfadeSeconds = "resona.crossfadeSeconds"
@@ -556,6 +562,7 @@ final class SettingsStore {
         animatedPlayerBackground = Self.load(Keys.animatedPlayerBackground, default: true)
         lyricsLineChangeAdjustMs = Self.load(Keys.lyricsLineChangeAdjustMs, default: 0.0)
         lyricsAutoHideControls = Self.load(Keys.lyricsAutoHideControls, default: false)
+        showMostReplayedCurve = Self.load(Keys.showMostReplayedCurve, default: true)
         playerBackgroundBrightness = Self.load(Keys.playerBackgroundBrightness, default: 1.0)
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)

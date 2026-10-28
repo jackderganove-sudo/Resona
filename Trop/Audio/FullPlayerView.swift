@@ -526,7 +526,7 @@ struct FullPlayerView: View {
             }
             // "Most replayed" as a soft wave rising behind the bar.
             .background(alignment: .top) {
-                if let heatmap, !compact {
+                if let heatmap, !compact, settings.showMostReplayedCurve {
                     HeatmapWave(heatmap: heatmap, color: playerAccentColor)
                         .frame(height: 26)
                         .offset(y: -18)
@@ -558,7 +558,11 @@ struct FullPlayerView: View {
                 np.isRepeatOn.toggle()
             }
             if heatmap?.dropTime != nil {
-                PlayerRoundToggle(systemName: "bolt.fill", isOn: false, label: "Jump to the drop") {
+                // Tap: jump; long press: menu with the curve switch.
+                PlayerDropButton(showCurve: Binding(
+                    get: { settings.showMostReplayedCurve },
+                    set: { value in withAnimation(M3Motion.defaultEffects) { settings.showMostReplayedCurve = value } }
+                )) {
                     jumpToDrop()
                 }
                 .transition(.scale.combined(with: .opacity))

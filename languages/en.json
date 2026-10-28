@@ -691,5 +691,7 @@
   "Tempo not adjusted: original length not found": "Tempo not adjusted: original length not found",
   "Tempo not adjusted: lengths too different (original %@, this version %@)": "Tempo not adjusted: lengths too different (original %@, this version %@)",
   "Tempo not checked: song length unknown": "Tempo not checked: song length unknown",
-  "Tempo not adjusted": "Tempo not adjusted"
+  "Tempo not adjusted": "Tempo not adjusted",
+  "Show most-replayed curve": "Show most-replayed curve",
+  "A soft wave behind the progress bar shows which parts of the song are replayed most. Long-press the lightning button in the player for the same switch.": "A soft wave behind the progress bar shows which parts of the song are replayed most. Long-press the lightning button in the player for the same switch."
 }
