@@ -232,7 +232,7 @@ struct LyricsStage<Accessory: View>: View {
                     .foregroundStyle(.white.opacity(isActive ? 0.8 : 0.6))
                     .multilineTextAlignment(alignment.multilineTextAlignment)
             }
-            if settings.showLyricsTranslation, let translation = line.translation, !translation.isEmpty,
+            if settings.lyricsTranslationMode != .off, let translation = line.translation, !translation.isEmpty,
                !Self.sameText(translation, line.text) {
                 Text(translation)
                     .font(.system(size: max(13, fontSize * 0.55), weight: .medium))
@@ -651,5 +651,16 @@ enum KaraokeTiming {
             defer { t += d }
             return LyricWord(text: token, start: t, end: t + d)
         }
+    }
+}
+
+/// Non-generic access to the "same text" check.
+enum LyricsStageText {
+    static func same(_ a: String, _ b: String) -> Bool {
+        func norm(_ s: String) -> String {
+            s.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
+                .filter { $0.isLetter || $0.isNumber }
+        }
+        return norm(a) == norm(b)
     }
 }

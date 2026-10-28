@@ -27,6 +27,10 @@ struct LyricsMenuSheet: View {
                 actionGrid
 
                 MenuCard {
+                        if settings.lyricsTranslationMode == .onRequest {
+                            translateRow
+                            Divider()
+                        }
                         syncRow
                         Divider()
                         offsetRow
@@ -150,6 +154,37 @@ struct LyricsMenuSheet: View {
     }
 
     // MARK: - Offset Row
+
+    /// On-request translation into German for this song.
+    private var translateRow: some View {
+        let state = LyricsTranslationState.shared
+        let id = np.videoId ?? ""
+        return Toggle(isOn: Binding(
+            get: { state.requested.contains(id) },
+            set: { on in
+                if on { state.requested.insert(id) } else { state.requested.remove(id) }
+            }
+        )) {
+            HStack(spacing: 14) {
+                Image(systemName: "character.bubble")
+                    .font(.system(size: 18))
+                    .foregroundStyle(settings.accentColor)
+                    .frame(width: 26)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Translate into German")
+                        .font(.body)
+                        .foregroundStyle(.m3OnSurface)
+                    if state.isTranslating {
+                        Text("Translating…")
+                            .font(.footnote)
+                            .foregroundStyle(.m3OnSurfaceVariant)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
 
     /// "Sync yourself" (tap along) — or reset self-synced lyrics.
     private var syncRow: some View {

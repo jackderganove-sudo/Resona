@@ -619,5 +619,11 @@
   "Go": "Go",
   "Search Tab": "Search Tab",
   "Jump to the drop": "Jump to the drop",
-  "Jumped to the drop": "Jumped to the drop"
+  "Jumped to the drop": "Jumped to the drop",
+  "On request": "On request",
+  "Always": "Always",
+  "Translation": "Translation",
+  "Translate into German": "Translate into German",
+  "Translating…": "Translating…",
+  "Lyrics in other languages are translated into German on the device (Apple Translation); translations from the lyrics source (e.g. Better Lyrics, YouLyPlus) are preferred. \"On request\": switch it on per song in the lyrics menu.": "Lyrics in other languages are translated into German on the device (Apple Translation); translations from the lyrics source (e.g. Better Lyrics, YouLyPlus) are preferred. \"On request\": switch it on per song in the lyrics menu."
 }

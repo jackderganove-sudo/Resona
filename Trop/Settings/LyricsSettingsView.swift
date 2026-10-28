@@ -56,12 +56,12 @@ struct LyricsSettingsView: View {
 
             M3Section {
                 SettingsPickerRow("Animation", icon: "sparkles", selection: $settings.lyricsAnimationStyle)
-                SettingsToggleRow("Show translation", icon: "character.bubble", isOn: $settings.showLyricsTranslation)
+                SettingsPickerRow("Translation", icon: "character.bubble", selection: $settings.lyricsTranslationMode)
                 SettingsToggleRow("Show romanization", icon: "globe", isOn: $settings.romanizeCurrentTrack)
             } header: {
                 Text("Display")
             } footer: {
-                Text("Translations appear when the lyrics source provides them (e.g. Better Lyrics, YouLyPlus).")
+                Text("Lyrics in other languages are translated into German on the device (Apple Translation); translations from the lyrics source (e.g. Better Lyrics, YouLyPlus) are preferred. \"On request\": switch it on per song in the lyrics menu.")
             }
 
             M3Section {

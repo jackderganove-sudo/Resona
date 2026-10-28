@@ -290,6 +290,11 @@ final class SettingsStore {
         didSet { Self.defaults.set(glassStrength, forKey: Keys.glassStrength) }
     }
 
+    /// German translation under each line (provider's or on-device).
+    var lyricsTranslationMode: LyricsTranslationMode {
+        didSet { Self.defaults.set(lyricsTranslationMode.rawValue, forKey: Keys.lyricsTranslationMode) }
+    }
+
     /// Show the provider's translation under each line.
     var showLyricsTranslation: Bool {
         didSet { Self.defaults.set(showLyricsTranslation, forKey: Keys.showLyricsTranslation) }
@@ -453,6 +458,7 @@ final class SettingsStore {
         static let showAudioDetails = "resona.showAudioDetails"
         static let crossfadeSeconds = "resona.crossfadeSeconds"
         static let sleepFadeSeconds = "resona.sleepFadeSeconds"
+        static let lyricsTranslationMode = "resona.lyricsTranslationMode"
         static let removeDeletedPlaylistSongs = "resona.removeDeletedPlaylistSongs"
         static let lyricsAnimationStyle = "resona.lyricsAnimationStyle"
         static let playerLayoutStyle = "resona.playerLayoutStyle"
@@ -528,6 +534,7 @@ final class SettingsStore {
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)
         sleepFadeSeconds = Self.load(Keys.sleepFadeSeconds, default: 30.0)
+        lyricsTranslationMode = Self.loadEnum(Keys.lyricsTranslationMode, default: LyricsTranslationMode.onRequest)
         removeDeletedPlaylistSongs = Self.load(Keys.removeDeletedPlaylistSongs, default: false)
         lyricsAnimationStyle = Self.loadEnum(Keys.lyricsAnimationStyle, default: LyricsAnimationStyle.karaoke)
         playerLayoutStyle = Self.loadEnum(Keys.playerLayoutStyle, default: PlayerLayoutStyle.largeCover)

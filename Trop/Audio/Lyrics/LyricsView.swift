@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import Translation
 
 struct LyricsView<ProgressSlider: View>: View {
     private let np = NowPlaying.shared
@@ -41,6 +42,8 @@ struct LyricsView<ProgressSlider: View>: View {
     @State private var showLyricsMenu = false
     @State private var showManualSearch = false
     @State private var showSyncSheet = false
+    /// On-device translation job (nil = idle).
+    @State private var translationConfig: TranslationSession.Configuration?
     @State private var instrumentalGaps: [InstrumentalGap] = []
     @State private var romanizedLines: [String?] = []
     @State private var isLoading = false
@@ -95,6 +98,11 @@ struct LyricsView<ProgressSlider: View>: View {
             )
         }
         .task(id: np.videoId) { await loadLyrics() }
+        .translationTask(translationConfig) { session in
+            await translate(with: session)
+        }
+        .onChange(of: settings.lyricsTranslationMode) { _, _ in prepareTranslation() }
+        .onChange(of: LyricsTranslationState.shared.requested) { _, _ in prepareTranslation() }
         .onAppear { startFrameDriver() }
         .onDisappear { stopFrameDriver() }
         .onChange(of: settings.lyricsOffsetSeconds) { _, _ in updateActiveLine() }
@@ -478,6 +486,66 @@ struct LyricsView<ProgressSlider: View>: View {
         updateActiveLine()
     }
 
+    // MARK: - Translation (on-device, German)
+
+    /// Applies cached translations and starts a translation job when the
+    /// mode asks for one (provider translations always win).
+    private func prepareTranslation() {
+        guard let videoId = np.videoId, !lines.isEmpty else { return }
+        let mode = settings.lyricsTranslationMode
+        guard mode != .off else { return }
+        let state = LyricsTranslationState.shared
+        let missing = lines.filter { ($0.translation ?? "").isEmpty }
+        // The provider translated (nearly) everything already.
+        guard missing.count > lines.count / 4 else { return }
+        let cached = LyricsTranslationCache.load(videoId)
+        if !cached.isEmpty { applyTranslations(cached) }
+        guard let language = state.sourceLanguage[videoId] ?? LyricsLanguage.detect(lines), language != "de" else { return }
+        state.sourceLanguage[videoId] = language
+        let wanted = mode == .always || state.requested.contains(videoId)
+        let stillMissing = lines.contains { ($0.translation ?? "").isEmpty && cached[$0.text] == nil }
+        guard wanted, stillMissing else { return }
+        translationConfig = TranslationSession.Configuration(
+            source: Locale.Language(identifier: language),
+            target: Locale.Language(identifier: "de")
+        )
+    }
+
+    private func translate(with session: TranslationSession) async {
+        guard let videoId = np.videoId else { return }
+        let state = LyricsTranslationState.shared
+        state.isTranslating = true
+        defer {
+            state.isTranslating = false
+            translationConfig = nil
+        }
+        let texts = Array(Set(lines.filter { ($0.translation ?? "").isEmpty }.map(\.text))).filter { !$0.isEmpty }
+        guard !texts.isEmpty else { return }
+        let requests = texts.enumerated().map { TranslationSession.Request(sourceText: $0.element, clientIdentifier: String($0.offset)) }
+        guard let responses = try? await session.translations(from: requests) else { return }
+        var map = LyricsTranslationCache.load(videoId)
+        for response in responses {
+            guard let id = response.clientIdentifier, let index = Int(id), texts.indices.contains(index) else { continue }
+            map[texts[index]] = response.targetText
+        }
+        LyricsTranslationCache.save(map, for: videoId)
+        guard np.videoId == videoId else { return }
+        applyTranslations(map)
+    }
+
+    /// Fills missing translations (never overwrites the provider's).
+    private func applyTranslations(_ map: [String: String]) {
+        var changed = false
+        let updated = lines.map { line -> LyricLine in
+            guard (line.translation ?? "").isEmpty, let text = map[line.text], !LyricsStageText.same(text, line.text) else { return line }
+            var copy = line
+            copy.translation = text
+            changed = true
+            return copy
+        }
+        if changed { lines = updated }
+    }
+
     // MARK: - Romanization
 
     private func romanization(for index: Int) -> String? {
@@ -600,6 +668,7 @@ struct LyricsView<ProgressSlider: View>: View {
                 withAnimation(M3Motion.defaultEffects) { lines = fresh }
             }
             loadedVideoId = videoId
+            prepareTranslation()
             instrumentalGaps = detectGaps(in: result)
             updateActiveLine()
             await rebuildRomanization()
