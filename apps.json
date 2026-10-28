@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.8",
+          "buildVersion": "66",
+          "date": "2026-10-28T20:02:48Z",
+          "localizedDescription": "- Docs: round 7 progress\n- AI for every song: synced lyrics are calibrated (robust Theil–Sen fit of tempo + offset from confident anchors, stored per song, shown under the label), otherwise synced; remixes: partial sync of every sung line occurrence, lyrics from audio, clear message with options; slowed/sped-up: calibration offer / automatic on Wi-Fi (setting); tests\n- Drop menu rebuilt as a plain system menu (inherited button style broke its items): jump + curve toggle, tap still jumps\n- Docs: test report with UI screenshots (no lyrics), device findings rounds 5–6\n- Landscape side panel: action tile labels on two lines, queue chips stack when they don't fit (were cut off with …); UI test closes the sleep timer dialog via Cancel\n- UI tests: collapse the player robustly (wide layout has no chevron), tolerant taps on search results\n- UI tests: lyrics opened once and closed by swiping (coordinates), ✕ only as fallback\n- UI tests: close diagnostics (frame, screenshot), swipe fallback for lyrics\n- Simulator tests: skip XCTest's automatic screen recordings in the export (artifact was 1 GB)",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.8/Resona.ipa",
+          "size": 28794027,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.7",
           "buildVersion": "65",
           "date": "2026-10-28T15:38:52Z",
@@ -82,11 +91,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.7",
-      "versionDate": "2026-10-28T15:38:52Z",
-      "versionDescription": "- Docs: round 6 progress\n- Crossfade dropouts: audio session identical to mpv's iOS output (no mode/policy flip-flop), fixed 48 kHz stereo float output so outputs stay open across files, faded instance parked on silence instead of stopped (no setActive(NO)), spare warmed up on creation, timestamped logs; revive only as watchdog\n- AI sync: larger model tried automatically below 30 %, aligner more tolerant (phonetic similarity for longer words, sung spellings, digits as words, threshold 0.5); tests\n- AI lyrics: outlier anchors dropped (longest non-decreasing run) and interpolated, strictly increasing word/line times; lyrics never jump backwards (monotonic timing on load); tests with scrambled times\n- Slowed: cross-check the original length with the original's YouTube Music audio track (used when within 6 % of LRCLIB, both logged); tempo fine tuning ±0.01 in the lyrics menu\n- Most-replayed curve can be switched off: long press on the drop button (menu) or Settings → Playback; default on",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.7/Resona.ipa",
-      "size": 28750021,
+      "version": "0.8.8",
+      "versionDate": "2026-10-28T20:02:48Z",
+      "versionDescription": "- Docs: round 7 progress\n- AI for every song: synced lyrics are calibrated (robust Theil–Sen fit of tempo + offset from confident anchors, stored per song, shown under the label), otherwise synced; remixes: partial sync of every sung line occurrence, lyrics from audio, clear message with options; slowed/sped-up: calibration offer / automatic on Wi-Fi (setting); tests\n- Drop menu rebuilt as a plain system menu (inherited button style broke its items): jump + curve toggle, tap still jumps\n- Docs: test report with UI screenshots (no lyrics), device findings rounds 5–6\n- Landscape side panel: action tile labels on two lines, queue chips stack when they don't fit (were cut off with …); UI test closes the sleep timer dialog via Cancel\n- UI tests: collapse the player robustly (wide layout has no chevron), tolerant taps on search results\n- UI tests: lyrics opened once and closed by swiping (coordinates), ✕ only as fallback\n- UI tests: close diagnostics (frame, screenshot), swipe fallback for lyrics\n- Simulator tests: skip XCTest's automatic screen recordings in the export (artifact was 1 GB)",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.8/Resona.ipa",
+      "size": 28794027,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
