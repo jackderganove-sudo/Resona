@@ -1376,6 +1376,125 @@ extension PlayerController {
         }
     }
 
+    /// Quiet, clean stop of the faded-out instance, then make sure the
+    /// active one keeps sounding.
+    ///
+    /// On the device mpv's iOS audio output deactivates the shared
+    /// AVAudioSession when it shuts down (ao_audiounit uninit →
+    /// setActive(NO)) — stopping the old instance silenced the NEW one as
+    /// well ("plop", then nothing until pause/play re-activated the session
+    /// and restarted the AudioUnit). The simulator (ao=null) has no session,
+    /// so this only showed on the iPad.
+    func retireFadedInstance(_ handle: OpaquePointer) async {
+        setVolume(0, onInstance: handle)
+        // Audio already buffered at the old volume drains first.
+        try? await Task.sleep(for: .milliseconds(120))
+        mpvAccessQueue.async {
+            var yes: Int32 = 1
+            mpv_set_property(handle, "pause", MPV_FORMAT_FLAG, &yes)
+        }
+        try? await Task.sleep(for: .milliseconds(40))
+        stopInstance(handle)
+        // Wait until its audio output is really shut down.
+        let deadline = CACurrentMediaTime() + 1.5
+        while CACurrentMediaTime() < deadline, !instanceIsIdle(handle) {
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        // Session back on at once; the AudioUnit is only restarted when the
+        // active instance really stalled (a pause → play would otherwise be
+        // a small gap of its own).
+        assertAudioSession()
+        logActiveAudioState("CROSSFADE after old stop")
+        if desiredPlaying, await !activeAdvances(within: 0.2) {
+            await reviveActiveAudio(reason: "active instance stalled after old stop")
+        }
+        // Watchdog: the active instance's clock must run.
+        try? await Task.sleep(for: .milliseconds(1500))
+        await verifyActiveAudioRuns()
+    }
+
+    private func activeAdvances(within seconds: Double) async -> Bool {
+        let before = activeTimePos()
+        try? await Task.sleep(for: .milliseconds(Int(seconds * 1000)))
+        guard let before, let after = activeTimePos() else { return false }
+        return after - before > seconds * 0.4
+    }
+
+    private func instanceIsIdle(_ handle: OpaquePointer) -> Bool {
+        mpvAccessQueue.sync {
+            var idle: Int32 = 0
+            mpv_get_property(handle, "idle-active", MPV_FORMAT_FLAG, &idle)
+            return idle != 0
+        }
+    }
+
+    /// Session active again and the active instance's AudioUnit restarted
+    /// (a short pause → play, exactly what fixed it by hand).
+    func reviveActiveAudio(reason: String) async {
+        assertAudioSession()
+        guard desiredPlaying else {
+            Log.player.info("CROSSFADE revive (\(reason)): paused by user, session only")
+            return
+        }
+        withMpvAsync { mpv in
+            var yes: Int32 = 1
+            mpv_set_property(mpv, "pause", MPV_FORMAT_FLAG, &yes)
+        }
+        try? await Task.sleep(for: .milliseconds(30))
+        withMpvAsync { mpv in
+            var no: Int32 = 0
+            mpv_set_property(mpv, "pause", MPV_FORMAT_FLAG, &no)
+        }
+        try? await Task.sleep(for: .milliseconds(60))
+        logActiveAudioState("CROSSFADE revived (\(reason))")
+    }
+
+    /// If the active instance's position doesn't advance while it should
+    /// play: reload its audio output.
+    private func verifyActiveAudioRuns() async {
+        guard desiredPlaying else { return }
+        let before = activeTimePos()
+        try? await Task.sleep(for: .milliseconds(500))
+        let after = activeTimePos()
+        guard desiredPlaying else { return }
+        if let before, let after, after - before > 0.25 {
+            Log.player.info("CROSSFADE watchdog ok (time-pos +\(String(format: "%.2f", after - before)) s in 0.5 s)")
+            return
+        }
+        Log.player.error("CROSSFADE watchdog: active instance not advancing (\(before ?? -1) → \(after ?? -1)) → ao-reload")
+        assertAudioSession()
+        withMpvAsync { mpv in
+            _ = ["ao-reload"].withUnsafeCArg { mpv_command(mpv, $0) }
+            var no: Int32 = 0
+            mpv_set_property(mpv, "pause", MPV_FORMAT_FLAG, &no)
+        }
+        try? await Task.sleep(for: .milliseconds(600))
+        logActiveAudioState("CROSSFADE after ao-reload")
+    }
+
+    private func activeTimePos() -> Double? {
+        withMpv { mpv -> Double? in
+            var pos = Double(0)
+            return mpv_get_property(mpv, "time-pos", MPV_FORMAT_DOUBLE, &pos) >= 0 ? pos : nil
+        } ?? nil
+    }
+
+    /// pause / core-idle / time-pos / volume / audio output of the active
+    /// instance, for device logs.
+    func logActiveAudioState(_ label: String) {
+        let state = withMpv { mpv -> String in
+            func prop(_ name: String) -> String {
+                guard let raw = mpv_get_property_string(mpv, name) else { return "-" }
+                defer { mpv_free(raw) }
+                return String(cString: raw)
+            }
+            return ["pause", "core-idle", "time-pos", "volume", "ao-volume", "current-ao", "audio-params/samplerate"]
+                .map { "\($0)=\(prop($0))" }.joined(separator: " ")
+        } ?? "no instance"
+        let session = AVAudioSession.sharedInstance()
+        Log.player.info("\(label): \(state) session.otherAudio=\(session.isOtherAudioPlaying) route=\(session.currentRoute.outputs.first?.portType.rawValue ?? "-")")
+    }
+
     func playbackTimes(ofInstance handle: OpaquePointer) -> (position: Double, duration: Double) {
         mpvAccessQueue.sync {
             var pos = Double(0), dur = Double(0)

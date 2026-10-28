@@ -178,11 +178,15 @@ final class CrossfadeEngine {
         return condition()
     }
 
-    /// Old instance stops (becomes the spare), new one at full volume.
+    /// Old instance goes quiet and stops (becomes the spare), new one at
+    /// full volume; afterwards the active instance's audio is revived
+    /// (see PlayerController.retireFadedInstance).
     private func finish() {
         if let fading {
-            PlayerController.shared.stopInstance(fading)
             self.fading = nil
+            let player = PlayerController.shared
+            player.setVolume(0, onInstance: fading)
+            Task { await player.retireFadedInstance(fading) }
         }
         PlayerController.shared.crossfadeGain = 1
         PlayerController.shared.applyPlayerVolume()
