@@ -55,7 +55,8 @@ final class UpdateChecker {
 
     /// Launch: at most once per 24 h, only with the switch on.
     func checkIfDue() {
-        guard autoCheck else { return }
+        // UI tests: no update banner over the screens being tested.
+        guard autoCheck, !TestMode.isUITest else { return }
         let last = UserDefaults.standard.double(forKey: Keys.lastCheck)
         guard Date().timeIntervalSince1970 - last > 24 * 3600 else { return }
         Task { await check(manual: false) }
