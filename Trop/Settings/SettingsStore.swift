@@ -256,6 +256,12 @@ final class SettingsStore {
         didSet { Self.defaults.set(audioNormalization, forKey: Keys.audioNormalization) }
     }
 
+    /// iPad full-screen lyrics: fade out title/controls after 5 s without
+    /// touch (off by default — controls always visible).
+    var lyricsAutoHideControls: Bool {
+        didSet { Self.defaults.set(lyricsAutoHideControls, forKey: Keys.lyricsAutoHideControls) }
+    }
+
     /// Shifts the lyric line change (scroll) earlier (−) or later (+), ms.
     var lyricsLineChangeAdjustMs: Double {
         didSet { Self.defaults.set(lyricsLineChangeAdjustMs, forKey: Keys.lyricsLineChangeAdjustMs) }
@@ -469,6 +475,7 @@ final class SettingsStore {
         static let gaplessPlayback = "settings.gaplessPlayback"
         static let animatedPlayerBackground = "resona.animatedPlayerBackground"
         static let lyricsLineChangeAdjustMs = "resona.lyricsLineChangeAdjustMs"
+        static let lyricsAutoHideControls = "resona.lyricsAutoHideControls"
         static let playerBackgroundBrightness = "resona.playerBackgroundBrightness"
         static let showAudioDetails = "resona.showAudioDetails"
         static let crossfadeSeconds = "resona.crossfadeSeconds"
@@ -548,6 +555,7 @@ final class SettingsStore {
         gaplessPlayback = Self.load(Keys.gaplessPlayback, default: true)
         animatedPlayerBackground = Self.load(Keys.animatedPlayerBackground, default: true)
         lyricsLineChangeAdjustMs = Self.load(Keys.lyricsLineChangeAdjustMs, default: 0.0)
+        lyricsAutoHideControls = Self.load(Keys.lyricsAutoHideControls, default: false)
         playerBackgroundBrightness = Self.load(Keys.playerBackgroundBrightness, default: 1.0)
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)

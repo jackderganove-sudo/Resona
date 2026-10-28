@@ -58,11 +58,12 @@ struct LyricsSettingsView: View {
                 SettingsPickerRow("Animation", icon: "sparkles", selection: $settings.lyricsAnimationStyle)
                 SettingsPickerRow("Translation", icon: "character.bubble", selection: $settings.lyricsTranslationMode)
                 SettingsToggleRow("Show romanization", icon: "globe", isOn: $settings.romanizeCurrentTrack)
+                SettingsToggleRow("Hide controls automatically", icon: "rectangle.and.hand.point.up.left", isOn: $settings.lyricsAutoHideControls)
                 SettingsPickerRow("AI sync model", icon: "wand.and.stars", selection: $settings.aiSyncModel)
             } header: {
                 Text("Display")
             } footer: {
-                Text("Lyrics in other languages are translated into German on the device (Apple Translation); translations from the lyrics source (e.g. Better Lyrics, YouLyPlus) are preferred. \"On request\": switch it on per song in the lyrics menu.")
+                Text("Lyrics in other languages are translated into German on the device (Apple Translation); translations from the lyrics source (e.g. Better Lyrics, YouLyPlus) are preferred. \"On request\": switch it on per song in the lyrics menu. Hiding the controls only affects full-screen lyrics on the iPad in landscape; the screen stays on either way.")
             }
 
             M3Section {

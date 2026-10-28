@@ -141,8 +141,9 @@ struct LyricsView<ProgressSlider: View>: View {
     }
 
     /// iPad landscape: large cover with title, progress and transport on the
-    /// left, lyrics in a larger size on the right. In "rest mode" (5 s
-    /// without touch) only cover and lyrics stay; a tap brings it all back.
+    /// left, lyrics in a larger size on the right. Controls stay visible;
+    /// only with "Hide controls automatically" (off by default) they rest
+    /// after 5 s without touch and a tap brings them back.
     private func splitLayout(size: CGSize) -> some View {
         let column = min(size.width * 0.38, 520)
         let cover = min(column - 16, size.height * 0.52)
@@ -160,14 +161,15 @@ struct LyricsView<ProgressSlider: View>: View {
                 .shadow(color: .black.opacity(0.3), radius: 22, y: 10)
                 .modifier(CoverMatch(namespace: coverNamespace))
 
-                VStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: 4) {
                     MarqueeText(text: np.title, font: .poppins(24, weight: .semibold), frameHeight: 34, textColor: .white)
                     Text(np.displayArtist)
                         .font(.poppins(18))
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(width: cover)
+                .frame(width: cover, alignment: .leading)
 
                 controls
                     .frame(width: cover)
@@ -226,9 +228,12 @@ struct LyricsView<ProgressSlider: View>: View {
         chromeWakeToken &+= 1
     }
 
-    /// Rest mode after 5 s without touch (split layout only).
+    /// Rest mode after 5 s without touch (split layout, opt-in setting).
     private func scheduleRest() async {
-        guard isSplit else { return }
+        guard isSplit, settings.lyricsAutoHideControls else {
+            if chromeResting { chromeResting = false }
+            return
+        }
         try? await Task.sleep(for: .seconds(5))
         guard !Task.isCancelled, isSplit, !showLyricsMenu else { return }
         chromeResting = true
