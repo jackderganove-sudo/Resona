@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.6",
+          "buildVersion": "64",
+          "date": "2026-10-28T14:24:38Z",
+          "localizedDescription": "- UI tests: close lyrics that are already open, wait for the close button, safe attachment names; export: always .png, rotation errors don't abort\n- Docs: round 5 progress\n- AI sync: ffmpeg with CA bundle/user agent/timeout for streams, no-speech window skipping off (singing), whole-song diagnostics per 30 s; end-to-end test on synthetic say speech\n- Crossfade (device): clean stop of the faded instance (volume 0, drain, pause, stop), re-activate the audio session that mpv's iOS audio output deactivates on shutdown, restart the active AudioUnit only if it stalled, watchdog with ao-reload, audio state logs\n- Slowed lyrics: tempo diagnosis (logged, shown under 'Lyrics from'), original length also via title + lyrics match (re-uploads credited to the channel), hand-picked/refetched provider lyrics get the check too, cache v3; fix inverted slowed/sped-up note\n- Lyrics: swipe down on handle/header to close (follows the finger, 25 % or flick, springs back); UI test for it\n- Lyrics: translation, background vocals and romanization wrap fully (were truncated with …)\n- UI tests: no automatic update check (banner covered the account menu)\n- Full-screen lyrics: controls always visible, auto-hide as opt-in setting; title and artist left-aligned\n- UI tests: lyrics close diagnostics (app log + per-attempt screenshots), wake landscape chrome; test.yml inputs for single tests / skipping crossfade",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.6/Resona.ipa",
+          "size": 28731675,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.5",
           "buildVersion": "63",
           "date": "2026-10-28T12:40:57Z",
@@ -64,11 +73,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.5",
-      "versionDate": "2026-10-28T12:40:57Z",
-      "versionDescription": "- Simulator tests: retry package resolution; test report draft with crossfade diagrams\n- UI tests: query buttons only (any-type query timed out in the lyrics view)\n- UI tests: tap the visible element when an id exists twice; video as its own artifact\n- UI tests: close buttons of lyrics/queue/menu overlays get identifiers\n- UI tests: local test tone instead of YouTube stream (CI IPs get a bot check), artist back button id; crossfade analysis: continuous clock, instance role swap, pause handling\n- Equalizer: preset chips wrap instead of being cut off at the column edge\n- Crossfade: equal power through mpv's cubic volume curve (measured -6 dB dip); test fixes: cleanup, song tap, export names, landscape rotation\n- Docs: round 4 progress [skip ci]\n- Split playlist: genre/mood grouping from Last.fm tags (cached, API key only), tests\n- Simulator test workflow: iPad sim build, unit+UI tests, video, screenshots, crossfade measurement\n- Unit + UI tests (placeholder texts only), testable tempo/scroll/split helpers, result identifiers\n- Test hooks: accessibility identifiers, TestMode (ao=null), DEBUG crossfade harness\n- Docs: progress file for round 4 [skip ci]\n- CI: don't build/release for documentation-only pushes [skip ci]\n- Docs: round 3 finished (v0.8.3, v0.8.4)",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.5/Resona.ipa",
-      "size": 28692121,
+      "version": "0.8.6",
+      "versionDate": "2026-10-28T14:24:38Z",
+      "versionDescription": "- UI tests: close lyrics that are already open, wait for the close button, safe attachment names; export: always .png, rotation errors don't abort\n- Docs: round 5 progress\n- AI sync: ffmpeg with CA bundle/user agent/timeout for streams, no-speech window skipping off (singing), whole-song diagnostics per 30 s; end-to-end test on synthetic say speech\n- Crossfade (device): clean stop of the faded instance (volume 0, drain, pause, stop), re-activate the audio session that mpv's iOS audio output deactivates on shutdown, restart the active AudioUnit only if it stalled, watchdog with ao-reload, audio state logs\n- Slowed lyrics: tempo diagnosis (logged, shown under 'Lyrics from'), original length also via title + lyrics match (re-uploads credited to the channel), hand-picked/refetched provider lyrics get the check too, cache v3; fix inverted slowed/sped-up note\n- Lyrics: swipe down on handle/header to close (follows the finger, 25 % or flick, springs back); UI test for it\n- Lyrics: translation, background vocals and romanization wrap fully (were truncated with …)\n- UI tests: no automatic update check (banner covered the account menu)\n- Full-screen lyrics: controls always visible, auto-hide as opt-in setting; title and artist left-aligned\n- UI tests: lyrics close diagnostics (app log + per-attempt screenshots), wake landscape chrome; test.yml inputs for single tests / skipping crossfade",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.6/Resona.ipa",
+      "size": 28731675,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
