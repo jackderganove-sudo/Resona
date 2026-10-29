@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.10",
+          "buildVersion": "68",
+          "date": "2026-10-29T08:13:28Z",
+          "localizedDescription": "- Fix optional chaining in the Deezer lyrics parser\n- Docs: round 9 progress\n- Lyrics accounts: Deezer (web login reads the ARL cookie, or paste; JWT + pipe GraphQL with word/line sync; Keychain only, sign out, expiry → 'sign in again') and Musixmatch with the user's own token (desktop API, falls back to guest); settings section with status and 'create free account'; tests\n- Full-screen lyrics: status bar + home indicator hidden, ✕/⋯ hidden until a tap on a free area (3 s), both as lyrics settings (default on); UI test reveals the buttons by a header tap",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.10/Resona.ipa",
+          "size": 28881193,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.9",
           "buildVersion": "67",
           "date": "2026-10-28T21:58:25Z",
@@ -100,11 +109,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.9",
-      "versionDate": "2026-10-28T21:58:25Z",
-      "versionDescription": "- UI test: drop jump checked via the elapsed time; test report: drop menu proof screenshots\n- Docs: round 8 progress\n- More lyrics sources: SimpMusic and Unison (per YouTube upload — remixes/edits), Megalobiz, QQ Music; candidates with title/artist/duration, version-aware ranking; manual search lists every hit (provider, title, artist, duration, sync type, 'this version') and offers AI calibration after a pick; tests\n- Drop menu: plain buttons only (the Toggle took the app-wide custom toggle style); UI test proves both entries (screenshot, curve hides/shows, jump toast)",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.9/Resona.ipa",
-      "size": 28819319,
+      "version": "0.8.10",
+      "versionDate": "2026-10-29T08:13:28Z",
+      "versionDescription": "- Fix optional chaining in the Deezer lyrics parser\n- Docs: round 9 progress\n- Lyrics accounts: Deezer (web login reads the ARL cookie, or paste; JWT + pipe GraphQL with word/line sync; Keychain only, sign out, expiry → 'sign in again') and Musixmatch with the user's own token (desktop API, falls back to guest); settings section with status and 'create free account'; tests\n- Full-screen lyrics: status bar + home indicator hidden, ✕/⋯ hidden until a tap on a free area (3 s), both as lyrics settings (default on); UI test reveals the buttons by a header tap",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.10/Resona.ipa",
+      "size": 28881193,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
