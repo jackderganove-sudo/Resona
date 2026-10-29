@@ -110,6 +110,12 @@ final class ResonaUITests: XCTestCase {
             sleep(5)
             snap("lyrics")   // shown in the app; not embedded in docs/
             let window = app.windows.firstMatch
+            // ✕ / ⋯ hidden by default; a tap on the header shows them.
+            XCTAssertNil(visibleButton("lyrics.close", attempts: 1), "[\(prefix)] close button hidden by default")
+            let headerX: CGFloat = prefix == "landscape" ? 0.72 : 0.3
+            window.coordinate(withNormalizedOffset: CGVector(dx: headerX, dy: 0.075)).tap()
+            XCTAssertNotNil(visibleButton("lyrics.close", attempts: 2), "[\(prefix)] close button appears after a tap")
+            snap("lyrics-buttons-shown")
             let x: CGFloat = prefix == "landscape" ? 0.72 : 0.3
             let start = window.coordinate(withNormalizedOffset: CGVector(dx: x, dy: 0.075))
             start.press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: x, dy: 0.75)))
@@ -379,9 +385,10 @@ final class ResonaUITests: XCTestCase {
                         XCTContext.runActivity(named: "\(id): \(candidates.count) found, none hittable") { _ in }
                     }
                 }
-                // Landscape lyrics hide their chrome after a while: one tap
-                // in the middle wakes it, then try again.
-                app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                // ✕ / ⋯ of the lyrics only appear after a tap on a free
+                // area (header / top bar, not a lyric line): tap, retry.
+                let x: CGFloat = prefix == "landscape" ? 0.72 : 0.3
+                app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: x, dy: 0.075)).tap()
                 sleep(1)
             }
             XCTContext.runActivity(named: "fallback: escape / swipe") { _ in

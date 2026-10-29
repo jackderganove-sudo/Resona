@@ -58,6 +58,8 @@ struct LyricsSettingsView: View {
                 SettingsPickerRow("Animation", icon: "sparkles", selection: $settings.lyricsAnimationStyle)
                 SettingsPickerRow("Translation", icon: "character.bubble", selection: $settings.lyricsTranslationMode)
                 SettingsToggleRow("Show romanization", icon: "globe", isOn: $settings.romanizeCurrentTrack)
+                SettingsToggleRow("Hide status bar", icon: "rectangle.topthird.inset.filled", isOn: $settings.lyricsHideStatusBar)
+                SettingsToggleRow("Hide close / menu buttons automatically", icon: "xmark.circle", isOn: $settings.lyricsAutoHideButtons)
                 SettingsToggleRow("Hide controls automatically", icon: "rectangle.and.hand.point.up.left", isOn: $settings.lyricsAutoHideControls)
                 SettingsPickerRow("AI sync model", icon: "wand.and.stars", selection: $settings.aiSyncModel)
                 SettingsPickerRow("AI tempo calibration (slowed / sped up)", icon: "metronome", selection: $settings.aiCalibrationMode)

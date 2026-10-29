@@ -27,6 +27,12 @@ struct LyricsView<ProgressSlider: View>: View {
     @State private var isSplit = false
     @State private var chromeResting = false
     @State private var chromeWakeToken = 0
+    /// ✕ / ⋯ are hidden by default (clean full-screen look); a tap on a
+    /// free area shows them for ~3 s.
+    @State private var cornerButtonsShown = false
+    @State private var cornerButtonsToken = 0
+    /// Lyric-line taps seek — they don't reveal the buttons.
+    @State private var lastLineTapAt: Date = .distantPast
     /// Swipe-down-to-close: how far the view follows the finger.
     @State private var dismissOffset: CGFloat = 0
     @State private var isDismissDragging = false
@@ -90,7 +96,16 @@ struct LyricsView<ProgressSlider: View>: View {
             .opacity(1 - min(0.35, Double(dismissOffset / max(1, viewHeight)) * 0.8))
         }
         .simultaneousGesture(swipeBackGesture)
-        .simultaneousGesture(TapGesture().onEnded { wakeChrome() }, including: .all)
+        .simultaneousGesture(TapGesture().onEnded { handleTap() }, including: .all)
+        .task(id: cornerButtonsToken) {
+            guard cornerButtonsShown else { return }
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled, !showLyricsMenu else { return }
+            withAnimation(.easeInOut(duration: 0.35)) { cornerButtonsShown = false }
+        }
+        // Clean full screen: no clock/battery, home indicator fades.
+        .statusBarHidden(settings.lyricsHideStatusBar)
+        .persistentSystemOverlays(settings.lyricsHideStatusBar ? .hidden : .automatic)
         .task(id: chromeWakeToken) { await scheduleRest() }
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
         .sheet(isPresented: Binding(get: { showLyricsMenu && !isSplit }, set: { showLyricsMenu = $0 })) { LyricsMenuSheet() }
@@ -194,14 +209,18 @@ struct LyricsView<ProgressSlider: View>: View {
             VStack(spacing: 0) {
                 HStack(spacing: 10) {
                     Spacer()
-                    M3IconButton(systemName: "ellipsis", kind: .onDark, size: 44, iconSize: 16, accessibility: "Lyrics options") {
-                        showLyricsMenu = true
+                    HStack(spacing: 10) {
+                        M3IconButton(systemName: "ellipsis", kind: .onDark, size: 44, iconSize: 16, accessibility: "Lyrics options") {
+                            showLyricsMenu = true
+                        }
+                        M3IconButton(systemName: "xmark", kind: .onDark, size: 44, iconSize: 16, accessibility: "Close lyrics") {
+                            Log.player.info("UI lyrics close tapped (split)")
+                            withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
+                        }
+                        .accessibilityIdentifier("lyrics.close")
                     }
-                    M3IconButton(systemName: "xmark", kind: .onDark, size: 44, iconSize: 16, accessibility: "Close lyrics") {
-                        Log.player.info("UI lyrics close tapped (split)")
-                        withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
-                    }
-                    .accessibilityIdentifier("lyrics.close")
+                    .opacity(cornerButtonsVisible ? 1 : 0)
+                    .allowsHitTesting(cornerButtonsVisible)
                 }
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
@@ -278,14 +297,37 @@ struct LyricsView<ProgressSlider: View>: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            M3IconButton(systemName: "xmark", kind: .onDark, size: 40, iconSize: 15, accessibility: "Close lyrics") {
-                Log.player.info("UI lyrics close tapped (stack)")
-                withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
+            HStack(spacing: 14) {
+                M3IconButton(systemName: "xmark", kind: .onDark, size: 40, iconSize: 15, accessibility: "Close lyrics") {
+                    Log.player.info("UI lyrics close tapped (stack)")
+                    withAnimation(M3Motion.defaultSpatial) { showLyrics = false }
+                }
+                .accessibilityIdentifier("lyrics.close")
+                M3IconButton(systemName: "ellipsis", kind: .onDark, size: 40, iconSize: 15, accessibility: "Lyrics options") {
+                    showLyricsMenu = true
+                }
             }
-            .accessibilityIdentifier("lyrics.close")
-            M3IconButton(systemName: "ellipsis", kind: .onDark, size: 40, iconSize: 15, accessibility: "Lyrics options") {
-                showLyricsMenu = true
-            }
+            .opacity(cornerButtonsVisible ? 1 : 0)
+            .allowsHitTesting(cornerButtonsVisible)
+        }
+    }
+
+    // MARK: Corner buttons (✕ / ⋯)
+
+    private var cornerButtonsVisible: Bool {
+        !settings.lyricsAutoHideButtons || cornerButtonsShown || showLyricsMenu
+    }
+
+    /// Any tap except one on a lyric line (that seeks) shows ✕ / ⋯ for
+    /// ~3 s; also wakes resting controls.
+    private func handleTap() {
+        wakeChrome()
+        Task { @MainActor in
+            // The line's own tap (seek) fires around the same time.
+            try? await Task.sleep(for: .milliseconds(60))
+            guard Date().timeIntervalSince(lastLineTapAt) > 0.3 else { return }
+            withAnimation(.easeInOut(duration: 0.25)) { cornerButtonsShown = true }
+            cornerButtonsToken &+= 1
         }
     }
 
@@ -626,6 +668,7 @@ struct LyricsView<ProgressSlider: View>: View {
     }
 
     private func seek(to line: LyricLine) {
+        lastLineTapAt = Date()
         guard let t = line.startTime else { return }
         let target = max(0, t - settings.lyricsOffsetSeconds)
         player.seek(to: target)

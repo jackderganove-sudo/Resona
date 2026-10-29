@@ -256,6 +256,16 @@ final class SettingsStore {
         didSet { Self.defaults.set(audioNormalization, forKey: Keys.audioNormalization) }
     }
 
+    /// Full-screen lyrics: no status bar, home indicator fades.
+    var lyricsHideStatusBar: Bool {
+        didSet { Self.defaults.set(lyricsHideStatusBar, forKey: Keys.lyricsHideStatusBar) }
+    }
+
+    /// Full-screen lyrics: ✕ / ⋯ only appear after a tap (for ~3 s).
+    var lyricsAutoHideButtons: Bool {
+        didSet { Self.defaults.set(lyricsAutoHideButtons, forKey: Keys.lyricsAutoHideButtons) }
+    }
+
     /// "Most replayed" wave behind the player's progress bar.
     var showMostReplayedCurve: Bool {
         didSet { Self.defaults.set(showMostReplayedCurve, forKey: Keys.showMostReplayedCurve) }
@@ -487,6 +497,8 @@ final class SettingsStore {
         static let lyricsLineChangeAdjustMs = "resona.lyricsLineChangeAdjustMs"
         static let lyricsAutoHideControls = "resona.lyricsAutoHideControls"
         static let showMostReplayedCurve = "resona.showMostReplayedCurve"
+        static let lyricsHideStatusBar = "resona.lyricsHideStatusBar"
+        static let lyricsAutoHideButtons = "resona.lyricsAutoHideButtons"
         static let playerBackgroundBrightness = "resona.playerBackgroundBrightness"
         static let showAudioDetails = "resona.showAudioDetails"
         static let crossfadeSeconds = "resona.crossfadeSeconds"
@@ -569,6 +581,8 @@ final class SettingsStore {
         lyricsLineChangeAdjustMs = Self.load(Keys.lyricsLineChangeAdjustMs, default: 0.0)
         lyricsAutoHideControls = Self.load(Keys.lyricsAutoHideControls, default: false)
         showMostReplayedCurve = Self.load(Keys.showMostReplayedCurve, default: true)
+        lyricsHideStatusBar = Self.load(Keys.lyricsHideStatusBar, default: true)
+        lyricsAutoHideButtons = Self.load(Keys.lyricsAutoHideButtons, default: true)
         playerBackgroundBrightness = Self.load(Keys.playerBackgroundBrightness, default: 1.0)
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)
         crossfadeSeconds = Self.load(Keys.crossfadeSeconds, default: 0.0)
