@@ -233,7 +233,7 @@ struct DeezerLyricsProvider: LyricsProvider {
     /// otherwise the plain text.
     static func parseLyrics(_ json: [String: Any]) -> [LyricLine] {
         guard let lyrics = ((json["data"] as? [String: Any])?["track"] as? [String: Any])?["lyrics"] as? [String: Any] else { return [] }
-        func ms(_ any: Any?) -> Double? { (any as? NSNumber)?.doubleValue.map { $0 / 1000 } }
+        func ms(_ any: Any?) -> Double? { ((any as? NSNumber)?.doubleValue).map { $0 / 1000 } }
         if let wordLines = lyrics["synchronizedWordByWordLines"] as? [[String: Any]], !wordLines.isEmpty {
             let lines: [LyricLine] = wordLines.compactMap { line in
                 let words = (line["words"] as? [[String: Any]] ?? []).compactMap { word -> LyricWord? in
