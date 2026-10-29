@@ -57,6 +57,59 @@ final class LyricsProvidersTests: XCTestCase {
         XCTAssertEqual(songs, [QQMusicLyricsProvider.Song(mid: "m1", title: "Platzhalter & Co", artist: "Testband, Gast", duration: 181)])
     }
 
+    func testDeezerSearch() {
+        let json: [String: Any] = ["data": [
+            ["id": 123, "title": "Platzhalter", "duration": 181, "artist": ["name": "Testband"]],
+            ["title": "ohne id"]
+        ]]
+        XCTAssertEqual(DeezerLyricsProvider.parseSearch(json),
+                       [DeezerLyricsProvider.Track(id: "123", title: "Platzhalter", artist: "Testband", duration: 181)])
+    }
+
+    func testDeezerWordByWordLines() {
+        let json: [String: Any] = ["data": ["track": ["lyrics": [
+            "text": "la la eins\nzwei",
+            "synchronizedWordByWordLines": [
+                ["start": 1000, "end": 2500, "words": [
+                    ["start": 1000, "end": 1400, "word": "la"],
+                    ["start": 1400, "end": 1800, "word": "la"],
+                    ["start": 1800, "end": 2500, "word": "eins"]
+                ]],
+                ["start": 3000, "end": 3600, "words": [["start": 3000, "end": 3600, "word": "zwei"]]]
+            ],
+            "synchronizedLines": [["milliseconds": 1000, "line": "la la eins"], ["milliseconds": 3000, "line": "zwei"]]
+        ]]]]
+        let lines = DeezerLyricsProvider.parseLyrics(json)
+        XCTAssertEqual(lines.map(\.text), ["la la eins", "zwei"], "spaces inserted between words")
+        XCTAssertEqual(lines[0].startTime ?? 0, 1, accuracy: 0.001)
+        XCTAssertEqual(lines[0].words?.count, 3)
+        XCTAssertEqual(lines[0].words?[2].start ?? 0, 1.8, accuracy: 0.001)
+        XCTAssertNil(lines[1].words, "single word: line timing only")
+    }
+
+    func testDeezerLineSyncedAndPlainFallbacks() {
+        let synced: [String: Any] = ["data": ["track": ["lyrics": [
+            "synchronizedLines": [["milliseconds": 500, "line": "erste"], ["milliseconds": 4000, "line": "zweite"]]
+        ]]]]
+        XCTAssertEqual(DeezerLyricsProvider.parseLyrics(synced).compactMap(\.startTime), [0.5, 4])
+        let plain: [String: Any] = ["data": ["track": ["lyrics": ["text": "eins\nzwei"]]]]
+        XCTAssertEqual(DeezerLyricsProvider.parseLyrics(plain).map(\.text), ["eins", "zwei"])
+        XCTAssertTrue(DeezerLyricsProvider.parseLyrics(["data": ["track": NSNull()]]).isEmpty)
+    }
+
+    func testAccountProvidersSkipSilentlyWithoutLogin() async {
+        // No ARL stored in the test simulator → Deezer must not throw anything but notFound.
+        LyricsAccountSecrets.shared.delete(.deezer)
+        do {
+            _ = try await DeezerLyricsProvider().search(query: LyricsQuery(title: "x", artist: "y", album: nil, duration: 0))
+            XCTFail("expected notFound")
+        } catch LyricsError.notFound {
+            // expected
+        } catch {
+            XCTFail("unexpected error \(error)")
+        }
+    }
+
     func testFormatDetection() {
         XCTAssertEqual(ProviderLyricsFormat.lines(from: lrc).count, 3)
         XCTAssertNil(ProviderLyricsFormat.lines(from: "eins\nzwei").first?.startTime)

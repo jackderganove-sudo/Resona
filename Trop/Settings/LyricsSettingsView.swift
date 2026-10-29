@@ -54,6 +54,8 @@ struct LyricsSettingsView: View {
                 Text("Disabled providers are skipped when fetching lyrics.")
             }
 
+            LyricsAccountsSection()
+
             M3Section {
                 SettingsPickerRow("Animation", icon: "sparkles", selection: $settings.lyricsAnimationStyle)
                 SettingsPickerRow("Translation", icon: "character.bubble", selection: $settings.lyricsTranslationMode)
@@ -172,6 +174,8 @@ struct LyricsSettingsView: View {
         case "unison": "Lyrics database, also per YouTube upload and its variants"
         case "megalobiz": "LRC files (line-synced)"
         case "qqmusic": "Large catalogue, line-synced"
+        case "deezer": "Line- and word-synced — needs a free Deezer login (below)"
+        case "musixmatch": "Better with your own free login (below)"
         default: nil
         }
     }

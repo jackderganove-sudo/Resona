@@ -48,6 +48,7 @@ enum LyricsProviderRegistry {
         UnisonLyricsProvider(),
         QQMusicLyricsProvider(),
         MegalobizLyricsProvider(),
+        DeezerLyricsProvider(),
         YouTubeMusicLyricsProvider()
     ]
 
@@ -58,6 +59,7 @@ enum LyricsProviderRegistry {
         "simpmusic",
         "unison",
         "lrclib",
+        "deezer",
         "musixmatch",
         "spotify",
         "paxsenix",

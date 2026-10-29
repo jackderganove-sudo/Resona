@@ -20,6 +20,17 @@ struct MusixmatchProvider: LyricsProvider {
     private static var guestToken: String?
 
     func fetch(query: LyricsQuery) async throws -> [LyricLine] {
+        // The user's own login (Settings → Lyrics) first: better hit rate
+        // and limits. A rejected token is flagged and the guest path used.
+        if let userToken = LyricsAccountSecrets.shared.secret(.musixmatch) {
+            do {
+                return try await fetchWithUserToken(userToken, query: query)
+            } catch MusixmatchUserTokenError.rejected {
+                LyricsAccountStatus.markExpired(.musixmatch)
+            } catch {
+                throw error
+            }
+        }
         let token = try await fetchToken()
         var components = URLComponents(string: baseURL)!
         let dur = Int(query.duration)
@@ -43,6 +54,36 @@ struct MusixmatchProvider: LyricsProvider {
         applyHeaders(to: &request)
 
         let json = try await LyricsHTTP.getJSON(request)
+        return try parse(json)
+    }
+
+    // MARK: - Own account (desktop user token)
+
+    private enum MusixmatchUserTokenError: Error { case rejected }
+
+    private func fetchWithUserToken(_ token: String, query: LyricsQuery) async throws -> [LyricLine] {
+        var components = URLComponents(string: "https://apic-desktop.musixmatch.com/ws/1.1/macro.subtitles.get")!
+        let dur = Int(query.duration)
+        components.queryItems = [
+            URLQueryItem(name: "format", value: "json"),
+            URLQueryItem(name: "namespace", value: "lyrics_richsynched"),
+            URLQueryItem(name: "subtitle_format", value: "mxm"),
+            URLQueryItem(name: "app_id", value: MusixmatchAccount.appId),
+            URLQueryItem(name: "q_track", value: query.title),
+            URLQueryItem(name: "q_artist", value: query.artist),
+            URLQueryItem(name: "q_artists", value: query.artist),
+            URLQueryItem(name: "q_album", value: query.album ?? ""),
+            URLQueryItem(name: "q_duration", value: String(dur)),
+            URLQueryItem(name: "f_subtitle_length", value: String(dur)),
+            URLQueryItem(name: "usertoken", value: token)
+        ]
+        guard let url = components.url else { throw LyricsError.invalidURL }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 8
+        request.setValue("AWSELBCORS=0; AWSELB=0", forHTTPHeaderField: "Cookie")
+        let json = try await LyricsHTTP.getJSON(request)
+        let status = (((json["message"] as? [String: Any])?["header"] as? [String: Any])?["status_code"] as? NSNumber)?.intValue
+        if status == 401 { throw MusixmatchUserTokenError.rejected }
         return try parse(json)
     }
 
