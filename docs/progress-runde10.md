@@ -116,3 +116,16 @@ abwechselnd mit Teil A weiter.
     Mini-Player nicht in einer Android-Bottom-Navigation; Resona hat stattdessen
     das Cover-Morphing in die Lyrics-Ansicht.
   - Acryl-Stile: Resonas Milchglas deckt das bereits ab.
+
+### A6 Startseite
+- Genre-Kacheln (Entdecken und Genre-Seiten) gestaffelt wie ein Mauerwerk,
+  jede mit eigener Form (rund, Bogen, Pille, Blatt, Ticket) und Höhe – pro
+  Genre immer gleich.
+- „Genres entdecken“ auf der Startseite nach den ersten Regalen: täglich
+  wechselnde Auswahl aus YouTube Musics Stimmungen & Genres.
+- Genre-Seiten mit Farb-Header (Browse-Header) statt nur großem Titel.
+- Featured-Playlist-Karten: das erste Playlist-Regal und „Aus der Community“
+  als große Karten mit unscharfem Cover, Cover, Titel, Autor und Play.
+- Quick Picks abwechslungsreicher: höchstens zwei Songs pro Künstler am
+  Anfang, der Rest dahinter. Das Hero-Karussell gab es schon.
+- Community: unverändert (braucht wie bei ArchiveTune ein Konto).

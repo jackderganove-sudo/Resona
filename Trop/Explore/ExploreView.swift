@@ -168,13 +168,9 @@ struct ExploreSectionsList: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 20)
                 .padding(.bottom, 14)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 12)], spacing: 12) {
-                ForEach(section.moods) { mood in
-                    NavigationLink(value: mood) {
-                        GenreTile(title: mood.title)
-                    }
-                    .buttonStyle(.expressive(scale: 0.96))
-                }
+            // Round 10: staggered tiles, each genre with its own shape.
+            StaggeredGenreGrid(moods: section.moods) { mood in
+                AppRouter.shared.open(.genre(title: mood.title, params: mood.params))
             }
             .padding(.horizontal, 12)
         }
@@ -211,6 +207,7 @@ struct MoodDetailView: View {
                     )
                 } else {
                     ScrollView {
+                        GenreBrowseHeader(title: mood.title)
                         ExploreSectionsList(sections: sections, pendingRoute: $pendingRoute)
                             .padding(.bottom, 16)
                     }
@@ -222,7 +219,7 @@ struct MoodDetailView: View {
             }
         }
         .navigationTitle(mood.title)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: pendingRoute) { _, route in
             if let route {
                 AppRouter.shared.open(route)

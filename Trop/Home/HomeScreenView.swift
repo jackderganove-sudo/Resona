@@ -89,9 +89,19 @@ struct HomeScreenView: View {
                     )
                 }
 
-                ForEach(viewModel.homeSections.indices, id: \.self) { index in
-                    let section = viewModel.homeSections[index]
-                    sectionView(for: section)
+                let sections = viewModel.homeSections
+                let featuredId = sections.first { Self.isFeaturedCandidate($0) }?.id
+                ForEach(sections.indices, id: \.self) { index in
+                    let section = sections[index]
+                    if section.id == featuredId || Self.isCommunity(section), FeaturedShelf.isPlaylistShelf(section.items) {
+                        featuredSection(section)
+                    } else {
+                        sectionView(for: section)
+                    }
+                    // Round 10: genre discovery after the first few shelves.
+                    if index == min(3, sections.count - 1) {
+                        GenreDiscoverySection()
+                    }
                 }
 
                 GeometryReader { _ in
@@ -167,7 +177,8 @@ struct HomeScreenView: View {
             if case .song(let s) = item { return !pinnedIds.contains(s.videoId) }
             return true
         }
-        let quickSongs = visibleItems.compactMap { if case .song(let s) = $0 { return s } else { return nil } }
+        // Round 10: no artist dominates the start of Quick Picks.
+        let quickSongs = QuickPicksMix.diversified(visibleItems.compactMap { if case .song(let s) = $0 { return s } else { return nil } })
         let combinedQueue = pinnedSongs + quickSongs
 
         if combinedQueue.isEmpty {
@@ -246,6 +257,30 @@ struct HomeScreenView: View {
         } else {
             YouTubeListItemView(item: item, onTap: { handleItemTap(item) }, onNavigate: { pendingRoute = $0 })
         }
+    }
+
+    private static func isCommunity(_ section: HomeSection) -> Bool {
+        if case .fromTheCommunity = section { return true }
+        return false
+    }
+
+    private static func isFeaturedCandidate(_ section: HomeSection) -> Bool {
+        guard case .homePageSection = section else { return false }
+        return FeaturedShelf.isPlaylistShelf(section.items)
+    }
+
+    /// Round 10: the first playlist shelf (and the community shelf) as
+    /// large featured cards.
+    private func featuredSection(_ section: HomeSection) -> some View {
+        HorizontalSection(title: section.displayTitle, vSpacing: 8, contentVerticalPadding: 0) {
+            HStack(spacing: 12) {
+                ForEach(section.items.indices, id: \.self) { i in
+                    let item = section.items[i]
+                    FeaturedPlaylistCard(item: item) { handleItemTap(item) }
+                }
+            }
+        }
+        .accessibilityIdentifier("home.featured")
     }
 
     private func mixedSection(_ section: HomeSection) -> some View {
