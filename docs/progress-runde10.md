@@ -155,3 +155,22 @@ abwechselnd mit Teil A weiter.
     hinaus – vorgemerkt.
   - Tags/Sortierung, Cover-Aktualisierung: Resona hat Sortierung bereits in
     den Listen; Cover kommen bei synchronisierten Playlists von YouTube Music.
+
+### Feather statt ESign
+- Belegt im Feather-Quellcode (khcrysalis/Feather, Commit 31ab6de):
+  `CFBundleURLSchemes` = `feather`; `FeatherApp._handleURL` kennt
+  `feather://install/<https-URL der IPA>` (Rückfrage „Install“, dann Download)
+  und `feather://source/<https-URL>` (Quelle hinzufügen); die URL wird
+  unkodiert angehängt und muss mit `https://` beginnen. Feather ist außerdem
+  Owner des `.ipa`-Dateityps.
+- Update-Banner: „In Feather installieren“ öffnet `feather://install/…` mit
+  der IPA des neuen Releases. Öffnet sich Feather nicht, lädt Resona die IPA
+  selbst (mit Fortschritt, abbrechbar) und öffnet das Teilen-Menü mit der
+  Datei. Der Teilen-Knopf daneben macht das direkt.
+- Einstellungen → Über: „Quelle zu Feather hinzufügen“; Texte ESign → Feather
+  (Banner, Über, README, CI-Kommentare).
+- apps.json geprüft gegen Feathers `ASRepository`: alle gelesenen Felder sind
+  vorhanden (identifier, name, iconURL, website, tintColor; App:
+  bundleIdentifier, name, subtitle, developerName, localizedDescription,
+  iconURL, versions[version, date, localizedDescription, downloadURL, size]);
+  neueste Version zuerst, Icon-URL liefert ein PNG.
