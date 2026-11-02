@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.11",
+          "buildVersion": "69",
+          "date": "2026-11-02T12:21:45Z",
+          "localizedDescription": "- Credits: ArchiveTune (rukamori & contributors) in About and docs/CREDITS.md\n- Lyrics (round 10 / ArchiveTune 15): Binimum provider, enhanced LRC word times on repeated lines, per-song offset ±5 s, AI translation via OpenRouter (own key in Keychain, model, own prompt, test) with fallback, translation source shown; tests\n- Docs: round 10 plan (ArchiveTune canary features, Resona for Android)",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.11/Resona.ipa",
+          "size": 28920741,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.10",
           "buildVersion": "68",
           "date": "2026-10-29T08:13:28Z",
@@ -109,11 +118,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.10",
-      "versionDate": "2026-10-29T08:13:28Z",
-      "versionDescription": "- Fix optional chaining in the Deezer lyrics parser\n- Docs: round 9 progress\n- Lyrics accounts: Deezer (web login reads the ARL cookie, or paste; JWT + pipe GraphQL with word/line sync; Keychain only, sign out, expiry → 'sign in again') and Musixmatch with the user's own token (desktop API, falls back to guest); settings section with status and 'create free account'; tests\n- Full-screen lyrics: status bar + home indicator hidden, ✕/⋯ hidden until a tap on a free area (3 s), both as lyrics settings (default on); UI test reveals the buttons by a header tap",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.10/Resona.ipa",
-      "size": 28881193,
+      "version": "0.8.11",
+      "versionDate": "2026-11-02T12:21:45Z",
+      "versionDescription": "- Credits: ArchiveTune (rukamori & contributors) in About and docs/CREDITS.md\n- Lyrics (round 10 / ArchiveTune 15): Binimum provider, enhanced LRC word times on repeated lines, per-song offset ±5 s, AI translation via OpenRouter (own key in Keychain, model, own prompt, test) with fallback, translation source shown; tests\n- Docs: round 10 plan (ArchiveTune canary features, Resona for Android)",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.11/Resona.ipa",
+      "size": 28920741,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
