@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.12",
+          "buildVersion": "70",
+          "date": "2026-11-02T16:37:34Z",
+          "localizedDescription": "- Fix: lastSeenKey nonisolated\n- Fix: OnboardingState.isExistingInstall nonisolated for unit tests\n- Fix: PlaybackErrorCenter.describe nonisolated (unit tests call it synchronously)\n- Stats (round 10 / ArchiveTune 15): listening statistics per period (minutes, plays, streak, top artists / songs / albums, time of day + listener type, weekdays), recap stories with artwork wall and count-up, share the summary as image, non-destructive undoable reset; tests\n- Home (round 10 / ArchiveTune 15): staggered genre tiles with their own shapes, 'Discover genres' on Home (daily pick), genre pages with colour header, featured cards for the first playlist shelf and the community shelf, more varied Quick Picks; tests\n- Player (round 10 / ArchiveTune 15): Editorial style (die-cut cover morphing squircle ↔ scalloped disc, serif headline, bento controls), Immersive style (full-screen canvas or turning cover disc), 'Blurred cover' background, rotate-cover switch, artist picker for several artists, codec + sample rate in the audio details, artwork placeholder; docs; tests\n- App (round 10 / ArchiveTune 15): 'What's new' after an update from the GitHub release notes (New / Improved / Fixed, all versions since the last seen one, also in Settings → About), first-launch onboarding with optional YouTube Music sign-in, update banner shows the sorted notes; tests\n- Queue (round 10 / ArchiveTune 15): YouTube recommendation chips replace the upcoming songs, 'Play next' moves the song (swipe right or row menu), multi-select with play next / remove, empty state; tests\n- Playback (round 10 / ArchiveTune 15): playback stream resolution before downloads, 'preload next song' switch, 'prevent audio interruptions' (mix with other apps, session + mpv consistent), SponsorBlock skip button mode + per-song switch in the player menu, visible playback error banner with cause hint and copyable details; tests",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.12/Resona.ipa",
+          "size": 29282708,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.11",
           "buildVersion": "69",
           "date": "2026-11-02T12:21:45Z",
@@ -118,11 +127,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.11",
-      "versionDate": "2026-11-02T12:21:45Z",
-      "versionDescription": "- Credits: ArchiveTune (rukamori & contributors) in About and docs/CREDITS.md\n- Lyrics (round 10 / ArchiveTune 15): Binimum provider, enhanced LRC word times on repeated lines, per-song offset ±5 s, AI translation via OpenRouter (own key in Keychain, model, own prompt, test) with fallback, translation source shown; tests\n- Docs: round 10 plan (ArchiveTune canary features, Resona for Android)",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.11/Resona.ipa",
-      "size": 28920741,
+      "version": "0.8.12",
+      "versionDate": "2026-11-02T16:37:34Z",
+      "versionDescription": "- Fix: lastSeenKey nonisolated\n- Fix: OnboardingState.isExistingInstall nonisolated for unit tests\n- Fix: PlaybackErrorCenter.describe nonisolated (unit tests call it synchronously)\n- Stats (round 10 / ArchiveTune 15): listening statistics per period (minutes, plays, streak, top artists / songs / albums, time of day + listener type, weekdays), recap stories with artwork wall and count-up, share the summary as image, non-destructive undoable reset; tests\n- Home (round 10 / ArchiveTune 15): staggered genre tiles with their own shapes, 'Discover genres' on Home (daily pick), genre pages with colour header, featured cards for the first playlist shelf and the community shelf, more varied Quick Picks; tests\n- Player (round 10 / ArchiveTune 15): Editorial style (die-cut cover morphing squircle ↔ scalloped disc, serif headline, bento controls), Immersive style (full-screen canvas or turning cover disc), 'Blurred cover' background, rotate-cover switch, artist picker for several artists, codec + sample rate in the audio details, artwork placeholder; docs; tests\n- App (round 10 / ArchiveTune 15): 'What's new' after an update from the GitHub release notes (New / Improved / Fixed, all versions since the last seen one, also in Settings → About), first-launch onboarding with optional YouTube Music sign-in, update banner shows the sorted notes; tests\n- Queue (round 10 / ArchiveTune 15): YouTube recommendation chips replace the upcoming songs, 'Play next' moves the song (swipe right or row menu), multi-select with play next / remove, empty state; tests\n- Playback (round 10 / ArchiveTune 15): playback stream resolution before downloads, 'preload next song' switch, 'prevent audio interruptions' (mix with other apps, session + mpv consistent), SponsorBlock skip button mode + per-song switch in the player menu, visible playback error banner with cause hint and copyable details; tests",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.12/Resona.ipa",
+      "size": 29282708,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
