@@ -24,6 +24,7 @@ enum DetailRoute: Hashable, Identifiable {
         case .genre(let title, _): return "genre_\(title)"
         case .stats: return "stats"
         case .localMusic: return "localMusic"
+        case .spotifySaved: return "spotifySaved"
         }
     }
 
@@ -41,6 +42,8 @@ enum DetailRoute: Hashable, Identifiable {
     case stats
     /// Imported audio files (round 10).
     case localMusic
+    /// Spotify "Liked Songs" played from YouTube Music (round 10).
+    case spotifySaved
 }
 
 /// Shared view resolving a `DetailRoute` to its target destination view.
@@ -79,6 +82,8 @@ struct DetailRouteDestinationView: View {
             StatsView()
         case .localMusic:
             LocalMusicView()
+        case .spotifySaved:
+            SpotifySavedTracksView()
         }
     }
 }

@@ -862,5 +862,14 @@
   "Download IPA and share": "Download IPA and share",
   "Downloading update … %d %%": "Downloading update … %d %%",
   "Add source to Feather": "Add source to Feather",
-  "New builds are published on GitHub and in the app source for Feather: %@": "New builds are published on GitHub and in the app source for Feather: %@"
+  "New builds are published on GitHub and in the app source for Feather: %@": "New builds are published on GitHub and in the app source for Feather: %@",
+  "Connect Spotify first (Settings → Canvas).": "Connect Spotify first (Settings → Canvas).",
+  "Spotify answered with HTTP %d.": "Spotify answered with HTTP %d.",
+  "Spotify sent an unexpected answer.": "Spotify sent an unexpected answer.",
+  "“%@” wasn't found on YouTube Music.": "“%@” wasn't found on YouTube Music.",
+  "Spotify isn't connected": "Spotify isn't connected",
+  "Sign in to Spotify under Settings → Canvas. Resona reads your liked songs with that login and plays them from YouTube Music.": "Sign in to Spotify under Settings → Canvas. Resona reads your liked songs with that login and plays them from YouTube Music.",
+  "No saved tracks": "No saved tracks",
+  "Your Spotify “Liked Songs” appear here.": "Your Spotify “Liked Songs” appear here.",
+  "Saved tracks": "Saved tracks"
 }

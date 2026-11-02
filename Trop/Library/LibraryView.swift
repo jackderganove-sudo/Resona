@@ -40,6 +40,15 @@ struct LibraryView: View {
         return Array(repeating: GridItem(.flexible(), spacing: 16), count: 2)
     }
     private var autoPlaylists: [AutoPlaylistInfo] {
+        var items = baseAutoPlaylists
+        if SpotifySavedTracksStore.shared.isConnected {
+            items.append(AutoPlaylistInfo(id: "spotifySaved", title: "Saved tracks", icon: "heart.text.square.fill",
+                                          subtitle: "Spotify", route: nil, detailRoute: .spotifySaved))
+        }
+        return items
+    }
+
+    private var baseAutoPlaylists: [AutoPlaylistInfo] {
         [
             AutoPlaylistInfo(id: "liked", title: "Liked Songs", icon: "heart.fill", subtitle: L10n.songs(likedSongCount), route: .likedSongs),
             AutoPlaylistInfo(id: "downloads", title: "Downloads", icon: "arrow.down.circle.fill",

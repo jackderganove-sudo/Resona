@@ -19,13 +19,13 @@ Extension-System, Listen Together (Server von ArchiveTune).
 | Schritt | Gruppe | Inhalt | Aufwand | Status |
 |---|---|---|---|---|
 | A1 | 7 Lyrics | Binimum-Anbieter, Enhanced-LRC-Wortzeiten (abgleichen), Übersetzungsquelle erkennen, Versatz ±5000 ms, OpenRouter-Übersetzung (eigener Key, Keychain, eigener Prompt) | mittel | Release v0.8.11 |
-| A2 | 6 Wiedergabe | Vorladen des nächsten Songs (Schalter), Wiedergabe vor Downloads, Download aus vollständigem Cache, „Audio-Unterbrechungen verhindern“, SponsorBlock im Player, Fehlerhinweise | mittel | erledigt, im Test |
-| A3 | 3 Warteschlange | Redesign, YouTube-Empfehlungs-Chips, „Als Nächstes spielen“ | mittel | erledigt, im Test |
-| A4 | 8 App | „Was ist neu“ aus Release-Notes, Onboarding (optionaler Login), Update-Ablauf, Bewertungs-/Support-Dialog nur wenn sinnvoll | mittel | erledigt, im Test |
-| A5 | 1 Player & Design | V10 Editorial Player, Acryl-/Blur-Stile, Immersive Player mit Canvas (Spotify + Tidal, Frame-Capture, rotierendes Artwork), Form-Morphing Mini-Player ↔ Navigationsleiste, Künstler-Auswahl, Codec-Anzeige abgleichen, Artwork-Platzhalter | groß | offen |
-| A6 | 2 Startseite | Community, Featured-Playlist-Karten, Quick-Picks-Hero-Karussell + abwechslungsreichere Quick Picks, gestaffelte Genre-Kacheln mit eigenen Formen, Genre-Entdeckung, Browse-Header | groß | offen |
-| A7 | 4 Statistiken | Year in Music / Recap-Stories (Animationen, Artwork-Wall, Teilen als Bild), Hör-Statistiken + Zurücksetzen | groß | offen |
-| A8 | 5 Bibliothek | Podcasts, „Gespeicherte Titel“, Tags/Sortierung, Leer-Zustände, CSV-Export, Cover-Aktualisierung, lokale Musik (Dateien-App, Metadaten) | sehr groß | offen |
+| A2 | 6 Wiedergabe | Vorladen des nächsten Songs (Schalter), Wiedergabe vor Downloads, Download aus vollständigem Cache, „Audio-Unterbrechungen verhindern“, SponsorBlock im Player, Fehlerhinweise | mittel | Release v0.8.12 |
+| A3 | 3 Warteschlange | Redesign, YouTube-Empfehlungs-Chips, „Als Nächstes spielen“ | mittel | Release v0.8.12 |
+| A4 | 8 App | „Was ist neu“ aus Release-Notes, Onboarding (optionaler Login), Update-Ablauf, Bewertungs-/Support-Dialog nur wenn sinnvoll | mittel | Release v0.8.12 |
+| A5 | 1 Player & Design | V10 Editorial Player, Acryl-/Blur-Stile, Immersive Player mit Canvas (Spotify + Tidal, Frame-Capture, rotierendes Artwork), Form-Morphing Mini-Player ↔ Navigationsleiste, Künstler-Auswahl, Codec-Anzeige abgleichen, Artwork-Platzhalter | groß | Release v0.8.12 |
+| A6 | 2 Startseite | Community, Featured-Playlist-Karten, Quick-Picks-Hero-Karussell + abwechslungsreichere Quick Picks, gestaffelte Genre-Kacheln mit eigenen Formen, Genre-Entdeckung, Browse-Header | groß | Release v0.8.12 |
+| A7 | 4 Statistiken | Year in Music / Recap-Stories (Animationen, Artwork-Wall, Teilen als Bild), Hör-Statistiken + Zurücksetzen | groß | Release v0.8.12 |
+| A8 | 5 Bibliothek | Podcasts, „Gespeicherte Titel“, Tags/Sortierung, Leer-Zustände, CSV-Export, Cover-Aktualisierung, lokale Musik (Dateien-App, Metadaten) | sehr groß | Release v0.8.13 (Rest offen: Gespeicherte Titel) |
 
 Teil B startet, sobald Teil A auf Gerätetests wartet, und läuft dann
 abwechselnd mit Teil A weiter.
