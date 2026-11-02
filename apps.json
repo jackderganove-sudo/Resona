@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.14",
+          "buildVersion": "72",
+          "date": "2026-11-02T18:24:44Z",
+          "localizedDescription": "- Updates via Feather: 'Install in Feather' opens feather://install/<ipa> (scheme verified in Feather's source), fallback downloads the IPA with progress and opens the share sheet; 'Add source to Feather' in About; ESign texts → Feather (banner, About, README, CI comments); tests",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.14/Resona.ipa",
+          "size": 29342340,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.13",
           "buildVersion": "71",
           "date": "2026-11-02T17:15:40Z",
@@ -136,11 +145,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.13",
-      "versionDate": "2026-11-02T17:15:40Z",
-      "versionDescription": "- Podcasts (round 10 / ArchiveTune 15): episode search on podcast pages; docs A8; tests\n- Library (round 10 / ArchiveTune 15): export playlists as CSV (share sheet, Excel-safe UTF-8), local music imported from the Files app with metadata and cover, playing offline like downloads; tests",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.13/Resona.ipa",
-      "size": 29328171,
+      "version": "0.8.14",
+      "versionDate": "2026-11-02T18:24:44Z",
+      "versionDescription": "- Updates via Feather: 'Install in Feather' opens feather://install/<ipa> (scheme verified in Feather's source), fallback downloads the IPA with progress and opens the share sheet; 'Add source to Feather' in About; ESign texts → Feather (banner, About, README, CI comments); tests",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.14/Resona.ipa",
+      "size": 29342340,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
