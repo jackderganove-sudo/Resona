@@ -7,6 +7,7 @@
 
 import CryptoKit
 import Foundation
+import Observation
 
 enum SponsorBlock {
     private static let enabledKey = "sponsorBlockEnabled"
@@ -18,6 +19,39 @@ enum SponsorBlock {
     static func save(enabled: Bool) {
         UserDefaults.standard.set(enabled, forKey: enabledKey)
     }
+
+    // MARK: Player controls (as in ArchiveTune 15)
+
+    private static let buttonModeKey = "resona.sponsorBlockShowButton"
+    private static let disabledSongsKey = "resona.sponsorBlockDisabledSongs"
+
+    /// Show a "Skip non-music part" button instead of skipping automatically.
+    static var showsSkipButton: Bool {
+        get { UserDefaults.standard.bool(forKey: buttonModeKey) }
+        set { UserDefaults.standard.set(newValue, forKey: buttonModeKey) }
+    }
+
+    static func isDisabled(for videoId: String?) -> Bool {
+        guard let videoId else { return false }
+        return (UserDefaults.standard.stringArray(forKey: disabledSongsKey) ?? []).contains(videoId)
+    }
+
+    static func setDisabled(_ disabled: Bool, for videoId: String) {
+        var list = Set(UserDefaults.standard.stringArray(forKey: disabledSongsKey) ?? [])
+        if disabled { list.insert(videoId) } else { list.remove(videoId) }
+        UserDefaults.standard.set(Array(list), forKey: disabledSongsKey)
+    }
+}
+
+/// What the player shows: segment count of the song and the segment the
+/// playback is in (button mode).
+@MainActor
+@Observable
+final class SponsorBlockState {
+    static let shared = SponsorBlockState()
+    var segmentCount: [String: Int] = [:]
+    /// End of the segment currently playing (button mode), else nil.
+    var activeSegmentEnd: Double?
 }
 
 @MainActor
@@ -74,17 +108,36 @@ final class SponsorBlockIntegration {
             }
             return
         }
-        guard nowPlaying.isPlaying else { return }
+        guard nowPlaying.isPlaying, !SponsorBlock.isDisabled(for: id) else {
+            if SponsorBlockState.shared.activeSegmentEnd != nil { SponsorBlockState.shared.activeSegmentEnd = nil }
+            return
+        }
         let player = PlayerController.shared
         guard player.currentVideoId == id, player.pendingVideoId == nil else { return }
         let position = nowPlaying.currentTime
+        var inSegment: Double?
         for (index, segment) in segments.enumerated() where !skipped.contains(index) {
             // Within the last second the jump isn't worth it.
             guard position >= segment.start, position < segment.end - 1 else { continue }
+            if SponsorBlock.showsSkipButton {
+                inSegment = segment.end
+                break
+            }
             skipped.insert(index)
             player.seek(to: segment.end)
             return
         }
+        if SponsorBlockState.shared.activeSegmentEnd != inSegment {
+            SponsorBlockState.shared.activeSegmentEnd = inSegment
+        }
+    }
+
+    /// Button mode: skip the segment playing now.
+    func skipActiveSegment() {
+        guard let end = SponsorBlockState.shared.activeSegmentEnd else { return }
+        if let index = segments.firstIndex(where: { $0.end == end }) { skipped.insert(index) }
+        SponsorBlockState.shared.activeSegmentEnd = nil
+        PlayerController.shared.seek(to: end)
     }
 
     private func fetchTask(for videoId: String) -> Task<[Segment], Never> {
@@ -102,6 +155,7 @@ final class SponsorBlockIntegration {
             guard let self else { return }
             self.fetchTasks.removeValue(forKey: videoId)
             self.prefetchedSegments[videoId] = found
+            SponsorBlockState.shared.segmentCount[videoId] = found.count
             if self.prefetchedSegments.count > 64 {
                 self.prefetchedSegments.removeAll(keepingCapacity: true)
             }

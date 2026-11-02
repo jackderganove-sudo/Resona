@@ -763,5 +763,22 @@
   "Model and prompt": "Model and prompt",
   "The own prompt is appended to the default instructions (e.g. “keep slang”, “informal Du”).": "The own prompt is appended to the default instructions (e.g. “keep slang”, “informal Du”).",
   "Works": "Works",
-  "ArchiveTune by rukamori & contributors": "ArchiveTune by rukamori & contributors"
+  "ArchiveTune by rukamori & contributors": "ArchiveTune by rukamori & contributors",
+  "Preloading resolves the next song's stream ahead of time for faster song changes. “Prevent audio interruptions” plays alongside other apps, so their sounds no longer pause Resona — the lock-screen controls may then be missing. Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on.": "Preloading resolves the next song's stream ahead of time for faster song changes. “Prevent audio interruptions” plays alongside other apps, so their sounds no longer pause Resona — the lock-screen controls may then be missing. Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on.",
+  "Preload the next song": "Preload the next song",
+  "Prevent audio interruptions": "Prevent audio interruptions",
+  "Skip non-music part": "Skip non-music part",
+  "SponsorBlock on for this song": "SponsorBlock on for this song",
+  "SponsorBlock off for this song": "SponsorBlock off for this song",
+  "Ask with a button instead of skipping": "Ask with a button instead of skipping",
+  "Shows “Skip non-music part” in the player while such a part plays. Per song SponsorBlock can be switched off in the player menu.": "Shows “Skip non-music part” in the player while such a part plays. Per song SponsorBlock can be switched off in the player menu.",
+  "YouTube asks for a sign-in (bot check). Sign in to your account or try again later.": "YouTube asks for a sign-in (bot check). Sign in to your account or try again later.",
+  "This song isn't available (removed, private or blocked in your region).": "This song isn't available (removed, private or blocked in your region).",
+  "This song is age-restricted. Signing in may help.": "This song is age-restricted. Signing in may help.",
+  "No connection to YouTube. Check the internet connection.": "No connection to YouTube. Check the internet connection.",
+  "The stream could not be loaded. Try again or play another version.": "The stream could not be loaded. Try again or play another version.",
+  "This song": "This song",
+  "%@ can't be played": "%@ can't be played",
+  "Copied": "Copied",
+  "Copy details": "Copy details"
 }

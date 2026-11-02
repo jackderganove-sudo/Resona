@@ -91,7 +91,14 @@ actor PlaybackManager {
         }
         inflightResolutions[videoId] = task
         defer { clearInflight(key: videoId) }
-        return try await task.value
+        do {
+            return try await task.value
+        } catch {
+            // Visible hint instead of a log line only.
+            let title = await MainActor.run { NowPlaying.shared.queueSongs.first { $0.videoId == videoId }?.title }
+            await MainActor.run { PlaybackErrorCenter.shared.report(error, videoId: videoId, title: title) }
+            throw error
+        }
     }
 
     /// Runs the client fallback chain for playback. Only called once per
@@ -99,11 +106,20 @@ actor PlaybackManager {
     private func resolveAndPlayFromNetwork(videoId: String) async throws -> PlaybackResult {
         var request = StreamResolveRequest.playback(videoId: videoId)
         request.options.audioQuality = SettingsStore.shared.audioQuality
-        let result = try await StreamFallback.resolveFirstValid(
-            request,
-            using: InnerTubeClient.tropShared,
-            providers: .tropLive
-        )
+        // Playback first: downloads wait while this resolves.
+        await PlaybackPriorityGate.shared.begin()
+        let result: PlaybackResult
+        do {
+            result = try await StreamFallback.resolveFirstValid(
+                request,
+                using: InnerTubeClient.tropShared,
+                providers: .tropLive
+            )
+            await PlaybackPriorityGate.shared.end()
+        } catch {
+            await PlaybackPriorityGate.shared.end()
+            throw error
+        }
         await playNetworkResult(result, videoId: videoId)
         return result
     }
@@ -220,6 +236,7 @@ actor PlaybackManager {
     }
 
     private func resolveFromNetwork(videoId: String, preferredFormat: Format?, forDownload: Bool) async throws -> PlaybackResult {
+        if forDownload { await PlaybackPriorityGate.shared.waitForPlayback() }
         var request = forDownload ? StreamResolveRequest.download(videoId: videoId) : .playback(videoId: videoId)
         request.options.preferredFormat = preferredFormat
         request.options.audioQuality = SettingsStore.shared.audioQuality

@@ -430,7 +430,9 @@ extension PlayerController {
         mpv_set_option_string(mpv, "audio-exclusive", "no")
         #else
         mpv_set_option_string(mpv, "hwdec", "videotoolbox")
-        mpv_set_option_string(mpv, "audio-exclusive", "yes")
+        // "Mix with other apps" (Settings → Playback): mpv's iOS output then
+        // sets MixWithOthers itself — must match assertAudioSession().
+        mpv_set_option_string(mpv, "audio-exclusive", mixWithOtherAudio ? "no" : "yes")
         #endif
 
         // Automated simulator runs: no audio device, still real-time.
@@ -970,18 +972,36 @@ extension PlayerController {
 // MARK: - Audio session / interruption handling
 
 extension PlayerController {
+    /// The mixing option changed: both instances and the session follow.
+    func applyMixWithOtherAudio() {
+        let value = Self.mixWithOtherAudio ? "no" : "yes"
+        mpvAccessQueue.async { [weak self] in
+            guard let self else { return }
+            for handle in [self._mpv, self._spare].compactMap({ $0 }) {
+                mpv_set_property_string(handle, "audio-exclusive", value)
+            }
+        }
+        assertAudioSession()
+    }
+
     /// Exactly the configuration mpv's iOS audio output sets on every init
     /// (category playback, mode moviePlayback, no options with
     /// audio-exclusive): a different mode/policy here made every output
     /// start and every resume reconfigure the session — each switch
     /// briefly interrupts all running audio (crossfade dropouts).
+    /// UserDefaults directly: read from nonisolated mpv setup code.
+    nonisolated static var mixWithOtherAudio: Bool {
+        UserDefaults.standard.bool(forKey: "resona.mixWithOtherAudio")
+    }
+
     func assertAudioSession() {
         let session = AVAudioSession.sharedInstance()
+        let options: AVAudioSession.CategoryOptions = Self.mixWithOtherAudio ? [.mixWithOthers] : []
         do {
             if session.category != .playback || session.mode != .moviePlayback
-                || session.routeSharingPolicy != .default || !session.categoryOptions.isEmpty {
+                || session.routeSharingPolicy != .default || session.categoryOptions != options {
                 Log.player.info("AUDIO session reconfigure (was \(session.category.rawValue)/\(session.mode.rawValue))")
-                try session.setCategory(.playback, mode: .moviePlayback, policy: .default, options: [])
+                try session.setCategory(.playback, mode: .moviePlayback, policy: .default, options: options)
             }
             try session.setActive(true)
         } catch {

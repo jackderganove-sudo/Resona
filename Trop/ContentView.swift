@@ -78,6 +78,11 @@ struct ContentView: View {
                         .zIndex(30)
                 }
 
+                // "Can't be played" hint with cause (round 10).
+                PlaybackErrorBanner()
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .zIndex(40)
+
                 if let update = updates.available, !updates.bannerDismissed, !isExpanded {
                     VStack {
                         UpdateBanner(update: update)

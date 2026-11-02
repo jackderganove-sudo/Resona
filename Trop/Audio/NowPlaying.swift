@@ -398,6 +398,8 @@ final class NowPlaying {
                 _ = await MainActor.run { self.lastFailureAt.removeValue(forKey: videoId) }
             } catch {
                 Log.nowPlaying.error("Mid-play recovery failed: \(error)")
+                let title = await MainActor.run { self.title }
+                await MainActor.run { PlaybackErrorCenter.shared.report(error, videoId: videoId, title: title) }
                 if self.videoId == videoId {
                     isPlaying = false
                 }
@@ -547,7 +549,7 @@ final class NowPlaying {
     }
 
     private func preloadNextTrack() {
-        guard hasNext else { return }
+        guard hasNext, SettingsStore.shared.preloadNextSong else { return }
         let nextId = queueSongs[queueIndex + 1].videoId
         SponsorBlockIntegration.shared.warm(for: nextId)
         loggedTask(Log.nowPlaying, "Pre-resolve failed") {

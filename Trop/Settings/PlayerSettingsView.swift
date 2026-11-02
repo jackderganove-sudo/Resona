@@ -28,6 +28,8 @@ struct PlayerSettingsView: View {
                 SettingsPickerRow("Audio Quality", icon: "waveform", selection: $settings.audioQuality)
                 SettingsToggleRow("Audio Normalization", icon: "speaker.wave.2", isOn: $settings.audioNormalization)
                 SettingsToggleRow("Gapless Playback", icon: "arrow.right.arrow.left", isOn: $settings.gaplessPlayback)
+                SettingsToggleRow("Preload the next song", icon: "forward.circle", isOn: $settings.preloadNextSong)
+                SettingsToggleRow("Prevent audio interruptions", icon: "speaker.wave.2.bubble", isOn: $settings.mixWithOtherAudio)
                 M3SliderRow(
                     value: $settings.crossfadeSeconds,
                     range: 0...12,
@@ -45,7 +47,7 @@ struct PlayerSettingsView: View {
             } header: {
                 Text("Audio")
             } footer: {
-                Text("Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on.")
+                Text("Preloading resolves the next song's stream ahead of time for faster song changes. “Prevent audio interruptions” plays alongside other apps, so their sounds no longer pause Resona — the lock-screen controls may then be missing. Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on.")
             }
 
             M3Section {
@@ -75,5 +77,8 @@ struct PlayerSettingsView: View {
         }
         .m3ScreenBackground()
         .miniPlayerTracksScroll()
+        .onChange(of: settings.mixWithOtherAudio) { _, _ in
+            PlayerController.shared.applyMixWithOtherAudio()
+        }
     }
 }

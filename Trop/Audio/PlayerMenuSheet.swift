@@ -175,10 +175,12 @@ struct PlayerMenuSheet: View {
 
     /// "Most replayed" peak of this song (loaded on appear).
     @State private var dropTime: Double?
+    @State private var sponsorBlockOff = false
 
     private var actionGrid: some View {
         actionTiles
             .task(id: song.videoId) {
+                sponsorBlockOff = SponsorBlock.isDisabled(for: song.videoId)
                 dropTime = await MostReplayedService.shared.heatmap(for: song.videoId)?.dropTime
             }
     }
@@ -203,8 +205,18 @@ struct PlayerMenuSheet: View {
             },
             M3ActionTile(icon: "arrow.up.forward.app", title: "Open in YouTube Music") {
                 if let url = URL(string: song.webUrl) { openURL(url) }
+            },
+            // SponsorBlock per song (only when the song has segments or is
+            // switched off).
+            M3ActionTile(icon: sponsorBlockOff ? "forward.end.alt" : "forward.end.alt.fill",
+                         title: sponsorBlockOff ? "SponsorBlock on for this song" : "SponsorBlock off for this song") {
+                SponsorBlock.setDisabled(!sponsorBlockOff, for: song.videoId)
+                sponsorBlockOff.toggle()
             }
-        ].filter { $0.icon != "bolt.fill" || dropTime != nil })
+        ].filter {
+            ($0.icon != "bolt.fill" || dropTime != nil)
+                && (!$0.icon.hasPrefix("forward.end.alt") || (SponsorBlock.isEnabled && ((SponsorBlockState.shared.segmentCount[song.videoId] ?? 0) > 0 || sponsorBlockOff)))
+        })
     }
 
     private var separator: some View {

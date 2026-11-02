@@ -106,6 +106,28 @@ struct FullPlayerView: View {
                     .allowsHitTesting(false)
                     .zIndex(6)
                 }
+
+                // SponsorBlock button mode: offer to skip the non-music part.
+                if SponsorBlockState.shared.activeSegmentEnd != nil, !showLyrics {
+                    VStack {
+                        Spacer()
+                        Button {
+                            SponsorBlockIntegration.shared.skipActiveSegment()
+                        } label: {
+                            Label("Skip non-music part", systemImage: "forward.end.alt.fill")
+                                .font(.poppins(15, weight: .semibold))
+                                .padding(.horizontal, 18)
+                                .frame(height: 44)
+                                .background(ResonaGlassBackground(shape: Capsule()))
+                                .foregroundStyle(.white)
+                        }
+                        .buttonStyle(.expressive(scale: 0.92))
+                        .accessibilityIdentifier("player.sponsorblock.skip")
+                        .padding(.bottom, 140)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(7)
+                }
             }
             .onChange(of: usePanel, initial: true) { _, value in sidePanelMode = value }
             .onChange(of: showLyrics) { _, shown in Log.player.info("UI lyrics shown=\(shown)") }
