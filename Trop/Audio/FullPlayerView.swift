@@ -40,6 +40,9 @@ struct FullPlayerView: View {
     @State private var artworkEntryOffset: CGFloat = 0
     @State private var isCollapseDragging = false
     @State private var toast: LocalizedStringKey?
+    /// A canvas clip is showing (the cover then stops turning).
+    @State private var canvasActive = false
+    @State private var showArtistPicker = false
     @State private var toastTask: Task<Void, Never>?
 
     private var currentSong: SongItem? {
@@ -74,6 +77,10 @@ struct FullPlayerView: View {
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
                         } else if np.isVideoMode && np.hasVideo {
                             videoLayout(size: contentSize)
+                        } else if settings.playerLayoutStyle == .editorial {
+                            editorialLayout(size: contentSize, wide: wide)
+                        } else if settings.playerLayoutStyle == .immersive {
+                            immersiveLayout(size: contentSize, wide: wide)
                         } else if wide {
                             wideLayout(size: contentSize)
                         } else {
@@ -171,6 +178,13 @@ struct FullPlayerView: View {
             QueueSheet(pendingRoute: $pendingRoute)
         }
         .background(Color.clear.detailRouteSheet(item: $pendingRoute))
+        .confirmationDialog("Choose artist", isPresented: $showArtistPicker, titleVisibility: .visible) {
+            ForEach(Array(np.artists.filter { $0.id != nil }.enumerated()), id: \.offset) { _, artist in
+                Button(artist.name) {
+                    if let id = artist.id { open(artistId: id) }
+                }
+            }
+        }
     }
 
     // MARK: Side panel (iPad landscape)
@@ -220,8 +234,19 @@ struct FullPlayerView: View {
 
     @ViewBuilder
     private var background: some View {
-        if np.isVideoMode && np.hasVideo || settings.playerBackgroundStyle == .solid {
+        if np.isVideoMode && np.hasVideo {
             Color.black.ignoresSafeArea()
+        } else if settings.playerLayoutStyle == .editorial && !showLyrics {
+            // Editorial: one flat field in the cover's container colour.
+            m3.playerAccent.container
+                .ignoresSafeArea()
+                .animation(M3Motion.colorChange, value: m3.playerAccent)
+        } else if settings.playerLayoutStyle == .immersive && !showLyrics {
+            Color.black.ignoresSafeArea()
+        } else if settings.playerBackgroundStyle == .solid {
+            Color.black.ignoresSafeArea()
+        } else if settings.playerBackgroundStyle == .blurredCover {
+            BlurredCoverBackground(image: np.thumbnailUIImage, dimmed: showSleepTimer)
         } else {
             PlayerBackground(dimmed: showSleepTimer)
         }
@@ -331,6 +356,244 @@ struct FullPlayerView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    // MARK: Editorial (round 10)
+
+    private func editorialLayout(size: CGSize, wide: Bool) -> some View {
+        let accent = m3.playerAccent.on
+        let field = m3.playerAccent.container
+        let compact = size.height < 760
+        return Group {
+            if wide {
+                let column = min(500, max(360, size.width * 0.4))
+                let side = max(240, min(size.height * 0.78, size.width - column - 40 - 64))
+                HStack(alignment: .center, spacing: 40) {
+                    editorialArt
+                        .frame(width: side, height: side)
+                    VStack(alignment: .leading, spacing: 0) {
+                        editorialTopBar(accent: accent, field: field)
+                        Spacer(minLength: 12)
+                        editorialTitle(accent: accent, compact: compact)
+                        editorialControls(accent: accent, field: field, compact: compact)
+                            .padding(.top, 18)
+                        Spacer(minLength: 12)
+                    }
+                    .frame(width: column)
+                }
+                .padding(.horizontal, 32)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                let side = min(size.width - 64, size.height * (compact ? 0.36 : 0.42))
+                VStack(spacing: 0) {
+                    editorialTopBar(accent: accent, field: field)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                    editorialArt
+                        .frame(width: side, height: side)
+                        .frame(maxHeight: .infinity)
+                    VStack(alignment: .leading, spacing: 0) {
+                        editorialTitle(accent: accent, compact: compact)
+                        editorialControls(accent: accent, field: field, compact: compact)
+                            .padding(.top, compact ? 10 : 16)
+                    }
+                    .frame(maxWidth: 640)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, compact ? 6 : 12)
+                }
+            }
+        }
+        .accessibilityIdentifier("player.editorial")
+    }
+
+    private func editorialTopBar(accent: Color, field: Color) -> some View {
+        HStack(spacing: 10) {
+            EditorialCircleButton(size: 44, accent: accent, field: field, accessibility: "Collapse player", action: onCollapse) {
+                Image(systemName: "chevron.down").font(.system(size: 18, weight: .semibold))
+            }
+            Spacer()
+            if !np.albumTitle.isEmpty {
+                Text(np.albumTitle.uppercased())
+                    .font(.poppins(12, weight: .semibold))
+                    .tracking(1.5)
+                    .foregroundStyle(accent.opacity(0.7))
+                    .lineLimit(1)
+            }
+            Spacer()
+            EditorialCircleButton(size: 44, accent: accent, field: field, accessibility: "More") {
+                showSongMenu = true
+            } label: {
+                Image(systemName: "ellipsis").font(.system(size: 18, weight: .semibold))
+            }
+        }
+    }
+
+    /// The cover as a die-cut: squircle while paused, scalloped disc while
+    /// playing; turns slowly unless a canvas is showing. Tap = play/pause.
+    private var editorialArt: some View {
+        ZStack {
+            artworkImage
+            CanvasVideoView(
+                videoId: np.videoId,
+                title: np.title,
+                artist: np.artist,
+                album: np.albumTitle.isEmpty ? nil : np.albumTitle,
+                isPlaying: np.isPlaying,
+                enabled: settings.canvasEnabled,
+                onDominantColorsChange: { canvasActive = $0 != nil }
+            )
+        }
+        .clipShape(DieCutShape(morph: np.isPlaying ? 1 : 0))
+        .rotatingWhilePlaying(np.isPlaying, enabled: settings.rotateArtwork && !canvasActive)
+        .animation(M3Motion.slowSpatial, value: np.isPlaying)
+        .shadow(color: .black.opacity(0.3), radius: 22, y: 10)
+        .offset(x: artworkEntryOffset)
+        .contentShape(Circle())
+        .onTapGesture { player.togglePlayPause() }
+        .gesture(artworkSwipe)
+        .accessibilityElement()
+        .accessibilityLabel(Text("Artwork"))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("player.editorial.art")
+    }
+
+    private func editorialTitle(accent: Color, compact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(np.title)
+                .font(.system(size: EditorialType.headlineSize(for: np.title, compact: compact), weight: .bold, design: .serif).italic())
+                .foregroundStyle(accent)
+                .lineLimit(2)
+                .minimumScaleFactor(0.6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(action: openArtist) {
+                Text(np.displayArtist.uppercased())
+                    .font(.poppins(14, weight: .semibold))
+                    .tracking(2)
+                    .foregroundStyle(accent.opacity(0.8))
+                    .lineLimit(1)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    /// Bento cluster: word pill + next, previous + progress, toggles.
+    private func editorialControls(accent: Color, field: Color, compact: Bool) -> some View {
+        let circle: CGFloat = compact ? 68 : 80
+        let word = (np.isPlaying ? String(localized: "Pause") : String(localized: "Play")).uppercased()
+        return VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                Button {
+                    player.togglePlayPause()
+                } label: {
+                    Text(verbatim: word)
+                        .font(.system(size: compact ? 28 : 34, weight: .black, design: .serif).italic())
+                        .tracking(3)
+                        .foregroundStyle(field)
+                        .contentTransition(.interpolate)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: circle)
+                        .background(accent, in: Capsule())
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.expressive(scale: 0.95))
+                .accessibilityLabel(Text(np.isPlaying ? "Pause" : "Play"))
+                .accessibilityIdentifier("player.editorial.playPause")
+                EditorialCircleButton(size: circle, accent: accent, field: field, accessibility: "Next") {
+                    np.playNext()
+                } label: {
+                    Image(systemName: "forward.fill").font(.system(size: 28, weight: .semibold))
+                }
+                .disabled(!np.hasNext)
+                .opacity(np.hasNext ? 1 : 0.4)
+            }
+            HStack(spacing: 16) {
+                EditorialCircleButton(size: circle, accent: accent, field: field, accessibility: "Previous") {
+                    np.playPrevious()
+                } label: {
+                    Image(systemName: "backward.fill").font(.system(size: 28, weight: .semibold))
+                }
+                progressSlider(compact: true, tint: accent)
+            }
+            HStack {
+                toggleRow
+                Spacer(minLength: 0)
+            }
+            bottomRow
+                .padding(.top, 4)
+        }
+        .animation(M3Motion.defaultEffects, value: np.isPlaying)
+    }
+
+    // MARK: Immersive (round 10)
+
+    private func immersiveLayout(size: CGSize, wide: Bool) -> some View {
+        ZStack(alignment: .bottom) {
+            immersiveBackdrop(size: size, wide: wide)
+            LinearGradient(colors: [.black.opacity(0.45), .clear, .clear, .black.opacity(0.85)],
+                           startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+            VStack(spacing: 0) {
+                header
+                    .padding(.top, 12)
+                Spacer(minLength: 0)
+                VStack(spacing: 0) {
+                    titleRow
+                    progressSlider(compact: false)
+                        .padding(.top, 14)
+                    PlaybackButtonGroup(
+                        isPlaying: np.isPlaying,
+                        hasPrevious: np.hasPrevious,
+                        hasNext: np.hasNext,
+                        onPrevious: { np.playPrevious() },
+                        onPlayPause: { player.togglePlayPause() },
+                        onNext: { np.playNext() }
+                    )
+                    .frame(height: 76)
+                    .padding(.top, 12)
+                    toggleRow
+                        .padding(.top, 12)
+                    bottomRow
+                        .padding(.top, 14)
+                }
+                .frame(maxWidth: 560)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 12)
+            }
+        }
+        .accessibilityIdentifier("player.immersive")
+    }
+
+    /// Canvas full screen; without one the blurred cover with the cover as
+    /// a turning disc on top.
+    private func immersiveBackdrop(size: CGSize, wide: Bool) -> some View {
+        let disc = min(size.width, size.height) * (wide ? 0.56 : 0.62)
+        return ZStack {
+            BlurredCoverBackground(image: np.thumbnailUIImage, dimmed: false)
+            artworkImage
+                .frame(width: disc, height: disc)
+                .clipShape(Circle())
+                .overlay(Circle().strokeBorder(.white.opacity(0.12), lineWidth: 1))
+                .rotatingWhilePlaying(np.isPlaying, enabled: settings.rotateArtwork)
+                .shadow(color: .black.opacity(0.35), radius: 30, y: 12)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .padding(.top, wide ? size.height * 0.08 : size.height * 0.12)
+                .offset(x: artworkEntryOffset)
+                .opacity(canvasActive ? 0 : 1)
+            CanvasVideoView(
+                videoId: np.videoId,
+                title: np.title,
+                artist: np.artist,
+                album: np.albumTitle.isEmpty ? nil : np.albumTitle,
+                isPlaying: np.isPlaying,
+                enabled: settings.canvasEnabled,
+                onDominantColorsChange: { canvasActive = $0 != nil }
+            )
+            .ignoresSafeArea()
+        }
+        .animation(M3Motion.colorChange, value: canvasActive)
+        .contentShape(Rectangle())
+        .gesture(artworkSwipe)
+    }
+
     private func videoLayout(size: CGSize) -> some View {
         VStack(spacing: 0) {
             HStack {
@@ -407,7 +670,7 @@ struct FullPlayerView: View {
                 album: np.albumTitle.isEmpty ? nil : np.albumTitle,
                 isPlaying: np.isPlaying,
                 enabled: settings.canvasEnabled,
-                onDominantColorsChange: { _ in }
+                onDominantColorsChange: { canvasActive = $0 != nil }
             )
         }
         .clipShape(RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous))
@@ -436,12 +699,7 @@ struct FullPlayerView: View {
                     .transition(.opacity)
                     .id(ObjectIdentifier(image))
             } else {
-                ZStack {
-                    Color.white.opacity(0.1)
-                    Image(systemName: "music.note")
-                        .font(.system(size: 64))
-                        .foregroundStyle(.white.opacity(0.4))
-                }
+                ArtworkPlaceholder(title: np.title)
             }
         }
         .animation(M3Motion.defaultEffects, value: np.thumbnailVersion)
@@ -512,7 +770,7 @@ struct FullPlayerView: View {
 
     // MARK: Slider
 
-    private func progressSlider(compact: Bool) -> some View {
+    private func progressSlider(compact: Bool, tint: Color = .white) -> some View {
         PlaybackProgressReader { time, progress in
             VStack(spacing: compact ? 4 : 6) {
                 ExpressiveSlider(
@@ -522,8 +780,8 @@ struct FullPlayerView: View {
                     ),
                     trackHeight: compact ? 6 : 14,
                     handleHeight: compact ? 20 : 40,
-                    activeColor: .white,
-                    inactiveColor: .white.opacity(0.28),
+                    activeColor: tint,
+                    inactiveColor: tint.opacity(0.28),
                     onEditingChanged: { editing in
                         if editing {
                             editingProgress = progress
@@ -543,7 +801,7 @@ struct FullPlayerView: View {
                     Text(DurationFormat.playbackTime(np.duration))
                 }
                 .font(.poppins(14, weight: .medium).monospacedDigit())
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(tint.opacity(0.9))
                 .padding(.horizontal, 4)
             }
             // "Most replayed" as a soft wave rising behind the bar.
@@ -670,8 +928,19 @@ struct FullPlayerView: View {
         }
     }
 
+    /// Several credited artists: pick one (round 10, ArchiveTune's artist
+    /// picker); one artist opens directly.
     private func openArtist() {
-        guard let artist = np.artists.first(where: { $0.id != nil }), let id = artist.id else { return }
+        let linked = np.artists.filter { $0.id != nil }
+        if linked.count > 1 {
+            showArtistPicker = true
+            return
+        }
+        guard let id = linked.first?.id else { return }
+        open(artistId: id)
+    }
+
+    private func open(artistId id: String) {
         onCollapse()
         AppRouter.shared.open(.artist(browseId: id))
     }

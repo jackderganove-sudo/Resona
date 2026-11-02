@@ -54,7 +54,12 @@ struct AppearanceSettingsView: View {
 
             M3Section {
                 SettingsPickerRow("Player Style", icon: "rectangle.portrait.on.rectangle.portrait", selection: $settings.playerLayoutStyle)
-                SettingsPickerRow("Player Background", icon: "photo", selection: $settings.playerBackgroundStyle)
+                if settings.playerLayoutStyle == .editorial || settings.playerLayoutStyle == .immersive {
+                    SettingsToggleRow("Rotate the cover while playing", icon: "arrow.trianglehead.2.clockwise.rotate.90", isOn: $settings.rotateArtwork)
+                }
+                if settings.playerLayoutStyle != .editorial {
+                    SettingsPickerRow("Player Background", icon: "photo", selection: $settings.playerBackgroundStyle)
+                }
                 SettingsToggleRow("Show audio details", icon: "waveform.badge.magnifyingglass", isOn: $settings.showAudioDetails)
                 if settings.playerBackgroundStyle == .dynamic {
                     SettingsToggleRow("Animated", icon: "wind", isOn: $settings.animatedPlayerBackground)

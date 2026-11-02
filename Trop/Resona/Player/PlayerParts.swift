@@ -371,22 +371,59 @@ struct StreamInfoLine: View {
         for attempt in 0..<6 {
             let stream = await StreamCache.shared.get(videoId: videoId)
             let format = try? await DatabaseService.shared.fetchOne(FormatEntity.self, key: videoId)
-            var parts: [String] = []
-            if let mime = stream?.mimeType ?? format?.mimeType {
-                parts.append(Self.container(from: mime))
-            }
             let bitrate = (stream?.bitrate).flatMap { $0 > 0 ? $0 : nil } ?? format?.bitrate ?? 0
-            if bitrate > 0 { parts.append("\(bitrate / 1000) kbps") }
-            if let length = format?.contentLength, length > 0 {
-                parts.append(String(format: "%.1f MB", Double(length) / 1_048_576))
-            }
-            if !parts.isEmpty {
-                text = parts.joined(separator: " • ")
+            let line = Self.describe(mime: stream?.mimeType ?? format?.mimeType, codecs: format?.codecs,
+                                     bitrate: bitrate, sampleRate: format?.sampleRate ?? 0,
+                                     contentLength: format?.contentLength ?? 0)
+            if !line.isEmpty {
+                text = line
                 return
             }
             if attempt < 5 { try? await Task.sleep(nanoseconds: 1_500_000_000) }
             if Task.isCancelled { return }
         }
+    }
+
+    /// "Opus · WEBM • 132 kbps • 48 kHz • 3.4 MB" (round 10: codec and
+    /// sample rate as in ArchiveTune's codec display).
+    static func describe(mime: String?, codecs: String?, bitrate: Int, sampleRate: Int, contentLength: Int64) -> String {
+        var parts: [String] = []
+        if let mime {
+            let container = container(from: mime)
+            if let codec = codecName(codecs: codecs, mime: mime), codec.uppercased() != container {
+                parts.append("\(codec) · \(container)")
+            } else {
+                parts.append(container)
+            }
+        }
+        if bitrate > 0 { parts.append("\(bitrate / 1000) kbps") }
+        if sampleRate > 0 {
+            let khz = Double(sampleRate) / 1000
+            parts.append(khz == khz.rounded() ? "\(Int(khz)) kHz" : String(format: "%.1f kHz", khz))
+        }
+        if contentLength > 0 {
+            parts.append(String(format: "%.1f MB", Double(contentLength) / 1_048_576))
+        }
+        return parts.joined(separator: " • ")
+    }
+
+    /// "opus" → "Opus", "mp4a.40.2" → "AAC"; from `codecs` or the mime's
+    /// codecs="…" parameter.
+    static func codecName(codecs: String?, mime: String) -> String? {
+        var raw = codecs?.trimmingCharacters(in: .whitespaces) ?? ""
+        if raw.isEmpty, let range = mime.range(of: #"codecs="?([^";]+)"?"#, options: .regularExpression) {
+            raw = String(mime[range]).replacingOccurrences(of: "codecs=", with: "").trimmingCharacters(in: CharacterSet(charactersIn: "\" "))
+        }
+        let first = raw.split(separator: ",").first.map { $0.trimmingCharacters(in: .whitespaces).lowercased() } ?? ""
+        guard !first.isEmpty else { return nil }
+        if first.hasPrefix("opus") { return "Opus" }
+        if first.hasPrefix("mp4a.40.5") || first.hasPrefix("mp4a.40.29") { return "HE-AAC" }
+        if first.hasPrefix("mp4a") { return "AAC" }
+        if first.hasPrefix("vorbis") { return "Vorbis" }
+        if first.hasPrefix("flac") { return "FLAC" }
+        if first.hasPrefix("ec-3") { return "E-AC-3" }
+        if first.hasPrefix("ac-3") { return "AC-3" }
+        return first.uppercased()
     }
 
     /// "audio/webm; codecs=\"opus\"" → "WEBM"

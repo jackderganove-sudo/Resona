@@ -29,6 +29,8 @@ enum ThemeMode: String, CaseIterable, Identifiable, SettingsOption {
 
 enum PlayerBackgroundStyle: String, CaseIterable, Identifiable, SettingsOption {
     case dynamic
+    /// Blurred, dimmed cover (round 10, ArchiveTune's "Blur").
+    case blurredCover
     case solid
 
     var id: String { rawValue }
@@ -36,6 +38,7 @@ enum PlayerBackgroundStyle: String, CaseIterable, Identifiable, SettingsOption {
     var displayName: String {
         switch self {
         case .dynamic: return "Album Art"
+        case .blurredCover: return "Blurred cover"
         case .solid: return "Solid"
         }
     }
@@ -45,6 +48,10 @@ enum PlayerBackgroundStyle: String, CaseIterable, Identifiable, SettingsOption {
 enum PlayerLayoutStyle: String, CaseIterable, Identifiable, SettingsOption {
     case largeCover
     case smallCoverLyrics
+    /// Round 10 (after ArchiveTune 15's V10): die-cut cover, serif headline.
+    case editorial
+    /// Round 10: canvas / turning cover full screen, controls on a scrim.
+    case immersive
 
     var id: String { rawValue }
 
@@ -52,6 +59,8 @@ enum PlayerLayoutStyle: String, CaseIterable, Identifiable, SettingsOption {
         switch self {
         case .largeCover: return "Large cover"
         case .smallCoverLyrics: return "Small cover + lyrics"
+        case .editorial: return "Editorial"
+        case .immersive: return "Immersive"
         }
     }
 }
@@ -381,6 +390,11 @@ final class SettingsStore {
         didSet { Self.defaults.set(animatedPlayerBackground, forKey: Keys.animatedPlayerBackground) }
     }
 
+    /// Editorial / Immersive: the cover turns slowly while playing.
+    var rotateArtwork: Bool {
+        didSet { Self.defaults.set(rotateArtwork, forKey: Keys.rotateArtwork) }
+    }
+
     var gaplessPlayback: Bool {
         didSet { Self.defaults.set(gaplessPlayback, forKey: Keys.gaplessPlayback) }
     }
@@ -519,6 +533,7 @@ final class SettingsStore {
         static let audioNormalization = "settings.audioNormalization"
         static let gaplessPlayback = "settings.gaplessPlayback"
         static let animatedPlayerBackground = "resona.animatedPlayerBackground"
+        static let rotateArtwork = "resona.rotateArtwork"
         static let lyricsLineChangeAdjustMs = "resona.lyricsLineChangeAdjustMs"
         static let lyricsAutoHideControls = "resona.lyricsAutoHideControls"
         static let showMostReplayedCurve = "resona.showMostReplayedCurve"
@@ -608,6 +623,7 @@ final class SettingsStore {
         audioNormalization = Self.load(Keys.audioNormalization, default: false)
         gaplessPlayback = Self.load(Keys.gaplessPlayback, default: true)
         animatedPlayerBackground = Self.load(Keys.animatedPlayerBackground, default: true)
+        rotateArtwork = Self.load(Keys.rotateArtwork, default: true)
         lyricsLineChangeAdjustMs = Self.load(Keys.lyricsLineChangeAdjustMs, default: 0.0)
         lyricsAutoHideControls = Self.load(Keys.lyricsAutoHideControls, default: false)
         showMostReplayedCurve = Self.load(Keys.showMostReplayedCurve, default: true)
