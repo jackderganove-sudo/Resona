@@ -1,3 +1,5 @@
+ALLES FERTIG – mit einer Ausnahme: KI-Sync/-Kalibrierung für Android (whisper.cpp) ist nicht umgesetzt (Begründung unter „Teil B – Stand“).
+
 # Runde 10 – ArchiveTune-Canary-Features (iPad) + Resona für Android
 
 Quelle: öffentlicher Quellcode `github.com/rukamori/ArchiveTune`, Branch `dev`
@@ -181,3 +183,30 @@ v0.8.14). Weiter mit Teil B, Schritt 4 (Resona-Extras für Android), Stand in
   bundleIdentifier, name, subtitle, developerName, localizedDescription,
   iconURL, versions[version, date, localizedDescription, downloadURL, size]);
   neueste Version zuerst, Icon-URL liefert ein PNG.
+
+## Teil B – Stand (Resona für Android)
+
+Repo `jackderganove-sudo/Resona-Android`, Details und Pixel-Testliste in
+`docs/progress-android.md` dort. Jedes Release: Build → Unit-Tests →
+Emulator-Starttest (frisch installiert, darf nicht gesperrt starten) → Release.
+
+| Version | Inhalt |
+|---|---|
+| v1.0.0 | Branding Resona, eigenes Icon, applicationId, signierte APKs, Obtainium-README |
+| v1.0.1 | „Update required“-Sperre behoben (Updates nur aus Resona-Android, kein Zwang, Signaturprüfung), ArchiveTune-Dienste aus/umgestellt, Texte → Resona |
+| v1.0.2 | Resona-Logo im Willkommensbildschirm |
+| v1.0.3 | Zum Drop springen |
+| v1.0.4 | Playlist-Werkzeuge: Duplikate, nach Künstler aufteilen, CSV |
+| v1.0.5 | Smarte Downloads, Slowed/Sped-up-Lyrics-Korrektur |
+| v1.0.6 | Selbst-Sync für Text-Lyrics |
+
+Schon in ArchiveTune vorhanden (kein Port nötig): Crossfade, Sleep-Timer-Fade,
+Mehrfachauswahl, Übersetzung, viele Lyrics-Anbieter, Blur/Acryl.
+
+**Nicht umgesetzt: KI-Sync/-Kalibrierung (whisper.cpp).** Auf dem iPad läuft
+das mit WhisperKit (CoreML). Für Android bräuchte es whisper.cpp als natives
+NDK-Modul (CMake/JNI) für alle ABIs, einen Modell-Download (75–140 MB), das
+Dekodieren des Songs aus ExoPlayers Cache zu 16-kHz-PCM und den Port des
+Abgleichs (LNDS + Theil–Sen). Das ist ein eigener großer Schritt mit vielen
+CI-Durchläufen; bis dahin decken Selbst-Sync, Versatz pro Song und die
+Slowed-Korrektur das meiste ab. Bei Bedarf als eigene Runde angehen.
