@@ -850,5 +850,12 @@
   "Your top songs": "Your top songs",
   "You listen most around %d:00": "You listen most around %d:00",
   "Share as image": "Share as image",
-  "Recap & listening time": "Recap & listening time"
+  "Recap & listening time": "Recap & listening time",
+  "%d files could not be imported.": "%d files could not be imported.",
+  "No local music yet": "No local music yet",
+  "Import audio files (MP3, M4A, FLAC, WAV …) from the Files app. They play offline like downloads.": "Import audio files (MP3, M4A, FLAC, WAV …) from the Files app. They play offline like downloads.",
+  "Import files": "Import files",
+  "Local music": "Local music",
+  "Export as CSV": "Export as CSV",
+  "Title, artists, album, duration and link of every song": "Title, artists, album, duration and link of every song"
 }

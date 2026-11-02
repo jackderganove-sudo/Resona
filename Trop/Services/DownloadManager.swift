@@ -810,6 +810,8 @@ extension DownloadManager {
         #if DEBUG
         if let url = TestMode.localOverride[videoId] { return url }
         #endif
+        // Round 10: music imported from the Files app.
+        if let url = LocalMusicLibrary.fileURL(for: videoId) { return url }
         if let track = tracksById[videoId], let url = resolvedURL(for: track) {
             repairStoredPathIfNeeded(track, url: url)
             return url

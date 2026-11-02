@@ -94,6 +94,16 @@ struct PlaylistMoreSheet: View {
                     dismiss()
                 }
                 Divider()
+                if !playlist.songs.isEmpty {
+                    MenuRow(
+                        icon: "tablecells",
+                        title: "Export as CSV",
+                        subtitle: "Title, artists, album, duration and link of every song"
+                    ) {
+                        exportCSV()
+                    }
+                    Divider()
+                }
                 MenuRow(
                     icon: "trash",
                     title: "Delete",
@@ -148,6 +158,11 @@ struct PlaylistMoreSheet: View {
         guard let url = URL.playlistShareURL(id: playlist.playlistId) else { return }
         presentShareSheet(items: [url])
         dismiss()
+    }
+
+    private func exportCSV() {
+        guard let url = try? PlaylistCSV.writeFile(title: playlist.title, songs: playlist.songs) else { return }
+        presentShareSheet(items: [url], afterDismiss: { dismiss() })
     }
 
     private func deleteAllDownloads() {
