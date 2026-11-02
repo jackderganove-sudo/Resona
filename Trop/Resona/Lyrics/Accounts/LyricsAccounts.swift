@@ -18,6 +18,8 @@ import Observation
 enum LyricsAccount: String, CaseIterable, Sendable {
     case deezer
     case musixmatch
+    /// OpenRouter API key for the AI translation (not a lyrics source).
+    case openRouter
 }
 
 /// Keychain + status. Secrets are read from any thread by the providers.

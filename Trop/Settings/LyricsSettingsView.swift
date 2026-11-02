@@ -59,6 +59,12 @@ struct LyricsSettingsView: View {
             M3Section {
                 SettingsPickerRow("Animation", icon: "sparkles", selection: $settings.lyricsAnimationStyle)
                 SettingsPickerRow("Translation", icon: "character.bubble", selection: $settings.lyricsTranslationMode)
+                SettingsPickerRow("Translation engine", icon: "cpu", selection: $settings.lyricsTranslationEngine)
+                if settings.lyricsTranslationEngine == .openRouter {
+                    SettingsNavigationRow(String(localized: "AI translation"), icon: "sparkles") {
+                        AITranslationSettingsView()
+                    }
+                }
                 SettingsToggleRow("Show romanization", icon: "globe", isOn: $settings.romanizeCurrentTrack)
                 SettingsToggleRow("Hide status bar", icon: "rectangle.topthird.inset.filled", isOn: $settings.lyricsHideStatusBar)
                 SettingsToggleRow("Hide close / menu buttons automatically", icon: "xmark.circle", isOn: $settings.lyricsAutoHideButtons)
@@ -170,6 +176,7 @@ struct LyricsSettingsView: View {
         case "spotify": "Requires Spotify sign-in"
         case "paxsenix": "Requires an API key (below)"
         case "youtube": "Plain text only (fallback)"
+        case "binimum": "TTML, often word-synced"
         case "simpmusic": "Per YouTube upload — finds remixes and edits"
         case "unison": "Lyrics database, also per YouTube upload and its variants"
         case "megalobiz": "LRC files (line-synced)"

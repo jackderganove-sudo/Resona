@@ -54,6 +54,9 @@ struct LyricsView<ProgressSlider: View>: View {
     @State private var showSyncSheet = false
     /// On-device translation job (nil = idle).
     @State private var translationConfig: TranslationSession.Configuration?
+    /// Where the shown translation came from (label under the provider).
+    @State private var translationSource: LyricsTranslationSource?
+    @State private var aiTranslationError: String?
     @State private var instrumentalGaps: [InstrumentalGap] = []
     @State private var romanizedLines: [String?] = []
     @State private var isLoading = false
@@ -458,6 +461,12 @@ struct LyricsView<ProgressSlider: View>: View {
             if let note = tempoNote {
                 Text(note)
             }
+            if let source = translationSource, lines.contains(where: { !($0.translation ?? "").isEmpty }) {
+                Text(translationSourceLabel(source))
+            }
+            if let aiTranslationError {
+                Text(aiTranslationError)
+            }
             calibrationOffer
         }
         .font(.poppins(12, weight: .medium))
@@ -465,6 +474,14 @@ struct LyricsView<ProgressSlider: View>: View {
         .frame(maxWidth: .infinity, alignment: settings.lyricsAlignment.textAlignment)
         .padding(.horizontal, 28)
         .padding(.top, 8)
+    }
+
+    private func translationSourceLabel(_ source: LyricsTranslationSource) -> String {
+        switch source {
+        case .provider: return String(localized: "Translation: from the lyrics source")
+        case .apple: return String(localized: "Translation: Apple (on device)")
+        case .ai: return String(localized: "Translation: AI (OpenRouter)")
+        }
     }
 
     /// Lyrics made for this recording (AI-synced, self-synced, edited,
@@ -687,18 +704,59 @@ struct LyricsView<ProgressSlider: View>: View {
         let state = LyricsTranslationState.shared
         let missing = lines.filter { ($0.translation ?? "").isEmpty }
         // The provider translated (nearly) everything already.
-        guard missing.count > lines.count / 4 else { return }
+        guard missing.count > lines.count / 4 else {
+            translationSource = lines.contains { !($0.translation ?? "").isEmpty } ? .provider : nil
+            return
+        }
         let cached = LyricsTranslationCache.load(videoId)
-        if !cached.isEmpty { applyTranslations(cached) }
+        if !cached.isEmpty {
+            applyTranslations(cached)
+            translationSource = LyricsTranslationSourceStore.source(for: videoId) ?? .apple
+        }
         guard let language = state.sourceLanguage[videoId] ?? LyricsLanguage.detect(lines), language != "de" else { return }
         state.sourceLanguage[videoId] = language
         let wanted = mode == .always || state.requested.contains(videoId)
         let stillMissing = lines.contains { ($0.translation ?? "").isEmpty && cached[$0.text] == nil }
         guard wanted, stillMissing else { return }
+        if settings.lyricsTranslationEngine == .openRouter, let key = LyricsAccountSecrets.shared.secret(.openRouter) {
+            Task { await translateWithAI(videoId: videoId, apiKey: key) }
+            return
+        }
         translationConfig = TranslationSession.Configuration(
             source: Locale.Language(identifier: language),
             target: Locale.Language(identifier: "de")
         )
+    }
+
+    /// OpenRouter: the missing lines as one JSON array; falls back to the
+    /// on-device translation when the AI fails.
+    private func translateWithAI(videoId: String, apiKey: String) async {
+        let state = LyricsTranslationState.shared
+        guard !state.isTranslating else { return }
+        let texts = Array(Set(lines.filter { ($0.translation ?? "").isEmpty }.map(\.text))).filter { !$0.isEmpty }.sorted()
+        guard !texts.isEmpty else { return }
+        state.isTranslating = true
+        defer { state.isTranslating = false }
+        do {
+            let translated = try await AILyricsTranslator.translate(texts, model: settings.openRouterModel,
+                                                                    customPrompt: settings.openRouterPrompt, apiKey: apiKey)
+            var map = LyricsTranslationCache.load(videoId)
+            for (text, translation) in zip(texts, translated) { map[text] = translation }
+            LyricsTranslationCache.save(map, for: videoId)
+            LyricsTranslationSourceStore.set(.ai, for: videoId)
+            Log.player.info("LYRICS AI translation: \(texts.count) lines")
+            aiTranslationError = nil
+            guard np.videoId == videoId else { return }
+            applyTranslations(map)
+            translationSource = .ai
+        } catch {
+            Log.player.error("LYRICS AI translation failed: \(error.localizedDescription)")
+            aiTranslationError = error.localizedDescription
+            if let language = state.sourceLanguage[videoId] {
+                translationConfig = TranslationSession.Configuration(source: Locale.Language(identifier: language),
+                                                                     target: Locale.Language(identifier: "de"))
+            }
+        }
     }
 
     private func translate(with session: TranslationSession) async {
@@ -719,8 +777,10 @@ struct LyricsView<ProgressSlider: View>: View {
             map[texts[index]] = response.targetText
         }
         LyricsTranslationCache.save(map, for: videoId)
+        LyricsTranslationSourceStore.set(.apple, for: videoId)
         guard np.videoId == videoId else { return }
         applyTranslations(map)
+        translationSource = .apple
     }
 
     /// Fills missing translations (never overwrites the provider's).

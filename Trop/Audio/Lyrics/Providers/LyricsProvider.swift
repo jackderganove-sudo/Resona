@@ -140,8 +140,14 @@ enum LyricsParsing {
                 continue
             }
             guard let (times, rest) = parseLrcTimestamps(line) else { continue }
+            // Word tags are absolute times of the FIRST timestamp; a line
+            // repeated with more timestamps (chorus) shifts them along.
+            let (text, baseWords) = parseWordTags(rest, lineStart: times[0])
             for t in times {
-                let (text, words) = parseWordTags(rest, lineStart: t)
+                let shift = t - times[0]
+                let words = shift == 0 ? baseWords : baseWords?.map {
+                    LyricWord(text: $0.text, start: $0.start + shift, end: $0.end + shift)
+                }
                 timed.append((t, LyricLine(text: text, startTime: t, words: words)))
             }
         }

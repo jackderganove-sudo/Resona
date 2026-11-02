@@ -256,6 +256,20 @@ final class SettingsStore {
         didSet { Self.defaults.set(audioNormalization, forKey: Keys.audioNormalization) }
     }
 
+    /// Lyrics translation: Apple on device or an AI model via OpenRouter.
+    var lyricsTranslationEngine: LyricsTranslationEngine {
+        didSet { Self.defaults.set(lyricsTranslationEngine.rawValue, forKey: Keys.lyricsTranslationEngine) }
+    }
+
+    var openRouterModel: String {
+        didSet { Self.defaults.set(openRouterModel, forKey: Keys.openRouterModel) }
+    }
+
+    /// Appended to the default translation prompt.
+    var openRouterPrompt: String {
+        didSet { Self.defaults.set(openRouterPrompt, forKey: Keys.openRouterPrompt) }
+    }
+
     /// Full-screen lyrics: no status bar, home indicator fades.
     var lyricsHideStatusBar: Bool {
         didSet { Self.defaults.set(lyricsHideStatusBar, forKey: Keys.lyricsHideStatusBar) }
@@ -498,6 +512,9 @@ final class SettingsStore {
         static let lyricsAutoHideControls = "resona.lyricsAutoHideControls"
         static let showMostReplayedCurve = "resona.showMostReplayedCurve"
         static let lyricsHideStatusBar = "resona.lyricsHideStatusBar"
+        static let lyricsTranslationEngine = "resona.lyricsTranslationEngine"
+        static let openRouterModel = "resona.openRouterModel"
+        static let openRouterPrompt = "resona.openRouterPrompt"
         static let lyricsAutoHideButtons = "resona.lyricsAutoHideButtons"
         static let playerBackgroundBrightness = "resona.playerBackgroundBrightness"
         static let showAudioDetails = "resona.showAudioDetails"
@@ -582,6 +599,9 @@ final class SettingsStore {
         lyricsAutoHideControls = Self.load(Keys.lyricsAutoHideControls, default: false)
         showMostReplayedCurve = Self.load(Keys.showMostReplayedCurve, default: true)
         lyricsHideStatusBar = Self.load(Keys.lyricsHideStatusBar, default: true)
+        lyricsTranslationEngine = Self.loadEnum(Keys.lyricsTranslationEngine, default: LyricsTranslationEngine.apple)
+        openRouterModel = Self.load(Keys.openRouterModel, default: AILyricsTranslator.defaultModel)
+        openRouterPrompt = Self.load(Keys.openRouterPrompt, default: "")
         lyricsAutoHideButtons = Self.load(Keys.lyricsAutoHideButtons, default: true)
         playerBackgroundBrightness = Self.load(Keys.playerBackgroundBrightness, default: 1.0)
         showAudioDetails = Self.load(Keys.showAudioDetails, default: false)

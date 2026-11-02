@@ -264,3 +264,61 @@ struct QQMusicLyricsProvider: LyricsProvider {
         }
     }
 }
+
+// MARK: - Binimum
+
+/// Binimum Lyrics (as in ArchiveTune 15): lookup by track / artist /
+/// album / duration, results point to TTML files — word-synced first, then
+/// the closest duration.
+struct BinimumLyricsProvider: LyricsProvider {
+    let id = "binimum"
+    let name = "Binimum"
+
+    func fetch(query: LyricsQuery) async throws -> [LyricLine] {
+        guard let best = try await search(query: query).first else { throw LyricsError.notFound }
+        return best.lines
+    }
+
+    func search(query: LyricsQuery) async throws -> [LyricsCandidate] {
+        var components = URLComponents(string: "https://lyrics-api.binimum.org/")
+        var items = [URLQueryItem(name: "track", value: query.title), URLQueryItem(name: "artist", value: query.artist)]
+        if let album = query.album, !album.isEmpty { items.append(URLQueryItem(name: "album", value: album)) }
+        if query.durationSeconds > 0 { items.append(URLQueryItem(name: "duration", value: String(query.durationSeconds))) }
+        components?.queryItems = items
+        guard let url = components?.url else { throw LyricsError.invalidURL }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 8
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let matches = Self.parseLookup(try await LyricsHTTP.getJSON(request), queryDuration: query.duration)
+        var results: [LyricsCandidate] = []
+        for match in matches.prefix(2) {
+            guard let ttmlURL = URL(string: match.url), ttmlURL.scheme == "https" else { continue }
+            var ttmlRequest = URLRequest(url: ttmlURL)
+            ttmlRequest.timeoutInterval = 8
+            ttmlRequest.setValue("application/ttml+xml, application/xml, text/xml", forHTTPHeaderField: "Accept")
+            guard let data = try? await LyricsHTTP.get(ttmlRequest) else { continue }
+            let lines = TTMLLyricsParser.parse(String(decoding: data, as: UTF8.self))
+            guard !lines.isEmpty else { continue }
+            results.append(LyricsCandidate(lines: lines, duration: match.duration))
+        }
+        guard !results.isEmpty else { throw LyricsError.notFound }
+        return results
+    }
+
+    struct Match: Equatable { let url: String; let wordTimed: Bool; let duration: Double? }
+
+    /// `{"results":[{"lyricsUrl", "timing_type", "duration"}]}`.
+    static func parseLookup(_ json: [String: Any], queryDuration: Double) -> [Match] {
+        var seen = Set<String>()
+        let matches = (json["results"] as? [[String: Any]] ?? []).compactMap { item -> Match? in
+            guard let url = item["lyricsUrl"] as? String, seen.insert(url).inserted else { return nil }
+            return Match(url: url, wordTimed: (item["timing_type"] as? String) == "word",
+                         duration: (item["duration"] as? NSNumber)?.doubleValue)
+        }
+        return matches.sorted { a, b in
+            if a.wordTimed != b.wordTimed { return a.wordTimed }
+            guard queryDuration > 0 else { return false }
+            return abs((a.duration ?? .greatestFiniteMagnitude) - queryDuration) < abs((b.duration ?? .greatestFiniteMagnitude) - queryDuration)
+        }
+    }
+}

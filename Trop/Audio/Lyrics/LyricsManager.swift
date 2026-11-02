@@ -44,6 +44,7 @@ enum LyricsProviderRegistry {
         NeteaseProvider(),
         KugouProvider(),
         GeniusProvider(),
+        BinimumLyricsProvider(),
         SimpMusicLyricsProvider(),
         UnisonLyricsProvider(),
         QQMusicLyricsProvider(),
@@ -56,6 +57,7 @@ enum LyricsProviderRegistry {
     static let defaultOrder: [String] = [
         "betterlyrics",
         "youlyplus",
+        "binimum",
         "simpmusic",
         "unison",
         "lrclib",

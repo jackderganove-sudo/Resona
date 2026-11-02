@@ -413,7 +413,8 @@ struct LyricsOffsetSheet: View {
 
     /// Typed values may exceed the slider range, like Metrolist's ±9999ms.
     private let typeLimit: Double = 10
-    private let sliderRange: ClosedRange<Double> = -3...3
+    /// ±5 s per song (as in ArchiveTune 15).
+    private let sliderRange: ClosedRange<Double> = -5...5
 
     @State private var textFieldValue = ""
 
