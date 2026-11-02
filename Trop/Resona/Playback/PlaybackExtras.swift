@@ -63,7 +63,7 @@ final class PlaybackErrorCenter {
     }
 
     /// Readable cause + what to do (German UI via localization).
-    static func describe(_ error: Error, videoId: String, title: String?) -> PlaybackErrorInfo {
+    nonisolated static func describe(_ error: Error, videoId: String, title: String?) -> PlaybackErrorInfo {
         let raw = String(describing: error)
         let lower = raw.lowercased()
         let hint: String
