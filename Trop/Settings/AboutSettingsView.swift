@@ -68,6 +68,7 @@ struct AboutSettingsView: View {
             M3Section {
                 SettingsLinkRow("GitHub", icon: "chevron.left.forwardslash.chevron.right", url: URL(string: "https://github.com/\(UpdateChecker.repository)")!)
                 SettingsLinkRow("Trop (base project)", icon: "arrow.triangle.branch", url: URL(string: "https://github.com/SwiftyMedia/Trop")!)
+                SettingsLinkRow("ArchiveTune by rukamori & contributors", icon: "heart", url: URL(string: "https://github.com/rukamori/ArchiveTune")!)
             } header: {
                 Text("Links")
             }
