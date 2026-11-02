@@ -25,10 +25,14 @@ Extension-System, Listen Together (Server von ArchiveTune).
 | A5 | 1 Player & Design | V10 Editorial Player, Acryl-/Blur-Stile, Immersive Player mit Canvas (Spotify + Tidal, Frame-Capture, rotierendes Artwork), Form-Morphing Mini-Player ↔ Navigationsleiste, Künstler-Auswahl, Codec-Anzeige abgleichen, Artwork-Platzhalter | groß | Release v0.8.12 |
 | A6 | 2 Startseite | Community, Featured-Playlist-Karten, Quick-Picks-Hero-Karussell + abwechslungsreichere Quick Picks, gestaffelte Genre-Kacheln mit eigenen Formen, Genre-Entdeckung, Browse-Header | groß | Release v0.8.12 |
 | A7 | 4 Statistiken | Year in Music / Recap-Stories (Animationen, Artwork-Wall, Teilen als Bild), Hör-Statistiken + Zurücksetzen | groß | Release v0.8.12 |
-| A8 | 5 Bibliothek | Podcasts, „Gespeicherte Titel“, Tags/Sortierung, Leer-Zustände, CSV-Export, Cover-Aktualisierung, lokale Musik (Dateien-App, Metadaten) | sehr groß | Release v0.8.13 (Rest offen: Gespeicherte Titel) |
+| A8 | 5 Bibliothek | Podcasts, „Gespeicherte Titel“, Tags/Sortierung, Leer-Zustände, CSV-Export, Cover-Aktualisierung, lokale Musik (Dateien-App, Metadaten) | sehr groß | Release v0.8.13 + v0.8.15 (Gespeicherte Titel) |
 
 Teil B startet, sobald Teil A auf Gerätetests wartet, und läuft dann
 abwechselnd mit Teil A weiter.
+
+**Teil A ist abgeschlossen** (A1–A8 veröffentlicht, v0.8.11–v0.8.15; Feather
+v0.8.14). Weiter mit Teil B, Schritt 4 (Resona-Extras für Android), Stand in
+`docs/progress-android.md` im Android-Repo.
 
 ## Teil B – Resona für Android (docs/progress-android.md im Android-Repo)
 
@@ -149,10 +153,13 @@ abwechselnd mit Teil A weiter.
   dem Dateinamen); spielen offline über denselben Player wie Downloads,
   inkl. Ogg/Opus (mpv). Wischen entfernt.
 - Podcast-Seiten: Episodensuche (Titel und Beschreibung).
-- Nicht übernommen / offen:
-  - „Gespeicherte Titel“ (Spotify-Lieblingssongs): bräuchte Spotifys
-    Bibliotheks-Schnittstelle mit Nutzer-Login über die Canvas-Anmeldung
-    hinaus – vorgemerkt.
+- „Gespeicherte Titel“ (v0.8.15): deine Spotify-Lieblingssongs über die
+  vorhandene Spotify-Anmeldung (Einstellungen → Canvas, eigenes Konto) per
+  Spotify-GraphQL `fetchLibraryTracks`; beim Abspielen wird jeder Song auf
+  YouTube Music gesucht (Dauer ±15 s bevorzugt) und nach und nach in die
+  Warteschlange gestellt. Kachel in der Bibliothek erscheint nur mit
+  verbundenem Spotify.
+- Nicht übernommen:
   - Tags/Sortierung, Cover-Aktualisierung: Resona hat Sortierung bereits in
     den Listen; Cover kommen bei synchronisierten Playlists von YouTube Music.
 
