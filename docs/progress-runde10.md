@@ -129,3 +129,14 @@ abwechselnd mit Teil A weiter.
 - Quick Picks abwechslungsreicher: höchstens zwei Songs pro Künstler am
   Anfang, der Rest dahinter. Das Hero-Karussell gab es schon.
 - Community: unverändert (braucht wie bei ArchiveTune ein Konto).
+
+### A7 Statistiken
+- Bibliothek → „Deine Statistik“: Zeitraum (7 Tage, 30 Tage, dieses Jahr,
+  gesamt), Minuten, Wiedergaben, Künstler, längste Serie in Tagen, Top-Künstler,
+  -Songs und -Alben, Diagramme nach Tageszeit (mit Hörertyp) und Wochentag.
+  Wiedergaben unter 30 s zählen nur zu den Minuten.
+- Rückblick-Stories: Artwork-Wand, hochzählende Minuten, Top-Künstler,
+  Top-Songs, Hörertyp, Zusammenfassung; laufen von selbst, Tippen links/rechts
+  springt, Halten pausiert; „Als Bild teilen“ rendert die Zusammenfassung.
+- „Statistik zurücksetzen“ löscht nichts: die Zählung beginnt ab jetzt neu
+  (rückgängig machbar); Verlauf, Likes und Empfehlungen bleiben.

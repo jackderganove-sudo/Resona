@@ -22,6 +22,7 @@ enum DetailRoute: Hashable, Identifiable {
         case .settings: return "settings"
         case .downloads: return "downloads"
         case .genre(let title, _): return "genre_\(title)"
+        case .stats: return "stats"
         }
     }
 
@@ -35,6 +36,8 @@ enum DetailRoute: Hashable, Identifiable {
     case downloads
     /// Moods & genres category page (round 10: also reachable from Home).
     case genre(title: String, params: String?)
+    /// Listening statistics and recap (round 10).
+    case stats
 }
 
 /// Shared view resolving a `DetailRoute` to its target destination view.
@@ -69,6 +72,8 @@ struct DetailRouteDestinationView: View {
             DownloadsView()
         case .genre(let title, let params):
             MoodDetailView(mood: MoodItem(title: title, params: params))
+        case .stats:
+            StatsView()
         }
     }
 }

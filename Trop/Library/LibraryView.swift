@@ -44,7 +44,9 @@ struct LibraryView: View {
             AutoPlaylistInfo(id: "liked", title: "Liked Songs", icon: "heart.fill", subtitle: L10n.songs(likedSongCount), route: .likedSongs),
             AutoPlaylistInfo(id: "downloads", title: "Downloads", icon: "arrow.down.circle.fill",
                              subtitle: downloadsSubtitle, route: nil, detailRoute: .downloads),
-            AutoPlaylistInfo(id: "top100", title: "My Top 100", icon: "trophy.fill", subtitle: "Top 100", route: .topSongs(limit: 100))
+            AutoPlaylistInfo(id: "top100", title: "My Top 100", icon: "trophy.fill", subtitle: "Top 100", route: .topSongs(limit: 100)),
+            AutoPlaylistInfo(id: "stats", title: "Your stats", icon: "chart.bar.fill", subtitle: String(localized: "Recap & listening time"),
+                             route: nil, detailRoute: .stats)
         ]
     }
 
