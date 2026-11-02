@@ -417,6 +417,8 @@ struct PodcastDetailView: View {
     @State private var viewModel: PodcastDetailViewModel
     @State private var pendingRoute: DetailRoute?
     @State private var showMoreSheet = false
+    /// Round 10 (ArchiveTune 15): filter episodes by title / description.
+    @State private var episodeQuery = ""
 
     @Environment(\.dismiss) private var dismiss
 
@@ -548,19 +550,55 @@ struct PodcastDetailView: View {
 
     @ViewBuilder
     private func episodeList(for podcast: PodcastDetailInfo) -> some View {
+        let episodes = Self.filter(podcast.episodes, query: episodeQuery)
         VStack(spacing: 0) {
-            ForEach(Array(podcast.episodes.enumerated()), id: \.offset) { index, episode in
+            if podcast.episodes.count > 5 {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                    TextField("Search episodes", text: $episodeQuery)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .accessibilityIdentifier("podcast.episodeSearch")
+                    if !episodeQuery.isEmpty {
+                        Button { episodeQuery = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(Text("Clear"))
+                    }
+                }
+                .padding(.horizontal, 14)
+                .frame(height: 44)
+                .background(.thinMaterial, in: Capsule())
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+            }
+            if episodes.isEmpty && !episodeQuery.isEmpty {
+                Text("No episodes match your search.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 24)
+            }
+            ForEach(Array(episodes.enumerated()), id: \.offset) { index, episode in
                 EpisodeRowView(
                     episode: episode,
                     onTap: { playEpisode(episode, in: podcast) },
                     onNavigate: { pendingRoute = $0 }
                 )
 
-                if index < podcast.episodes.count - 1 {
+                if index < episodes.count - 1 {
                     Divider()
                         .padding(.leading, 100)
                 }
             }
+        }
+    }
+
+    /// Every word of the query must appear in title or description.
+    static func filter(_ episodes: [EpisodeItem], query: String) -> [EpisodeItem] {
+        let words = query.lowercased().split(separator: " ").map(String.init)
+        guard !words.isEmpty else { return episodes }
+        return episodes.filter { episode in
+            let text = (episode.title + " " + (episode.descriptionText ?? "")).lowercased()
+            return words.allSatisfy { text.contains($0) }
         }
     }
 

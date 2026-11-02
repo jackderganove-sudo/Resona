@@ -857,5 +857,7 @@
   "Import files": "Import files",
   "Local music": "Local music",
   "Export as CSV": "Export as CSV",
-  "Title, artists, album, duration and link of every song": "Title, artists, album, duration and link of every song"
+  "Title, artists, album, duration and link of every song": "Title, artists, album, duration and link of every song",
+  "Search episodes": "Search episodes",
+  "No episodes match your search.": "No episodes match your search."
 }

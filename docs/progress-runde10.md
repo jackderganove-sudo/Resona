@@ -140,3 +140,18 @@ abwechselnd mit Teil A weiter.
   springt, Halten pausiert; „Als Bild teilen“ rendert die Zusammenfassung.
 - „Statistik zurücksetzen“ löscht nichts: die Zählung beginnt ab jetzt neu
   (rückgängig machbar); Verlauf, Likes und Empfehlungen bleiben.
+
+### A8 Bibliothek
+- Playlist-Menü → „Als CSV exportieren“ (Titel, Künstler, Album, Dauer,
+  Video-ID, Link; UTF-8 mit BOM, öffnet sauber in Numbers/Excel).
+- „Lokale Musik“ in der Bibliothek: Audiodateien aus der Dateien-App
+  importieren (Metadaten + Cover aus der Datei, sonst „Interpret - Titel“ aus
+  dem Dateinamen); spielen offline über denselben Player wie Downloads,
+  inkl. Ogg/Opus (mpv). Wischen entfernt.
+- Podcast-Seiten: Episodensuche (Titel und Beschreibung).
+- Nicht übernommen / offen:
+  - „Gespeicherte Titel“ (Spotify-Lieblingssongs): bräuchte Spotifys
+    Bibliotheks-Schnittstelle mit Nutzer-Login über die Canvas-Anmeldung
+    hinaus – vorgemerkt.
+  - Tags/Sortierung, Cover-Aktualisierung: Resona hat Sortierung bereits in
+    den Listen; Cover kommen bei synchronisierten Playlists von YouTube Music.

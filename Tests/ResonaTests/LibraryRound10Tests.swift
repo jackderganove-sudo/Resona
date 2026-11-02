@@ -45,3 +45,16 @@ final class LibraryRound10Tests: XCTestCase {
         XCTAssertNil(LocalMusicLibrary.fileURL(for: "local-does-not-exist"))
     }
 }
+
+final class PodcastEpisodeSearchTests: XCTestCase {
+    func testEveryWordMustMatchTitleOrDescription() {
+        let episodes = [
+            EpisodeItem(videoId: "e1", title: "Folge 1: Platzhalter", artists: [], duration: 600, descriptionText: "Über Testdaten"),
+            EpisodeItem(videoId: "e2", title: "Folge 2: Andere Sache", artists: [], duration: 600, descriptionText: nil)
+        ]
+        XCTAssertEqual(PodcastDetailView.filter(episodes, query: "").count, 2)
+        XCTAssertEqual(PodcastDetailView.filter(episodes, query: "folge testdaten").map(\.videoId), ["e1"])
+        XCTAssertEqual(PodcastDetailView.filter(episodes, query: "SACHE").map(\.videoId), ["e2"])
+        XCTAssertTrue(PodcastDetailView.filter(episodes, query: "nichts").isEmpty)
+    }
+}
