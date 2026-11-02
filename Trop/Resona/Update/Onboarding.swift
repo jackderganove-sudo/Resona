@@ -43,7 +43,7 @@ final class OnboardingState {
     }
 
     /// Traces an earlier Resona version leaves behind.
-    static func isExistingInstall(_ defaults: UserDefaults) -> Bool {
+    nonisolated static func isExistingInstall(_ defaults: UserDefaults) -> Bool {
         defaults.double(forKey: "resona.update.lastCheck") > 0
             || defaults.object(forKey: "nowPlaying.queue") != nil
             || defaults.object(forKey: WhatsNewCenter.lastSeenKey) != nil
