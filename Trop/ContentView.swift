@@ -20,6 +20,8 @@ struct ContentView: View {
     @State private var scrollState = MiniPlayerScrollState()
     private let accountMenu = AccountMenuState.shared
     private let updates = UpdateChecker.shared
+    @Bindable private var onboarding = OnboardingState.shared
+    private let whatsNew = WhatsNewCenter.shared
     @Environment(\.scenePhase) private var scenePhase
 
     /// 0 = collapsed (mini player), 1 = full player.
@@ -97,7 +99,19 @@ struct ContentView: View {
         .environment(scrollState)
         .onAppear {
             AppRouter.shared.selectedTabIndex = selectedTab.rawValue
+            // Before the update check writes its timestamp (existing-install hint).
+            let firstLaunch = onboarding.checkOnLaunch()
+            WhatsNewCenter.shared.checkOnLaunch(isFirstLaunch: firstLaunch)
             updates.checkIfDue()
+        }
+        .fullScreenCover(isPresented: $onboarding.isPresented) {
+            OnboardingView()
+        }
+        .sheet(isPresented: Binding(
+            get: { whatsNew.presented != nil && !onboarding.isPresented },
+            set: { if !$0 { whatsNew.acknowledge() } }
+        )) {
+            WhatsNewSheet(releases: whatsNew.presented ?? [])
         }
         .onChange(of: scenePhase, initial: true) { _, phase in
             // Downloaded playlists: new songs are fetched in the foreground

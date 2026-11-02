@@ -25,7 +25,7 @@ struct AvailableUpdate: Equatable {
 final class UpdateChecker {
     static let shared = UpdateChecker()
 
-    static let repository = "jackderganove-sudo/Resona"
+    nonisolated static let repository = "jackderganove-sudo/Resona"
     static let sourceURL = "https://raw.githubusercontent.com/\(repository)/app-source/apps.json"
 
     private(set) var available: AvailableUpdate?
@@ -117,7 +117,7 @@ final class UpdateChecker {
     }
 
     /// Numeric comparison of dotted versions ("0.10.2" > "0.9.7").
-    static func isNewer(_ candidate: String, than installed: String) -> Bool {
+    nonisolated static func isNewer(_ candidate: String, than installed: String) -> Bool {
         let a = candidate.split(separator: ".").map { Int($0) ?? 0 }
         let b = installed.split(separator: ".").map { Int($0) ?? 0 }
         for i in 0..<max(a.count, b.count) {
@@ -165,12 +165,30 @@ struct UpdateBanner: View {
             }
             if expanded {
                 ScrollView {
-                    Text(update.notes)
-                        .font(.m3(.bodySmall))
-                        .foregroundStyle(m3.onSurfaceVariant)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    let sections = WhatsNewParser.sections(from: update.notes)
+                    VStack(alignment: .leading, spacing: 10) {
+                        if sections.isEmpty {
+                            Text(update.notes)
+                                .font(.m3(.bodySmall))
+                                .foregroundStyle(m3.onSurfaceVariant)
+                        }
+                        ForEach(sections) { section in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Label(section.category.title, systemImage: section.category.icon)
+                                    .font(.m3(.labelLarge))
+                                    .foregroundStyle(m3.primary)
+                                ForEach(Array(section.entries.enumerated()), id: \.offset) { _, entry in
+                                    (Text(entry.area.map { "\($0): " } ?? "").bold() + Text(entry.text))
+                                        .font(.m3(.bodySmall))
+                                        .foregroundStyle(m3.onSurfaceVariant)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxHeight: 180)
+                .frame(maxHeight: 220)
             }
             HStack(spacing: 10) {
                 Spacer()

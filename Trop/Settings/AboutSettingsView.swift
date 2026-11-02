@@ -13,6 +13,8 @@ struct AboutSettingsView: View {
     @AppStorage("resona.developerMode") private var developerMode = false
     @State private var versionTaps = 0
     @State private var developerNote: String?
+    @State private var currentNotes: CurrentNotes?
+    @State private var isLoadingNotes = false
 
     var body: some View {
         M3Form(title: "About") {
@@ -51,6 +53,19 @@ struct AboutSettingsView: View {
                         .font(.m3(.bodyMedium))
                         .foregroundStyle(m3.onSurfaceVariant)
                 }
+                Button {
+                    loadCurrentNotes()
+                } label: {
+                    HStack(spacing: 12) {
+                        Label("What's new in this version", systemImage: "sparkles.rectangle.stack")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if isLoadingNotes {
+                            ProgressView()
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .accessibilityIdentifier("about.whatsNew")
                 if updates.available != nil {
                     Button {
                         updates.showBannerAgain()
@@ -74,6 +89,26 @@ struct AboutSettingsView: View {
             }
         }
         .miniPlayerTracksScroll()
+        .sheet(item: $currentNotes) { notes in
+            WhatsNewSheet(releases: notes.releases, onContinue: { currentNotes = nil })
+        }
+    }
+
+    private func loadCurrentNotes() {
+        guard !isLoadingNotes else { return }
+        isLoadingNotes = true
+        let installed = UpdateChecker.installedVersion
+        Task {
+            let releases = await WhatsNewCenter.releases(after: WhatsNewCenter.previousVersion(of: installed), upTo: installed)
+            isLoadingNotes = false
+            currentNotes = CurrentNotes(releases: releases.isEmpty
+                ? [WhatsNewRelease(version: installed, sections: [], pageURL: nil)] : releases)
+        }
+    }
+
+    private struct CurrentNotes: Identifiable {
+        let releases: [WhatsNewRelease]
+        var id: String { releases.map(\.version).joined() }
     }
 
     /// 7 taps on the version toggle the hidden developer switches
