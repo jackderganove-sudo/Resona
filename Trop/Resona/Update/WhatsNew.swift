@@ -137,7 +137,7 @@ final class WhatsNewCenter {
     /// Sheet content; nil = nothing to show.
     var presented: [WhatsNewRelease]?
 
-    static let lastSeenKey = "resona.whatsNew.lastSeenVersion"
+    nonisolated static let lastSeenKey = "resona.whatsNew.lastSeenVersion"
 
     private init() {}
 
