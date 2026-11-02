@@ -780,5 +780,9 @@
   "This song": "This song",
   "%@ can't be played": "%@ can't be played",
   "Copied": "Copied",
-  "Copy details": "Copy details"
+  "Copy details": "Copy details",
+  "%d selected": "%d selected",
+  "Couldn't load recommendations. Retry": "Couldn't load recommendations. Retry",
+  "Your queue is empty": "Your queue is empty",
+  "Play a song, album or playlist and it shows up here.": "Play a song, album or playlist and it shows up here."
 }

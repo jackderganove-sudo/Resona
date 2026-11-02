@@ -296,6 +296,21 @@ actor PersonalizationService {
         return (resultSongs, clampedIndex)
     }
 
+    /// Songs of a `next` response's queue panel (queue recommendation chips).
+    func songs(fromNextResponse json: [String: Any], limit: Int = 50) -> [SongItem] {
+        guard let panel = try? extractPlaylistPanel(from: json) else { return [] }
+        var songs: [SongItem] = []
+        for entry in panel.contents {
+            guard songs.count < limit else { break }
+            if let renderer = entry["playlistPanelVideoRenderer"] as? [String: Any],
+               let song = parsePlaylistPanelVideoRenderer(renderer),
+               !songs.contains(where: { $0.videoId == song.videoId }) {
+                songs.append(song)
+            }
+        }
+        return songs
+    }
+
     private struct PlaylistPanel { let contents: [[String: Any]] }
 
     private func extractPlaylistPanel(from json: [String: Any]) throws -> PlaylistPanel {

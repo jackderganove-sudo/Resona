@@ -10,6 +10,8 @@ import SwiftUI
 struct SongMenuSheet: View {
     let song: SongItem
     var onNavigate: ((DetailRoute) -> Void)?
+    /// Inside the queue "Play next" moves the song instead of adding a copy.
+    var onPlayNextInQueue: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsStore) private var settings
@@ -199,6 +201,11 @@ struct SongMenuSheet: View {
     }
 
     private func playNext() {
+        if let onPlayNextInQueue {
+            onPlayNextInQueue()
+            dismiss()
+            return
+        }
         let np = NowPlaying.shared
         let insertIndex = min(np.queueIndex + 1, np.queueSongs.count)
         np.queueSongs.insert(song, at: insertIndex)

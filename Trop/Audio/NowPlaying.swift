@@ -190,6 +190,33 @@ final class NowPlaying {
         persistQueueState()
     }
 
+    /// Queue "Play next": moves the songs behind the current one.
+    func moveQueueSongsToNext(_ indices: IndexSet) {
+        let result = QueueEditing.movingToNext(queueSongs, current: queueIndex, indices: indices)
+        queueSongs = result.songs
+        queueIndex = result.current
+        persistQueueState()
+    }
+
+    /// Removes several upcoming/played songs (never the playing one).
+    func removeQueueSongs(_ indices: IndexSet) {
+        let removedIds = Set(indices.compactMap { queueSongs.indices.contains($0) && $0 != queueIndex ? queueSongs[$0].videoId : nil })
+        let result = QueueEditing.removing(queueSongs, current: queueIndex, indices: indices)
+        queueSongs = result.songs
+        queueIndex = result.current
+        originalQueue = originalQueue?.filter { !removedIds.contains($0.videoId) }
+        persistQueueState()
+    }
+
+    /// A recommendation chip's radio replaces everything after the current
+    /// song; the shuffle memory no longer applies.
+    func replaceUpcoming(with songs: [SongItem]) {
+        queueSongs = QueueEditing.replacingUpcoming(queueSongs, current: queueIndex, with: songs)
+        originalQueue = nil
+        isShuffleOn = false
+        persistQueueState()
+    }
+
     func repeatCurrent() {
         guard queueSongs.indices.contains(queueIndex) else { return }
         playCurrentSong(logContext: "repeatCurrent") {
