@@ -556,12 +556,10 @@
   "Update available": "Update available",
   "Changelog": "Changelog",
   "Later": "Later",
-  "Open in ESign": "Open in ESign",
   "Automatically check for updates": "Automatically check for updates",
   "Check for updates": "Check for updates",
   "Show update": "Show update",
   "Updates": "Updates",
-  "New builds are published on GitHub and in the ESign app source: %@": "New builds are published on GitHub and in the ESign app source: %@",
   "Trop (base project)": "Trop (base project)",
   "Crossfade": "Crossfade",
   "Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on.": "Crossfade blends the end of a song into the next one. It is skipped when you skip manually, with repeat one, with the sleep timer set to the end of the song, and between songs of the same album while gapless playback is on.",
@@ -859,5 +857,10 @@
   "Export as CSV": "Export as CSV",
   "Title, artists, album, duration and link of every song": "Title, artists, album, duration and link of every song",
   "Search episodes": "Search episodes",
-  "No episodes match your search.": "No episodes match your search."
+  "No episodes match your search.": "No episodes match your search.",
+  "Install in Feather": "Install in Feather",
+  "Download IPA and share": "Download IPA and share",
+  "Downloading update … %d %%": "Downloading update … %d %%",
+  "Add source to Feather": "Add source to Feather",
+  "New builds are published on GitHub and in the app source for Feather: %@": "New builds are published on GitHub and in the app source for Feather: %@"
 }

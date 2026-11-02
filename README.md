@@ -22,9 +22,11 @@ inspired by the Android app ArchiveTune (GPLv3) and re-implemented in SwiftUI.
 
 Requires iOS / iPadOS 18 or later.
 
-### ESign / AltStore source (recommended)
+### Feather source (recommended)
 
-Add this source in ESign (*Sources → +*), AltStore, SideStore or Feather:
+Add this source in [Feather](https://github.com/khcrysalis/Feather)
+(*Sources → +*, or in Resona: *Settings → About → Add source to Feather*);
+AltStore and SideStore read it too:
 
 ```
 https://raw.githubusercontent.com/jackderganove-sudo/Resona/app-source/apps.json
@@ -33,14 +35,17 @@ https://raw.githubusercontent.com/jackderganove-sudo/Resona/app-source/apps.json
 Every green build on `main` is published automatically as a GitHub release
 (`v0.x.<n+1>`, `Resona.ipa` attached directly, notes from the commits) and
 the source is updated with version, date, size, changelog and download URL.
-Resona itself checks for new releases once a day (Settings → About).
+Resona itself checks for new releases once a day (Settings → About). The
+update banner's **Install in Feather** hands the IPA to Feather directly
+(`feather://install/<ipa>`); without Feather, Resona downloads the IPA and
+opens the share sheet with the file.
 
 ### Direct download
 
 - latest release: **Releases** → `Resona.ipa`
 - any build: **Actions** tab → *Build IPA* run → artifact `Resona-<n>` (zip)
 
-Sideload it with ESign, Feather, AltStore or SideStore (they re-sign it).
+Sideload it with Feather, AltStore or SideStore (they re-sign it).
 Sign in to YouTube Music under *Settings → Account*.
 
 ## Project layout

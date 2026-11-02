@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Writes/updates the AltStore-compatible app source (apps.json) that ESign
-(and AltStore, Feather, SideStore …) can add as a source.
+"""Writes/updates the AltStore-compatible app source (apps.json) that Feather
+(and AltStore, SideStore …) can add as a source.
 
 Usage: update_app_source.py <apps.json> <version> <build> <download-url>
                             <size-bytes> <changelog-file>

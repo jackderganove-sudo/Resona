@@ -4,9 +4,9 @@
 //
 //  Checks GitHub Releases for a newer Resona build — on launch at most once
 //  a day (switchable) and on demand in Settings → About — and offers the
-//  update in a small banner. ESign has no documented URL scheme for
-//  installing, so "Open in ESign" opens the IPA download (iOS then offers
-//  "Open in ESign"); alternatively ESign picks it up from the app source.
+//  update in a small banner. "Install in Feather" uses Feather's
+//  feather://install/<ipa> scheme; without Feather the IPA is downloaded
+//  here and handed over through the share sheet (FeatherInstaller.swift).
 //
 
 import Foundation
@@ -26,7 +26,7 @@ final class UpdateChecker {
     static let shared = UpdateChecker()
 
     nonisolated static let repository = "jackderganove-sudo/Resona"
-    static let sourceURL = "https://raw.githubusercontent.com/\(repository)/app-source/apps.json"
+    nonisolated static let sourceURL = "https://raw.githubusercontent.com/\(repository)/app-source/apps.json"
 
     private(set) var available: AvailableUpdate?
     private(set) var isChecking = false
@@ -130,12 +130,12 @@ final class UpdateChecker {
 
 // MARK: - Banner
 
-/// Discreet card at the top: new version, changelog, "Open in ESign" / "Later".
+/// Discreet card at the top: new version, changelog, "Install in Feather" / "Later".
 struct UpdateBanner: View {
     @Environment(\.m3) private var m3
-    @Environment(\.openURL) private var openURL
     let update: AvailableUpdate
     @State private var expanded = false
+    private let installer = FeatherInstaller.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -190,12 +190,41 @@ struct UpdateBanner: View {
                 }
                 .frame(maxHeight: 220)
             }
-            HStack(spacing: 10) {
-                Spacer()
-                Button("Later") { withAnimation(M3Motion.defaultSpatial) { UpdateChecker.shared.dismissBanner() } }
-                    .buttonStyle(.m3Text)
-                Button("Open in ESign") { openURL(update.ipaURL) }
-                    .buttonStyle(.m3Filled)
+            if case .downloading(let fraction) = installer.phase {
+                VStack(alignment: .leading, spacing: 6) {
+                    ProgressView(value: fraction)
+                        .tint(m3.primary)
+                    HStack {
+                        Text(String(format: String(localized: "Downloading update … %d %%"), Int(fraction * 100)))
+                            .font(.m3(.bodySmall))
+                            .foregroundStyle(m3.onSurfaceVariant)
+                        Spacer()
+                        Button("Cancel") { installer.cancel() }
+                            .buttonStyle(.m3Text)
+                    }
+                }
+                .accessibilityIdentifier("update.progress")
+            } else {
+                if case .failed(let message) = installer.phase {
+                    Text(message)
+                        .font(.m3(.bodySmall))
+                        .foregroundStyle(m3.error)
+                }
+                HStack(spacing: 10) {
+                    Button("Later") { withAnimation(M3Motion.defaultSpatial) { UpdateChecker.shared.dismissBanner() } }
+                        .buttonStyle(.m3Text)
+                    Spacer()
+                    Button {
+                        installer.downloadAndShare(update)
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .buttonStyle(.m3Tonal)
+                    .accessibilityLabel(Text("Download IPA and share"))
+                    Button("Install in Feather") { installer.install(update) }
+                        .buttonStyle(.m3Filled)
+                        .accessibilityIdentifier("update.installFeather")
+                }
             }
         }
         .padding(16)

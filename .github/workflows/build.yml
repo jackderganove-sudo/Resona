@@ -146,7 +146,7 @@ jobs:
             --notes-file build/changelog.md
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-      # AltStore/ESign source on the app-source branch (raw URL in README).
+      # Feather/AltStore source on the app-source branch (raw URL in README).
       - name: Update app source (apps.json)
         if: steps.version.outputs.release == 'true' || startsWith(github.ref, 'refs/tags/v')
         env:
@@ -170,7 +170,7 @@ jobs:
           fi
           python3 scripts/update_app_source.py build/source/apps.json "$version" "${{ github.run_number }}" "$url" "$size" build/changelog.md
           # Validate before publishing: parseable JSON with the fields
-          # ESign/AltStore need, pointing at this version's IPA.
+          # Feather/AltStore need, pointing at this version's IPA.
           python3 - build/source/apps.json "$version" "$url" <<'PY'
           import json, sys
           path, version, url = sys.argv[1:4]

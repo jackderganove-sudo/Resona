@@ -66,6 +66,13 @@ struct AboutSettingsView: View {
                     .contentShape(Rectangle())
                 }
                 .accessibilityIdentifier("about.whatsNew")
+                Button {
+                    FeatherInstaller.shared.addSourceToFeather()
+                } label: {
+                    Label("Add source to Feather", systemImage: "plus.app")
+                        .contentShape(Rectangle())
+                }
+                .accessibilityIdentifier("about.addFeatherSource")
                 if updates.available != nil {
                     Button {
                         updates.showBannerAgain()
@@ -77,7 +84,7 @@ struct AboutSettingsView: View {
             } header: {
                 Text("Updates")
             } footer: {
-                Text("New builds are published on GitHub and in the ESign app source: \(UpdateChecker.sourceURL)")
+                Text("New builds are published on GitHub and in the app source for Feather: \(UpdateChecker.sourceURL)")
             }
 
             M3Section {
