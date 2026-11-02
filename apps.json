@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.15",
+          "buildVersion": "73",
+          "date": "2026-11-02T21:06:28Z",
+          "localizedDescription": "- Saved tracks (round 10 / ArchiveTune 15): Spotify 'Liked Songs' with the existing Spotify login (GraphQL fetchLibraryTracks), matched to YouTube Music on play (duration-aware, cached) and queued progressively; library tile when Spotify is connected; tests\n- Docs: Feather (round 10) [skip ci]",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.15/Resona.ipa",
+          "size": 29378876,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.14",
           "buildVersion": "72",
           "date": "2026-11-02T18:24:44Z",
@@ -145,11 +154,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.14",
-      "versionDate": "2026-11-02T18:24:44Z",
-      "versionDescription": "- Updates via Feather: 'Install in Feather' opens feather://install/<ipa> (scheme verified in Feather's source), fallback downloads the IPA with progress and opens the share sheet; 'Add source to Feather' in About; ESign texts → Feather (banner, About, README, CI comments); tests",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.14/Resona.ipa",
-      "size": 29342340,
+      "version": "0.8.15",
+      "versionDate": "2026-11-02T21:06:28Z",
+      "versionDescription": "- Saved tracks (round 10 / ArchiveTune 15): Spotify 'Liked Songs' with the existing Spotify login (GraphQL fetchLibraryTracks), matched to YouTube Music on play (duration-aware, cached) and queued progressively; library tile when Spotify is connected; tests\n- Docs: Feather (round 10) [skip ci]",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.15/Resona.ipa",
+      "size": 29378876,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
