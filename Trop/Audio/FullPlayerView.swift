@@ -622,6 +622,9 @@ struct FullPlayerView: View {
             bottomRow
                 .padding(.top, 14)
         }
+        // Natural height only — a child that fills the proposed height would
+        // otherwise measure as the whole screen and leave no room for the disc.
+        .fixedSize(horizontal: false, vertical: true)
         // The metrics need the height without the toggle row.
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.size.height - (showsToggles ? ImmersiveLayoutMetrics.togglesHeight : 0)

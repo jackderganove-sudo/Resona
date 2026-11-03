@@ -438,16 +438,6 @@ struct QueueSheet: View {
                     play(at: index)
                 }
             }
-            // Long press anywhere on the row, then drag (the handle drags at once).
-            .gesture(
-                LongPressGesture(minimumDuration: 0.4)
-                    .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.reorderSpace)))
-                    .onChanged { value in
-                        if case .second(true, let drag?) = value { updateReorder(song: song, index: index, drag: drag) }
-                    }
-                    .onEnded { _ in finishReorder() },
-                including: canReorder ? .all : .subviews
-            )
             .accessibilityAddTraits(isSelecting && selectedIds.contains(song.videoId) ? .isSelected : [])
             .accessibilityActions {
                 if canReorder {
@@ -539,7 +529,8 @@ struct QueueSheet: View {
                 .buttonStyle(.plain)
             }
 
-            // Drag handle: drags at once (long press works anywhere on the row).
+            // Drag handle: drags at once. (A long press on the whole row
+            // competed with the List's own scrolling and swipe actions.)
             if !isLocked && !isSelecting {
                 Image(systemName: "line.3.horizontal")
                     .font(.system(size: 18, weight: .medium))

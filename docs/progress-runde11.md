@@ -112,8 +112,9 @@ bis zum Ende und zurück scrollen, Wischen zum Entfernen, Umsortieren.
   undurchsichtige Kopie in der Panel-Farbe (Glas-Tönung ohne Transparenz),
   mit abgerundeten Ecken und leichtem Schatten, auf Panel-Breite. Ihr Platz
   bleibt als Lücke frei, die anderen Zeilen rücken um genau eine Zeile zur
-  Seite. Der Griff zieht sofort, langes Drücken funktioniert auf der
-  ganzen Zeile. VoiceOver hat „Nach oben/unten“-Aktionen. Die
+  Seite. Der Griff zieht sofort. (Eine Lang-Druck-Ziehgeste auf der ganzen
+  Zeile blockierte im UI-Test das Scrollen und Wischen der Liste – entfernt.)
+  VoiceOver hat „Nach oben/unten“-Aktionen. Die
   Einklapp-Geste des Players ist bei offener Seitenleiste ganz aus (sie
   blockierte auch das Wischen zum Entfernen im UI-Test).
 - Android auf dem Pixel geprüft (Screenshot mitten im Ziehen): Die Zeile

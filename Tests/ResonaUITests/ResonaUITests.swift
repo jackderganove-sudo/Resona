@@ -86,8 +86,8 @@ final class ResonaUITests: XCTestCase {
         let source = element("queue.row.5")
         let target = element("queue.row.8")
         if source.waitForExistence(timeout: 3), target.exists {
-            let movedTitle = source.staticTexts.firstMatch.label
-            let belowTitle = target.staticTexts.firstMatch.label
+            let movedTitle = Self.placeholderTitle(in: source.label)
+            let belowTitle = Self.placeholderTitle(in: target.label)
             // The handle sits at the trailing end of the row (hidden from
             // VoiceOver, which gets "Move up/down" actions instead).
             let start = source.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5)).withOffset(CGVector(dx: -38, dy: 0))
@@ -95,12 +95,18 @@ final class ResonaUITests: XCTestCase {
             start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.6)
             sleep(1)
             snap("queue-reordered")
-            let moved = app.staticTexts[movedTitle]
-            let below = app.staticTexts[belowTitle]
-            if !movedTitle.isEmpty, !belowTitle.isEmpty, moved.exists, below.exists {
-                XCTAssertGreaterThan(moved.frame.midY, below.frame.midY, "[queue] handle drag moved the row down")
+            if !movedTitle.isEmpty, !belowTitle.isEmpty {
+                // Row 8 now holds the moved song; the old row 8 moved up to 7.
+                XCTAssertEqual(Self.placeholderTitle(in: element("queue.row.8").label), movedTitle, "[queue] handle drag moved the row down")
+                XCTAssertEqual(Self.placeholderTitle(in: element("queue.row.7").label), belowTitle, "[queue] the rows in between moved up")
             }
         }
+    }
+
+    /// "Testtitel NN" out of a row's accessibility label.
+    static func placeholderTitle(in label: String) -> String {
+        guard let range = label.range(of: #"Testtitel \d\d"#, options: .regularExpression) else { return "" }
+        return String(label[range])
     }
 
     /// Round 11: Immersive layout — disc fully visible, controls inside the
@@ -118,7 +124,10 @@ final class ResonaUITests: XCTestCase {
             sleep(2)
             let window = app.windows.firstMatch.frame
             let disc = element("player.immersive.disc")
-            guard disc.waitForExistence(timeout: 6) else { return softFail("disc missing (\(name))") }
+            guard disc.waitForExistence(timeout: 6) else {
+                snap("\(name)-missing-disc")
+                return softFail("disc missing (\(name))")
+            }
             let shown = disc.frame
             XCTAssertTrue(window.contains(shown), "[immersive] disc fully visible \(name): \(shown) in \(window)")
             let controls = element("player.immersive.controls")
