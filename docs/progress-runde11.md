@@ -121,3 +121,13 @@ bis zum Ende und zurück scrollen, Wischen zum Entfernen, Umsortieren.
   war schon undurchsichtig, abgerundet und auf Breite, die anderen weichen
   aus. Ergänzt wurden der leichte Schatten und die Lesbarkeit der aktuellen
   Zeile (weiße Schrift auf hellgrau bei Schwarz-Weiß-Covern).
+
+## Offene UI-Testpunkte (schon vor Runde 11 G rot, nicht durch G verursacht)
+- `test1Portrait`: Nach dem Drop-Menü-Teil öffnet das Tippen auf „Songtext“
+  den Songtext nicht (Screenshot zeigt weiter den Player); dadurch scheitern
+  danach „Schließen-Knopf“ und „nach unten wischen“. In `test4LyricsDepth`
+  öffnet dieselbe Pille den Songtext. Vermutung: Ein Kontextmenü des
+  Drop-Knopfs (Blitz, Trefferpunkt {-1,-1}) fängt die nächsten Tipps ab.
+- `test1Portrait`: „Sprung zum Drop“ prüft den Positionssprung zeitabhängig
+  (57 → 55 s, wenn der Drop knapp hinter der Position liegt).
+- `test2Landscape`: „Failed to terminate“ – Simulator-Infrastruktur.
