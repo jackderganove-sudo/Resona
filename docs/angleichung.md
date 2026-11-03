@@ -36,7 +36,7 @@ bleiben bewusst.
 | Typo-Skala (Display/Headline/Title/Body/Label) | gleich | zentral definiert auf beiden (iPad `M3TypeStyle.spec`, Android `Type.kt` → `MaterialTheme.typography`), identische Werte: Größe, Zeilenhöhe, Gewicht, Laufweite (M3-Grundskala) | ja (geprüft) |
 | Lyrics-Schrift | iPad (Systemschrift fett) | iPad nutzt SF Pro; Android lieferte SF Pro als Datei mit (Lizenz verbietet das außerhalb von Apple) → Android-Systemschrift fett | ja – Android |
 | Akzent aus dem Cover, Hell/Dunkel | gleich | beide leiten das Farbschema dynamisch aus dem Cover ab (M3 tonal) | ja (geprüft auf Screenshots) |
-| AMOLED/Schwarz | Android | Android hat „Pure Black“; iPad: „Einfarbig“-Hintergrund im Player, kein App-weites Schwarz | offen (iPad) |
+| AMOLED/Schwarz | gleich | beide „Reines Schwarz“: Hintergrund und Flächen schwarz (iPad: Darstellung → „Pure black“, `M3Scheme.generate(pureBlack:)`) | ja (geprüft im Code) |
 | Eckenradien | gleich | beide M3-Formen (extraLarge 28, large 16, medium 12) | ja (geprüft) |
 | Icons | je Plattform | iPad: SF Symbols, Android: Material Symbols – SF Symbols dürfen auf Android nicht verwendet werden; beide outlined, ähnliche Strichstärke | bewusst so |
 | Dialoge / Bottom-Sheets | iPad (Glas) | Android: Glas-Tönung der gemeinsamen Komponente; Fenster-Blur hinter Menü-Sheets und Dialogen ab Android 12 (sonst fast deckend). Einzelne Upstream-Dialoge mit eigenem `AlertDialog` noch M3-Container | teilweise (wip, Gerät folgt) |
