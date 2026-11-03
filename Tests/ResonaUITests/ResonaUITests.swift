@@ -74,20 +74,68 @@ final class ResonaUITests: XCTestCase {
         let row = element("queue.row.3")
         if row.waitForExistence(timeout: 3) {
             row.swipeLeft()
-            let remove = app.buttons["Entfernen"]
+            let remove = app.buttons.matching(NSPredicate(format: "label IN %@", ["Entfernen", "Remove"])).firstMatch
             XCTAssertTrue(remove.waitForExistence(timeout: 3), "[queue] swipe shows remove")
             snap("queue-swipe-remove")
             if remove.exists { remove.tap() }
+            sleep(1)
         }
 
-        // Reorder by long press + drag (row 5 → row 8): the list must not scroll away.
+        // Reorder with the handle (row 5 → row 8): mid-drag the lifted copy
+        // is opaque and inside the panel, afterwards the order changed.
         let source = element("queue.row.5")
         let target = element("queue.row.8")
-        if source.exists, target.exists {
-            source.press(forDuration: 0.8, thenDragTo: target)
+        if source.waitForExistence(timeout: 3), target.exists {
+            let movedTitle = source.staticTexts.firstMatch.label
+            let belowTitle = target.staticTexts.firstMatch.label
+            // The handle sits at the trailing end of the row (hidden from
+            // VoiceOver, which gets "Move up/down" actions instead).
+            let start = source.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5)).withOffset(CGVector(dx: -38, dy: 0))
+            let end = target.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+            start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.6)
             sleep(1)
             snap("queue-reordered")
+            let moved = app.staticTexts[movedTitle]
+            let below = app.staticTexts[belowTitle]
+            if !movedTitle.isEmpty, !belowTitle.isEmpty, moved.exists, below.exists {
+                XCTAssertGreaterThan(moved.frame.midY, below.frame.midY, "[queue] handle drag moved the row down")
+            }
         }
+    }
+
+    /// Round 11: Immersive layout — disc fully visible, controls inside the
+    /// screen, and the disc keeps its place when the controls hide and show.
+    func test5ImmersiveLayout() {
+        prefix = "immersive"
+        app.launchArguments += ["-ResonaUITestLongQueue", "-ResonaUITestPlayerStyle", "immersive"]
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
+            XCUIDevice.shared.orientation = orientation
+            if app.state != .runningForeground { app.launch() }
+            let name = orientation == .portrait ? "portrait" : "landscape"
+            if !element("player.immersive").exists {
+                guard tap("miniplayer", timeout: 25) else { return }
+            }
+            sleep(2)
+            let window = app.windows.firstMatch.frame
+            let disc = element("player.immersive.disc")
+            guard disc.waitForExistence(timeout: 6) else { return softFail("disc missing (\(name))") }
+            let shown = disc.frame
+            XCTAssertTrue(window.contains(shown), "[immersive] disc fully visible \(name): \(shown) in \(window)")
+            let controls = element("player.immersive.controls")
+            if controls.exists {
+                XCTAssertTrue(window.contains(controls.frame), "[immersive] controls inside the screen \(name)")
+                XCTAssertLessThanOrEqual(shown.maxY, controls.frame.minY + 1, "[immersive] controls below the disc \(name)")
+            }
+            snap("\(name)-controls")
+            sleep(6)   // controls fade out after 4 s
+            snap("\(name)-clean")
+            XCTAssertEqual(disc.frame.minY, shown.minY, accuracy: 1, "[immersive] disc stays put when controls hide (\(name))")
+            disc.tap()
+            sleep(1)
+            XCTAssertEqual(disc.frame.minY, shown.minY, accuracy: 1, "[immersive] disc stays put when controls show (\(name))")
+            snap("\(name)-shown-again")
+        }
+        XCUIDevice.shared.orientation = .portrait
     }
 
     /// Round 11: lyrics depth (blur by distance) in portrait and landscape

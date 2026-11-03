@@ -16,6 +16,7 @@ struct QueueSheet: View {
     @Binding var pendingRoute: DetailRoute?
 
     @Environment(\.m3) private var m3
+    @Environment(\.coverPalette) private var coverPalette
     @Environment(\.dismiss) private var dismiss
     @Environment(SettingsStore.self) private var settings
     @Bindable private var np = NowPlaying.shared
@@ -25,6 +26,9 @@ struct QueueSheet: View {
     @State private var isLocked = false
     @State private var isSelecting = false
     @State private var selectedIds: Set<String> = []
+    /// Own drag-to-reorder (round 11), see `QueueReorder`.
+    @State private var reorder: QueueDragState?
+    @State private var rowPitch: CGFloat = 76
     private let recommendations = QueueRecommendationStore.shared
 
     private var isPodcast: Bool { np.musicVideoType == "MUSIC_VIDEO_TYPE_PODCAST_EPISODE" }
@@ -397,11 +401,11 @@ struct QueueSheet: View {
                     ForEach(Array(np.queueSongs.enumerated()), id: \.element.videoId) { index, song in
                         row(song: song, index: index)
                     }
-                    .onMove(perform: isLocked || isSelecting ? nil : { source, destination in
-                        np.moveQueueSongs(from: source, to: destination)
-                    })
                 }
             }
+            .scrollDisabled(reorder != nil)
+            .overlay(alignment: .topLeading) { reorderPreview }
+            .coordinateSpace(.named(Self.reorderSpace))
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .environment(\.defaultMinListRowHeight, 72)
@@ -413,6 +417,77 @@ struct QueueSheet: View {
     }
 
     private func row(song: SongItem, index: Int) -> some View {
+        let isCurrent = index == np.queueIndex
+        let isLifted = reorder?.videoId == song.videoId
+        return rowContent(song: song, index: index)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                // Uniform rows: content + 2 pt list insets above and below.
+                let pitch = max(height + 4, 72)
+                if index == 0, abs(pitch - rowPitch) > 0.5 { rowPitch = pitch }
+            }
+            // The lifted row leaves its slot empty (the preview floats above);
+            // the others slide aside to open the gap at the target.
+            .opacity(isLifted ? 0 : 1)
+            .offset(y: reorderShift(for: index))
+            .animation(M3Motion.defaultSpatial, value: reorder?.target)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if isSelecting {
+                    if !isCurrent { toggleSelection(song) }
+                } else {
+                    play(at: index)
+                }
+            }
+            // Long press anywhere on the row, then drag (the handle drags at once).
+            .gesture(
+                LongPressGesture(minimumDuration: 0.4)
+                    .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.reorderSpace)))
+                    .onChanged { value in
+                        if case .second(true, let drag?) = value { updateReorder(song: song, index: index, drag: drag) }
+                    }
+                    .onEnded { _ in finishReorder() },
+                including: canReorder ? .all : .subviews
+            )
+            .accessibilityAddTraits(isSelecting && selectedIds.contains(song.videoId) ? .isSelected : [])
+            .accessibilityActions {
+                if canReorder {
+                    if index > 0 {
+                        Button("Move up") { np.moveQueueSongs(from: IndexSet(integer: index), to: index - 1) }
+                    }
+                    if index < np.queueSongs.count - 1 {
+                        Button("Move down") { np.moveQueueSongs(from: IndexSet(integer: index), to: index + 2) }
+                    }
+                }
+            }
+            // No M3TapHighlight here: its long press competed with the List's
+            // gestures and made drags feel stuck (round 11).
+            .accessibilityIdentifier("queue.row.\(index)")
+            .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                if !isLocked, !isSelecting, let playNext = playNextAction(for: song) {
+                    Button {
+                        playNext()
+                    } label: {
+                        Label("Play Next", systemImage: "text.insert")
+                    }
+                    .tint(m3.tertiary)
+                }
+            }
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                if !isLocked, !isSelecting {
+                    Button(role: .destructive) {
+                        withAnimation(M3Motion.defaultSpatial) { remove(at: index) }
+                    } label: {
+                        Label("Remove", systemImage: "trash")
+                    }
+                }
+            }
+            .animation(M3Motion.defaultEffects, value: isCurrent)
+    }
+
+    private func rowContent(song: SongItem, index: Int, lifted: Bool = false) -> some View {
         let isCurrent = index == np.queueIndex
         return HStack(spacing: 16) {
             ZStack {
@@ -464,14 +539,22 @@ struct QueueSheet: View {
                 .buttonStyle(.plain)
             }
 
-            // Visible drag handle (long-press and drag anywhere on the row).
+            // Drag handle: drags at once (long press works anywhere on the row).
             if !isLocked && !isSelecting {
                 Image(systemName: "line.3.horizontal")
                     .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(isCurrent ? m3.onSecondaryContainer : m3.onSurfaceVariant)
-                    .frame(width: 28, height: 40)
+                    .frame(width: 44, height: 48)
+                    .contentShape(Rectangle())
+                    .highPriorityGesture(
+                        DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.reorderSpace))
+                            .onChanged { updateReorder(song: song, index: index, drag: $0) }
+                            .onEnded { _ in finishReorder() },
+                        including: lifted ? .none : .all
+                    )
                     .transition(.opacity)
                     .accessibilityHidden(true)
+                    .accessibilityIdentifier("queue.handle.\(index)")
             }
         }
         .padding(.horizontal, 16)
@@ -482,41 +565,75 @@ struct QueueSheet: View {
                     .fill(m3.secondaryContainer)
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if isSelecting {
-                if !isCurrent { toggleSelection(song) }
-            } else {
-                play(at: index)
-            }
+    }
+
+    // MARK: Reorder
+
+    static let reorderSpace = "queue.reorder"
+
+    private var canReorder: Bool { !isLocked && !isSelecting && np.queueSongs.count > 1 }
+
+    private func reorderShift(for index: Int) -> CGFloat {
+        guard let reorder else { return 0 }
+        return QueueReorder.shift(index: index, from: reorder.from, to: reorder.target, pitch: rowPitch)
+    }
+
+    private func updateReorder(song: SongItem, index: Int, drag: DragGesture.Value) {
+        guard canReorder else { return }
+        if reorder == nil {
+            // The row's top in the list: the touch keeps its spot on the row.
+            let rowTop = drag.startLocation.y - rowPitch / 2
+            reorder = QueueDragState(videoId: song.videoId, from: index, target: index, rowTop: rowTop, translation: 0)
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         }
-        .accessibilityAddTraits(isSelecting && selectedIds.contains(song.videoId) ? .isSelected : [])
-        // No M3TapHighlight here: its long press competed with the List's
-        // long-press-to-reorder and made drags feel stuck (round 11).
-        .accessibilityIdentifier("queue.row.\(index)")
-        .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            if !isLocked, !isSelecting, let playNext = playNextAction(for: song) {
-                Button {
-                    playNext()
-                } label: {
-                    Label("Play Next", systemImage: "text.insert")
+        reorder?.translation = drag.translation.height
+        let target = QueueReorder.target(from: index, translation: drag.translation.height, pitch: rowPitch, count: np.queueSongs.count)
+        if target != reorder?.target {
+            reorder?.target = target
+            UISelectionFeedbackGenerator().selectionChanged()
+        }
+    }
+
+    private func finishReorder() {
+        guard let state = reorder else { return }
+        // Settle the preview on the gap, then commit without a second animation.
+        withAnimation(.easeOut(duration: 0.16)) {
+            reorder?.translation = CGFloat(state.target - state.from) * rowPitch
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(170))
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                if state.target != state.from {
+                    np.moveQueueSongs(from: IndexSet(integer: state.from),
+                                      to: QueueReorder.moveDestination(from: state.from, to: state.target))
                 }
-                .tint(m3.tertiary)
+                reorder = nil
             }
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            if !isLocked, !isSelecting {
-                Button(role: .destructive) {
-                    withAnimation(M3Motion.defaultSpatial) { remove(at: index) }
-                } label: {
-                    Label("Remove", systemImage: "trash")
-                }
+    }
+
+    /// The lifted row: opaque panel colour, rounded corners, a soft shadow,
+    /// inset to the panel width — nothing shows through, nothing sticks out.
+    @ViewBuilder
+    private var reorderPreview: some View {
+        if let reorder, let index = np.queueSongs.firstIndex(where: { $0.videoId == reorder.videoId }) {
+            GeometryReader { proxy in
+                rowContent(song: np.queueSongs[index], index: index, lifted: true)
+                    .frame(height: rowPitch - 4)
+                    .background {
+                        RoundedRectangle(cornerRadius: M3Shape.large, style: .continuous)
+                            .fill(QueueDragState.panelColor(m3: m3, cover: coverPalette.main.color))
+                            .shadow(color: .black.opacity(0.28), radius: 12, y: 6)
+                    }
+                    .padding(.horizontal, 6)
+                    .frame(width: proxy.size.width)
+                    .offset(y: reorder.rowTop + reorder.translation)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
         }
-        .animation(M3Motion.defaultEffects, value: isCurrent)
     }
 
     /// "Artist • m:ss" — the artist falls back to the resolved uploader when
@@ -610,5 +727,20 @@ extension Color {
     func mixWhite(_ amount: Double) -> Color {
         let rgb = RGB(UIColor(self))
         return rgb.mix(.white, amount).color
+    }
+}
+
+/// A row being dragged: where it came from, where it would land, and where
+/// its lifted copy is drawn (list coordinates).
+struct QueueDragState: Equatable {
+    let videoId: String
+    let from: Int
+    var target: Int
+    let rowTop: CGFloat
+    var translation: CGFloat
+
+    /// The glass tint of the side panel / sheet, but fully opaque.
+    static func panelColor(m3: M3Scheme, cover: Color) -> Color {
+        m3.surfaceContainerHighest.mix(with: cover, by: ResonaGlass.coverMix)
     }
 }
