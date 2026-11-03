@@ -26,6 +26,10 @@ struct TropApp: App {
         Task { @MainActor in LastFMIntegration.shared.start() }
         #if DEBUG
         Task { @MainActor in CrossfadeTestHarness.runIfRequested() }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2))
+            TestMode.seedLongQueueIfRequested()
+        }
         #endif
     }
 

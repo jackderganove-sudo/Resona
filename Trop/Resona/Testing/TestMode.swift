@@ -28,7 +28,22 @@ enum TestMode {
     /// mpv without a real audio device (still real-time).
     nonisolated static var useNullAudio: Bool { isUITest || crossfadeCase != nil }
 
+    /// UI test: start with a long queue of placeholder songs (queue scroll test).
+    nonisolated static var seedsLongQueue: Bool { isUITest && arguments.contains("-ResonaUITestLongQueue") }
+
     #if DEBUG
+    /// Fills the queue with 60 placeholder songs (local test tone) and
+    /// starts the first, so the queue sheet has something to scroll.
+    @MainActor
+    static func seedLongQueueIfRequested() {
+        guard seedsLongQueue else { return }
+        let songs = (1...60).map { n in
+            SongItem(videoId: "uitest-\(n)", title: String(format: "Testtitel %02d", n),
+                     artists: [YTArtist(name: "Testband")], duration: 180, isExplicit: false)
+        }
+        PlaybackQueue.play(songs, log: Log.nowPlaying, context: "UI test long queue")
+    }
+
     /// Local files standing in for songs (crossfade test).
     nonisolated(unsafe) static var localOverride: [String: URL] = [:]
 

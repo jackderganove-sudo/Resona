@@ -43,6 +43,10 @@ struct FullPlayerView: View {
     /// A canvas clip is showing (the cover then stops turning).
     @State private var canvasActive = false
     @State private var showArtistPicker = false
+    /// Immersive style: controls shown (tap toggles, hide after a few seconds).
+    @State private var immersiveControlsVisible = true
+    @State private var immersiveHideTask: Task<Void, Never>?
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     @State private var toastTask: Task<Void, Never>?
 
     private var currentSong: SongItem? {
@@ -524,13 +528,23 @@ struct FullPlayerView: View {
 
     // MARK: Immersive (round 10)
 
+    /// Immersive: the canvas / turning cover fills the screen; the controls
+    /// appear on a tap and hide again after a few seconds (always shown with
+    /// VoiceOver). The backdrop sits in the background so it can't push the
+    /// controls off screen (it ignores the safe area).
     private func immersiveLayout(size: CGSize, wide: Bool) -> some View {
-        ZStack(alignment: .bottom) {
-            immersiveBackdrop(size: size, wide: wide)
+        let visible = immersiveControlsVisible || voiceOverEnabled
+        return ZStack(alignment: .bottom) {
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture { toggleImmersiveControls() }
+                .gesture(artworkSwipe)
+                .accessibilityHidden(true)
             LinearGradient(colors: [.black.opacity(0.45), .clear, .clear, .black.opacity(0.85)],
                            startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
+                .opacity(visible ? 1 : 0)
             VStack(spacing: 0) {
                 header
                     .padding(.top, 12)
@@ -557,10 +571,42 @@ struct FullPlayerView: View {
                 .frame(maxWidth: 560)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 12)
+                .accessibilityIdentifier("player.immersive.controls")
             }
+            // Any touch on the controls keeps them up a little longer.
+            .simultaneousGesture(TapGesture().onEnded { showImmersiveControls() })
+            .opacity(visible ? 1 : 0)
+            .allowsHitTesting(visible)
+            .accessibilityHidden(!visible)
         }
+        .frame(width: size.width, height: size.height)
+        .background { immersiveBackdrop(size: size, wide: wide) }
+        .animation(M3Motion.defaultEffects, value: visible)
+        .onAppear { showImmersiveControls() }
+        .onChange(of: isEditingSlider) { _, editing in if !editing { showImmersiveControls() } }
         .accessibilityIdentifier("player.immersive")
     }
+
+    private func showImmersiveControls() {
+        immersiveControlsVisible = true
+        immersiveHideTask?.cancel()
+        immersiveHideTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(Self.immersiveHideDelay))
+            guard !Task.isCancelled, !isEditingSlider else { return }
+            immersiveControlsVisible = false
+        }
+    }
+
+    private func toggleImmersiveControls() {
+        if immersiveControlsVisible {
+            immersiveHideTask?.cancel()
+            immersiveControlsVisible = false
+        } else {
+            showImmersiveControls()
+        }
+    }
+
+    static let immersiveHideDelay: Double = 4
 
     /// Canvas full screen; without one the blurred cover with the cover as
     /// a turning disc on top.
@@ -590,8 +636,7 @@ struct FullPlayerView: View {
             .ignoresSafeArea()
         }
         .animation(M3Motion.colorChange, value: canvasActive)
-        .contentShape(Rectangle())
-        .gesture(artworkSwipe)
+        .allowsHitTesting(false)
     }
 
     private func videoLayout(size: CGSize) -> some View {
@@ -895,7 +940,9 @@ struct FullPlayerView: View {
     private var collapseDrag: some Gesture {
         DragGesture(minimumDistance: 14, coordinateSpace: .global)
             .onChanged { value in
-                guard !showLyrics, !isEditingSlider else { return }
+                // Side panel open (queue / menu): its lists scroll vertically,
+                // a downward scroll must not drag the player away.
+                guard !showLyrics, !isEditingSlider, !(sidePanelMode && activePanel != nil) else { return }
                 if !isCollapseDragging {
                     guard value.translation.height > 0,
                           value.translation.height > abs(value.translation.width) * 1.4 else { return }

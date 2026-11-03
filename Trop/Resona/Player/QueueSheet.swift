@@ -87,6 +87,8 @@ struct QueueSheet: View {
             if locked { endSelection() }
         }
         .presentationDetents([.large, .medium])
+        // Round 11: the list scrolls; resizing the sheet uses the grabber.
+        .presentationContentInteraction(.scrolls)
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(M3Shape.extraLarge)
         .presentationBackground {
@@ -403,6 +405,7 @@ struct QueueSheet: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .environment(\.defaultMinListRowHeight, 72)
+            .accessibilityIdentifier("queue.list")
             .onAppear {
                 if let currentSong { proxy.scrollTo(currentSong.videoId, anchor: .center) }
             }
@@ -488,7 +491,9 @@ struct QueueSheet: View {
             }
         }
         .accessibilityAddTraits(isSelecting && selectedIds.contains(song.videoId) ? .isSelected : [])
-        .modifier(M3TapHighlight())
+        // No M3TapHighlight here: its long press competed with the List's
+        // long-press-to-reorder and made drags feel stuck (round 11).
+        .accessibilityIdentifier("queue.row.\(index)")
         .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)

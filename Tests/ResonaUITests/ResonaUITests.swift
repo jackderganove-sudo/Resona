@@ -37,6 +37,59 @@ final class ResonaUITests: XCTestCase {
         tour()
     }
 
+    /// Round 11: a 60-song queue must scroll, reorder and swipe-to-remove.
+    func test3LongQueue() {
+        XCUIDevice.shared.orientation = .portrait
+        prefix = "queue"
+        app.launchArguments.append("-ResonaUITestLongQueue")
+        app.launch()
+        guard tap("miniplayer", timeout: 25) else { return }
+        sleep(2)
+        guard tap("player.pill.list.bullet") else { return }
+        let list = element("queue.list")
+        guard list.waitForExistence(timeout: 8) else { return softFail("queue list missing") }
+        sleep(1)
+        snap("queue-top")
+
+        // Scroll to the end: the last row must become reachable.
+        let last = element("queue.row.59")
+        var swipes = 0
+        while !(last.exists && last.isHittable) && swipes < 20 {
+            list.swipeUp(velocity: .fast)
+            swipes += 1
+        }
+        XCTAssertTrue(last.exists && last.isHittable, "[queue] last row reachable by scrolling (\(swipes) swipes)")
+        snap("queue-scrolled")
+
+        // Scroll back up.
+        let first = element("queue.row.0")
+        swipes = 0
+        while !(first.exists && first.isHittable) && swipes < 20 {
+            list.swipeDown(velocity: .fast)
+            swipes += 1
+        }
+        XCTAssertTrue(first.exists && first.isHittable, "[queue] first row reachable again")
+
+        // Swipe to remove: the trailing action appears.
+        let row = element("queue.row.3")
+        if row.waitForExistence(timeout: 3) {
+            row.swipeLeft()
+            let remove = app.buttons["Entfernen"]
+            XCTAssertTrue(remove.waitForExistence(timeout: 3), "[queue] swipe shows remove")
+            snap("queue-swipe-remove")
+            if remove.exists { remove.tap() }
+        }
+
+        // Reorder by long press + drag (row 5 → row 8): the list must not scroll away.
+        let source = element("queue.row.5")
+        let target = element("queue.row.8")
+        if source.exists, target.exists {
+            source.press(forDuration: 0.8, thenDragTo: target)
+            sleep(1)
+            snap("queue-reordered")
+        }
+    }
+
     // MARK: Tour
 
     private func tour() {
