@@ -44,6 +44,15 @@ enum TestMode {
         PlaybackQueue.play(songs, log: Log.nowPlaying, context: "UI test long queue")
     }
 
+    /// UI test: player style from `-ResonaUITestPlayerStyle <rawValue>`
+    /// (Immersive layout snapshots).
+    @MainActor
+    static func applyPlayerStyleIfRequested() {
+        guard isUITest, let index = arguments.firstIndex(of: "-ResonaUITestPlayerStyle"), index + 1 < arguments.count,
+              let style = PlayerLayoutStyle(rawValue: arguments[index + 1]) else { return }
+        SettingsStore.shared.playerLayoutStyle = style
+    }
+
     /// UI tests: invented placeholder lyrics (48 lines, 4 s apart) for the
     /// placeholder songs of the long queue — never real song texts.
     static func placeholderLyrics(for videoId: String) -> [LyricLine]? {

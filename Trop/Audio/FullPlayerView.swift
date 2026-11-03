@@ -46,6 +46,9 @@ struct FullPlayerView: View {
     /// Immersive style: controls shown (tap toggles, hide after a few seconds).
     @State private var immersiveControlsVisible = true
     @State private var immersiveHideTask: Task<Void, Never>?
+    @State private var immersiveCoreHeight = ImmersiveLayoutMetrics.estimatedCoreHeight
+    /// True while the collapse drag is recognised; resets on cancel too.
+    @GestureState private var collapseGestureLive = false
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     @State private var toastTask: Task<Void, Never>?
 
@@ -147,7 +150,21 @@ struct FullPlayerView: View {
             .animation(M3Motion.defaultSpatial, value: showLyrics)
             .animation(M3Motion.defaultSpatial, value: showSleepTimer)
         }
-        .simultaneousGesture(collapseDrag)
+        // Off entirely while the side panel is open: even as a simultaneous
+        // gesture it kept the List's swipe actions and drags from starting.
+        .simultaneousGesture(collapseDrag, including: sidePanelMode && activePanel != nil ? .subviews : .all)
+        .onChange(of: collapseGestureLive) { _, live in
+            // A competing gesture (artwork swipe, slider) can cancel the
+            // drag without `onEnded`: the player then stayed shifted down
+            // (Immersive "everything slides down" bug) — snap it back.
+            guard !live else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(60))
+                guard isCollapseDragging else { return }
+                isCollapseDragging = false
+                sheetDrag.onEnded(0, 0)
+            }
+        }
         .onChange(of: np.videoId) { _, _ in
             np.isVideoMode = false
             preloadLyrics()
@@ -519,65 +536,101 @@ struct FullPlayerView: View {
         .animation(M3Motion.defaultEffects, value: np.isPlaying)
     }
 
-    // MARK: Immersive (round 10)
+    // MARK: Immersive (round 10, layout fixed in round 11)
 
-    /// Immersive: the canvas / turning cover fills the screen; the controls
-    /// appear on a tap and hide again after a few seconds (always shown with
-    /// VoiceOver). The backdrop sits in the background so it can't push the
-    /// controls off screen (it ignores the safe area).
+    /// Immersive: header in its own strip, then one centred block — the
+    /// turning disc as large as fits, title and controls below. The controls
+    /// (and header) fade on a tap and after a few seconds (always shown with
+    /// VoiceOver) but keep their space, so the disc never moves and nothing
+    /// leaves the visible area. Geometry: `ImmersiveLayoutMetrics`.
     private func immersiveLayout(size: CGSize, wide: Bool) -> some View {
         let visible = immersiveControlsVisible || voiceOverEnabled
-        return ZStack(alignment: .bottom) {
+        let metrics = ImmersiveLayoutMetrics(size: size, coreControlsHeight: immersiveCoreHeight)
+        return ZStack {
             Color.clear
                 .contentShape(Rectangle())
                 .onTapGesture { toggleImmersiveControls() }
-                .gesture(artworkSwipe)
                 .accessibilityHidden(true)
-            LinearGradient(colors: [.black.opacity(0.45), .clear, .clear, .black.opacity(0.85)],
-                           startPoint: .top, endPoint: .bottom)
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-                .opacity(visible ? 1 : 0)
             VStack(spacing: 0) {
-                header
-                    .padding(.top, 12)
-                Spacer(minLength: 0)
-                VStack(spacing: 0) {
-                    titleRow
-                    progressSlider(compact: false)
-                        .padding(.top, 14)
-                    PlaybackButtonGroup(
-                        isPlaying: np.isPlaying,
-                        hasPrevious: np.hasPrevious,
-                        hasNext: np.hasNext,
-                        onPrevious: { np.playPrevious() },
-                        onPlayPause: { player.togglePlayPause() },
-                        onNext: { np.playNext() }
-                    )
-                    .frame(height: 76)
-                    .padding(.top, 12)
-                    toggleRow
-                        .padding(.top, 12)
-                    bottomRow
-                        .padding(.top, 14)
+                if metrics.showsHeader {
+                    header
+                        .frame(height: ImmersiveLayoutMetrics.headerHeight)
+                        .opacity(visible ? 1 : 0)
+                        .allowsHitTesting(visible)
+                        .accessibilityHidden(!visible)
                 }
-                .frame(maxWidth: 560)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
-                .accessibilityIdentifier("player.immersive.controls")
+                Spacer(minLength: 0)
+                if metrics.disc > 0 {
+                    immersiveDisc(diameter: metrics.disc)
+                        .padding(.bottom, ImmersiveLayoutMetrics.gap)
+                }
+                immersiveControls(showsToggles: metrics.showsToggles)
+                    .frame(width: metrics.controlsWidth)
+                    .opacity(visible ? 1 : 0)
+                    .allowsHitTesting(visible)
+                    .accessibilityHidden(!visible)
+                Spacer(minLength: 0)
             }
-            // Any touch on the controls keeps them up a little longer.
-            .simultaneousGesture(TapGesture().onEnded { showImmersiveControls() })
-            .opacity(visible ? 1 : 0)
-            .allowsHitTesting(visible)
-            .accessibilityHidden(!visible)
+            .padding(.vertical, ImmersiveLayoutMetrics.margin)
         }
         .frame(width: size.width, height: size.height)
-        .background { immersiveBackdrop(size: size, wide: wide) }
+        .clipped()
         .animation(M3Motion.defaultEffects, value: visible)
         .onAppear { showImmersiveControls() }
         .onChange(of: isEditingSlider) { _, editing in if !editing { showImmersiveControls() } }
         .accessibilityIdentifier("player.immersive")
+    }
+
+    /// The turning cover disc (round 11: over the gradient, no canvas video).
+    private func immersiveDisc(diameter: CGFloat) -> some View {
+        artworkImage
+            .frame(width: diameter, height: diameter)
+            .clipShape(Circle())
+            .overlay(Circle().strokeBorder(.white.opacity(0.12), lineWidth: 1))
+            .rotatingWhilePlaying(np.isPlaying, enabled: settings.rotateArtwork)
+            .shadow(color: .black.opacity(0.35), radius: 30, y: 12)
+            .offset(x: artworkEntryOffset)
+            .contentShape(Circle())
+            .onTapGesture { toggleImmersiveControls() }
+            .gesture(artworkSwipe)
+            .accessibilityElement()
+            .accessibilityLabel(Text("Artwork"))
+            .accessibilityAddTraits(.isImage)
+            .accessibilityIdentifier("player.immersive.disc")
+    }
+
+    private func immersiveControls(showsToggles: Bool) -> some View {
+        VStack(spacing: 0) {
+            titleRow
+            progressSlider(compact: false)
+                .padding(.top, 14)
+            PlaybackButtonGroup(
+                isPlaying: np.isPlaying,
+                hasPrevious: np.hasPrevious,
+                hasNext: np.hasNext,
+                onPrevious: { np.playPrevious() },
+                onPlayPause: { player.togglePlayPause() },
+                onNext: { np.playNext() }
+            )
+            .frame(height: 76)
+            .padding(.top, 12)
+            if showsToggles {
+                toggleRow
+                    .frame(height: ImmersiveLayoutMetrics.togglesHeight - 12)
+                    .padding(.top, 12)
+            }
+            bottomRow
+                .padding(.top, 14)
+        }
+        // The metrics need the height without the toggle row.
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.height - (showsToggles ? ImmersiveLayoutMetrics.togglesHeight : 0)
+        } action: { core in
+            if abs(core - immersiveCoreHeight) > 0.5 { immersiveCoreHeight = core }
+        }
+        // Any touch on the controls keeps them up a little longer.
+        .simultaneousGesture(TapGesture().onEnded { showImmersiveControls() })
+        .accessibilityIdentifier("player.immersive.controls")
     }
 
     private func showImmersiveControls() {
@@ -600,24 +653,6 @@ struct FullPlayerView: View {
     }
 
     static let immersiveHideDelay: Double = 4
-
-    /// The turning cover disc over the gradient background (round 11: no
-    /// canvas video in the background — its colours drive the gradient).
-    private func immersiveBackdrop(size: CGSize, wide: Bool) -> some View {
-        let disc = min(size.width, size.height) * (wide ? 0.56 : 0.62)
-        return ZStack {
-            artworkImage
-                .frame(width: disc, height: disc)
-                .clipShape(Circle())
-                .overlay(Circle().strokeBorder(.white.opacity(0.12), lineWidth: 1))
-                .rotatingWhilePlaying(np.isPlaying, enabled: settings.rotateArtwork)
-                .shadow(color: .black.opacity(0.35), radius: 30, y: 12)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .padding(.top, wide ? size.height * 0.08 : size.height * 0.12)
-                .offset(x: artworkEntryOffset)
-        }
-        .allowsHitTesting(false)
-    }
 
     private func videoLayout(size: CGSize) -> some View {
         VStack(spacing: 0) {
@@ -919,6 +954,7 @@ struct FullPlayerView: View {
     /// Pull down anywhere to collapse; the host follows the finger.
     private var collapseDrag: some Gesture {
         DragGesture(minimumDistance: 14, coordinateSpace: .global)
+            .updating($collapseGestureLive) { _, live, _ in live = true }
             .onChanged { value in
                 // Side panel open (queue / menu): its lists scroll vertically,
                 // a downward scroll must not drag the player away.
