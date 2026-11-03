@@ -39,5 +39,12 @@ bleiben bewusst.
 | AMOLED/Schwarz | Android | Android hat „Pure Black“; iPad: „Einfarbig“-Hintergrund im Player, kein App-weites Schwarz | offen (iPad) |
 | Eckenradien | gleich | beide M3-Formen (extraLarge 28, large 16, medium 12) | ja (geprüft) |
 | Icons | je Plattform | iPad: SF Symbols, Android: Material Symbols – SF Symbols dürfen auf Android nicht verwendet werden; beide outlined, ähnliche Strichstärke | bewusst so |
-| Dialoge / Bottom-Sheets | iPad (Glas) | Android-Dialoge nutzen M3-Container (surfaceContainerHigh) statt Glas → mit D2 (gemeinsame Glas-Komponente) | offen (D2) |
+| Dialoge / Bottom-Sheets | iPad (Glas) | Android: Glas-Tönung der gemeinsamen Komponente; Fenster-Blur hinter Menü-Sheets und Dialogen ab Android 12 (sonst fast deckend). Einzelne Upstream-Dialoge mit eigenem `AlertDialog` noch M3-Container | teilweise (wip, Gerät folgt) |
 | Systemleisten | gleich | beide randlos, Inhalte unter Status-/Navigationsleiste | ja (geprüft) |
+| Miniplayer / Navigationsleiste | iPad (Glas) | Android: eine gemeinsame `ResonaGlassBackground` mit den iPad-Werten (Tönung 50 % Cover bei 0,62, Sättigung 1,4, Rand 1 dp weiß 0,12, Blur 28 dp, kein Rauschen) | ja (wip, Gerät folgt) |
+| Songtext-Pille im Player | iPad („Songtext“) | Android hieß sie „Text“ | ja (wip) |
+| Songtext-Tiefe (Enhanced-Modus, Android-Standard) | iPad | 1,4 dp Blur pro Zeile Abstand; Zeilenwechsel als eine Feder (Dämpfung 0,78, Response 0,5 s) statt 650-ms-Kurve | ja (wip) |
+| Queue: gezogene Zeile | gleich | undurchsichtig in Panel-Farbe, abgerundet, leichter Schatten, Panel-Breite, Lücke öffnet sich | ja (wip) |
+| Queue: Griff-Seite | je Plattform | iPad rechts (iOS-Konvention), Android links (Upstream-Layout) | bewusst so |
+| Queue: aktuelle Zeile | gleich | Text in der zum Container passenden Farbe (Android war bei S/W-Covern weiß auf hellgrau) | ja (wip) |
+| KI-Sync / Kalibrierung | iPad | Android jetzt mit whisper.cpp, gleicher Ablauf und gleiche Texte | ja (wip, Laufzeit auf Gerät folgt) |
