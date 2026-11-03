@@ -63,7 +63,9 @@ struct FullPlayerView: View {
             let wide = geo.size.width > geo.size.height && geo.size.width > 560
             // iPad landscape: queue / player menu as a side panel instead of
             // a centred sheet; the player content moves aside.
-            let usePanel = sizeClass == .regular && wide
+            // Round 11: also in iPad portrait — as a form sheet the queue got
+            // almost no height for its list (couldn't scroll).
+            let usePanel = sizeClass == .regular && (wide || geo.size.width >= 700)
             let panel = usePanel ? activePanel : nil
             let contentSize = CGSize(width: geo.size.width - (panel == nil ? 0 : Self.panelWidth + 16), height: geo.size.height)
             ZStack {

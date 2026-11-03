@@ -33,7 +33,11 @@ den ersten Regalen). Wer keine Änderung sieht, hat vermutlich noch einen
 Stand vor v0.8.12 installiert (Feather → Resona aktualisieren).
 
 ## B3 Warteschlange
-Ursachen: (1) Im Querformat liegt die Queue als Seitenleiste im Player; dessen
+Hauptursache (Simulator-Screenshot `portrait-16-queue` des v0.8.15-Tests): Im
+iPad-Hochformat erschien die Queue als kleines Formular-Sheet; Kopf, Chips und
+Autoplay-Schalter füllten es, die Liste bekam fast keine Höhe – nichts zu
+scrollen. Jetzt öffnen Queue und Player-Menü auf dem iPad auch im Hochformat
+als Seitenleiste neben dem Player (wie im Querformat). Weitere Ursachen: (1) Im Querformat liegt die Queue als Seitenleiste im Player; dessen
 Herunterzieh-Geste zum Einklappen lief gleichzeitig und zog beim Scrollen nach
 unten den ganzen Player mit. Jetzt aus, solange Queue/Menü als Seitenleiste
 offen sind. (2) Als Sheet vergrößerte Scrollen auf mittlerer Höhe erst das
