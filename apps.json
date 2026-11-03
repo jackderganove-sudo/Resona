@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.16",
+          "buildVersion": "74",
+          "date": "2026-11-03T10:46:08Z",
+          "localizedDescription": "- iPad: queue and player menu as side panel in portrait too (the form sheet left the list almost no height)\n- iPad fixes (round 11): Immersive shows controls on tap and hides them after 4 s (always with VoiceOver), backdrop no longer pushes them off screen; queue scrolls (no player collapse drag while the side panel is open, list scrolls before the sheet resizes, no competing long press); UI test with a 60-song queue; genre tiles proof screenshot\n- Docs: round 10 done (part B status, open item AI sync on Android)\n- Docs: round 10 part A complete",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.16/Resona.ipa",
+          "size": 29386640,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.15",
           "buildVersion": "73",
           "date": "2026-11-02T21:06:28Z",
@@ -143,22 +152,13 @@
           "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.2/Resona.ipa",
           "size": 27931915,
           "minOSVersion": "18.0"
-        },
-        {
-          "version": "0.8.1",
-          "buildVersion": "50",
-          "date": "2026-10-27T21:50:24Z",
-          "localizedDescription": "- Lyrics: plain text instead of fake [00:00.00] timing, sync it yourself\n- Settings: hide the lyrics developer switches behind 7 taps on the version\n- Appearance: player style (large cover / small cover + lyrics), blur strength\n- Songtext settings: animation style, translation, romanization\n- Storage settings: delete all downloads, clear caches with sizes\n- iPad: queue, player menu and lyrics options as a side panel\n- Artists: chevron instead of play on cards, 'Play mix' on the artist page\n- Downloads: keep downloaded playlists up to date\n- Rename the player AirPlay button (clashed with Trop's AirPlayButton)\n- Lyrics: fix timing for slowed/sped-up versions, per-song tempo and offset\n- Playback: crossfade between songs (off / 1-12 s)\n- Lock screen / Control Center: like, shuffle, repeat, AirPlay, safer pauses\n- Auto releases on every main build, ESign/AltStore app source, update check\n- iPad: lyrics full screen with cover, controls and rest mode",
-          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.1/Resona.ipa",
-          "size": 27921376,
-          "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.15",
-      "versionDate": "2026-11-02T21:06:28Z",
-      "versionDescription": "- Saved tracks (round 10 / ArchiveTune 15): Spotify 'Liked Songs' with the existing Spotify login (GraphQL fetchLibraryTracks), matched to YouTube Music on play (duration-aware, cached) and queued progressively; library tile when Spotify is connected; tests\n- Docs: Feather (round 10) [skip ci]",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.15/Resona.ipa",
-      "size": 29378876,
+      "version": "0.8.16",
+      "versionDate": "2026-11-03T10:46:08Z",
+      "versionDescription": "- iPad: queue and player menu as side panel in portrait too (the form sheet left the list almost no height)\n- iPad fixes (round 11): Immersive shows controls on tap and hides them after 4 s (always with VoiceOver), backdrop no longer pushes them off screen; queue scrolls (no player collapse drag while the side panel is open, list scrolls before the sheet resizes, no competing long press); UI test with a 60-song queue; genre tiles proof screenshot\n- Docs: round 10 done (part B status, open item AI sync on Android)\n- Docs: round 10 part A complete",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.16/Resona.ipa",
+      "size": 29386640,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
