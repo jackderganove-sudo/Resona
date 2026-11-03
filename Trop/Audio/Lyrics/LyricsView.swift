@@ -124,6 +124,11 @@ struct LyricsView<ProgressSlider: View>: View {
             )
         }
         .task(id: np.videoId) { await loadLyrics() }
+        // Round 11: re-check the tempo once the player knows the length.
+        .onChange(of: np.duration > 0) { _, known in
+            guard known, let id = np.videoId else { return }
+            Task { await LyricsService.shared.recheckTempoIfNeeded(videoId: id) }
+        }
         .translationTask(translationConfig) { session in
             await translate(with: session)
         }

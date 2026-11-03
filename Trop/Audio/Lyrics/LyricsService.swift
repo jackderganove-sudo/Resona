@@ -229,6 +229,12 @@ actor LyricsService {
     }
 
     func fetchLyrics(videoId: String) async throws -> [LyricLine] {
+        #if DEBUG
+        if let placeholder = TestMode.placeholderLyrics(for: videoId) {
+            await updateAvailability(videoId: videoId, available: true, providerName: "UI test")
+            return placeholder
+        }
+        #endif
         if var custom = customEntry(for: videoId) {
             var info = Self.storedCustomTempoInfo(videoId)
             // Provider lyrics picked by hand or re-fetched before the tempo
@@ -415,6 +421,37 @@ actor LyricsService {
         return entry
     }
 
+    /// The song's length arrived after the lyrics ("tempo not checked: length
+    /// unknown"): check the tempo again with the known length (round 11).
+    func recheckTempoIfNeeded(videoId: String) async {
+        let outcome = await MainActor.run { LyricsState.shared.tempoInfo[videoId]?.outcome }
+        guard outcome == .unknownLength,
+              let query = await resolveQuery(videoId: videoId), query.duration > 0 else { return }
+        let lines: [LyricLine]
+        let isCustom: Bool
+        if let cached = cache[videoId] {
+            lines = cached
+            isCustom = false
+        } else if let custom = customEntry(for: videoId), !Self.userMadeProviders.contains(custom.providerName) {
+            lines = custom.lines
+            isCustom = true
+        } else {
+            return
+        }
+        let checked = await Self.checkTempo(lines, query: query, knownOriginal: nil, source: nil)
+        if isCustom {
+            if let provider = customs[videoId]?.providerName { customs[videoId] = (checked.lines, provider) }
+            Self.storeCustomTempoInfo(checked.info, videoId)
+        } else {
+            cache[videoId] = checked.lines
+        }
+        await publishTempo(checked.info, for: videoId)
+        Self.logTempo(checked.info, videoId: videoId, lines: checked.lines.count, origin: "recheck (length known)")
+        if checked.lines != lines {
+            await MainActor.run { LyricsState.shared.refreshToken += 1 }
+        }
+    }
+
     func preload(videoId: String, upcoming: [String] = []) async {
         _ = try? await fetchLyrics(videoId: videoId)
         for id in upcoming where cache[id] == nil && customEntry(for: id) == nil {
@@ -498,7 +535,9 @@ actor LyricsService {
             title = npTitle
             artist = npArtist
             album = npAlbum
-            duration = npDuration
+            // The player's length may not be loaded yet: queue / metadata.
+            let known = queue.first(where: { $0.videoId == videoId }).map { TimeInterval($0.duration) } ?? 0
+            duration = npDuration > 0 ? npDuration : (known > 0 ? known : TimeInterval(DurationCache.get(videoId) ?? 0))
         } else if let song = queue.first(where: { $0.videoId == videoId }) {
             title = song.title
             artist = song.artists.map(\.name).joined(separator: ", ")

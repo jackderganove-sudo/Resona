@@ -90,6 +90,27 @@ final class ResonaUITests: XCTestCase {
         }
     }
 
+    /// Round 11: lyrics depth (blur by distance) in portrait and landscape
+    /// with 48 placeholder lines; screenshots for the record (placeholder
+    /// text only, fine for docs).
+    func test4LyricsDepth() {
+        prefix = "lyricsdepth"
+        XCUIDevice.shared.orientation = .portrait
+        app.launchArguments.append("-ResonaUITestLongQueue")
+        app.launch()
+        guard tap("miniplayer", timeout: 25) else { return }
+        sleep(2)
+        guard tap("player.pill.quote.bubble") else { return }
+        sleep(14)   // a few lines in, so there are lines above and below
+        snap("portrait")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        sleep(4)
+        snap("landscape")
+        XCUIDevice.shared.orientation = .portrait
+        sleep(3)
+        snap("portrait-again")
+    }
+
     // MARK: Tour
 
     private func tour() {

@@ -44,6 +44,15 @@ enum TestMode {
         PlaybackQueue.play(songs, log: Log.nowPlaying, context: "UI test long queue")
     }
 
+    /// UI tests: invented placeholder lyrics (48 lines, 4 s apart) for the
+    /// placeholder songs of the long queue — never real song texts.
+    static func placeholderLyrics(for videoId: String) -> [LyricLine]? {
+        guard isUITest, videoId.hasPrefix("uitest-") else { return nil }
+        return (0..<48).map { i in
+            LyricLine(text: String(format: "Platzhalterzeile %02d zum Testen", i + 1), startTime: Double(i) * 4)
+        }
+    }
+
     /// Local files standing in for songs (crossfade test).
     nonisolated(unsafe) static var localOverride: [String: URL] = [:]
 

@@ -54,6 +54,24 @@ enum LyricsTiming {
     }
 }
 
+/// Depth look of the lyrics: blur by distance to the active line.
+enum LyricsDepth {
+    /// Blur grows with the distance to the active line, the same above and
+    /// below, constant from 4 lines on — independent of screen height and
+    /// orientation. Lines further than 30 away are off screen in any layout
+    /// (no blur work for them).
+    static func blurRadius(distance: Int) -> CGFloat {
+        switch distance {
+        case ...0: return 0
+        case 1: return 1.4
+        case 2: return 2.8
+        case 3: return 4.4
+        case 4...30: return 6
+        default: return 0
+        }
+    }
+}
+
 struct LyricsStage<Accessory: View>: View {
     let lines: [LyricLine]
     /// Line being sung (highlight) — exactly on the timestamps.
@@ -294,7 +312,10 @@ struct LyricsStage<Accessory: View>: View {
         .animation(.easeOut(duration: isActive ? 0.18 : 0.42)) { content in
             content
                 .opacity(isActive ? 1 : opacity(distance: distance))
-                .blur(radius: isActive || isManual || debug.blurOff || style == .still || distance > 10 ? 0 : blur(rel: rel))
+                // Only the distance to the active line counts (round 11): the
+                // old "> 10 lines → sharp" cut-off made the lower quarter sharp
+                // again in iPad portrait, where more lines fit.
+                .blur(radius: isActive || isManual || debug.blurOff || style == .still ? 0 : LyricsDepth.blurRadius(distance: distance))
         }
         .contentShape(Rectangle())
         .onTapGesture { onSeek(line); resume() }
@@ -309,19 +330,6 @@ struct LyricsStage<Accessory: View>: View {
         case 2: return 0.3
         case 3: return 0.24
         default: return 0.18
-        }
-    }
-
-    /// Blur grows with distance; lines above blur a little less than below.
-    private func blur(rel: Int) -> CGFloat {
-        switch rel {
-        case -1: return 1
-        case -2: return 2.5
-        case ..<(-2): return 3.5
-        case 1: return 1.6
-        case 2: return 3
-        case 3: return 4.5
-        default: return 6
         }
     }
 
