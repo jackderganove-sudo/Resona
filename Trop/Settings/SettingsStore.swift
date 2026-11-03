@@ -27,19 +27,35 @@ enum ThemeMode: String, CaseIterable, Identifiable, SettingsOption {
     }
 }
 
+/// Round 11: the player background is only ever a colour gradient (no video).
 enum PlayerBackgroundStyle: String, CaseIterable, Identifiable, SettingsOption {
+    /// Gradient that follows the colours of the running canvas (cover without one).
+    case canvasGradient
+    /// Slowly flowing gradient from the cover colours.
     case dynamic
-    /// Blurred, dimmed cover (round 10, ArchiveTune's "Blur").
+    /// Gradient from the cover colours, not moving.
+    case staticGradient
+    /// Older values, shown as the cover gradient.
     case blurredCover
     case solid
 
+    static var allCases: [PlayerBackgroundStyle] { [.canvasGradient, .dynamic, .staticGradient] }
+
     var id: String { rawValue }
+
+    /// Legacy values behave like the cover gradient.
+    var effective: PlayerBackgroundStyle {
+        switch self {
+        case .blurredCover, .solid: return .dynamic
+        default: return self
+        }
+    }
 
     var displayName: String {
         switch self {
-        case .dynamic: return "Album Art"
-        case .blurredCover: return "Blurred cover"
-        case .solid: return "Solid"
+        case .canvasGradient: return "Animated gradient (canvas)"
+        case .dynamic, .blurredCover, .solid: return "Animated gradient (cover)"
+        case .staticGradient: return "Static gradient"
         }
     }
 }
@@ -603,7 +619,7 @@ final class SettingsStore {
         let d = Self.defaults
         themeMode = Self.loadEnum(Keys.themeMode, default: .dark)
         accentName = d.string(forKey: Keys.accentName) ?? AccentPreset.all[0].name
-        playerBackgroundStyle = Self.loadEnum(Keys.playerBackgroundStyle, default: .dynamic)
+        playerBackgroundStyle = Self.loadEnum(Keys.playerBackgroundStyle, default: .canvasGradient)
         // Migrated when Explore took index 2 (was Search): stored 2 → 3.
         let storedTab = Self.load(Keys.defaultTab, default: 0)
         defaultTab = storedTab == 2 ? 3 : storedTab

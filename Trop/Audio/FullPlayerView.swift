@@ -238,21 +238,12 @@ struct FullPlayerView: View {
 
     // MARK: Background
 
+    /// Round 11: always a colour gradient (canvas colours or cover), in
+    /// every player style and behind the lyrics — never video or a flat fill.
     @ViewBuilder
     private var background: some View {
         if np.isVideoMode && np.hasVideo {
             Color.black.ignoresSafeArea()
-        } else if settings.playerLayoutStyle == .editorial && !showLyrics {
-            // Editorial: one flat field in the cover's container colour.
-            m3.playerAccent.container
-                .ignoresSafeArea()
-                .animation(M3Motion.colorChange, value: m3.playerAccent)
-        } else if settings.playerLayoutStyle == .immersive && !showLyrics {
-            Color.black.ignoresSafeArea()
-        } else if settings.playerBackgroundStyle == .solid {
-            Color.black.ignoresSafeArea()
-        } else if settings.playerBackgroundStyle == .blurredCover {
-            BlurredCoverBackground(image: np.thumbnailUIImage, dimmed: showSleepTimer)
         } else {
             PlayerBackground(dimmed: showSleepTimer)
         }
@@ -610,12 +601,11 @@ struct FullPlayerView: View {
 
     static let immersiveHideDelay: Double = 4
 
-    /// Canvas full screen; without one the blurred cover with the cover as
-    /// a turning disc on top.
+    /// The turning cover disc over the gradient background (round 11: no
+    /// canvas video in the background — its colours drive the gradient).
     private func immersiveBackdrop(size: CGSize, wide: Bool) -> some View {
         let disc = min(size.width, size.height) * (wide ? 0.56 : 0.62)
         return ZStack {
-            BlurredCoverBackground(image: np.thumbnailUIImage, dimmed: false)
             artworkImage
                 .frame(width: disc, height: disc)
                 .clipShape(Circle())
@@ -625,19 +615,7 @@ struct FullPlayerView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .padding(.top, wide ? size.height * 0.08 : size.height * 0.12)
                 .offset(x: artworkEntryOffset)
-                .opacity(canvasActive ? 0 : 1)
-            CanvasVideoView(
-                videoId: np.videoId,
-                title: np.title,
-                artist: np.artist,
-                album: np.albumTitle.isEmpty ? nil : np.albumTitle,
-                isPlaying: np.isPlaying,
-                enabled: settings.canvasEnabled,
-                onDominantColorsChange: { canvasActive = $0 != nil }
-            )
-            .ignoresSafeArea()
         }
-        .animation(M3Motion.colorChange, value: canvasActive)
         .allowsHitTesting(false)
     }
 

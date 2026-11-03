@@ -28,6 +28,8 @@ struct PlayerBackground: View {
     @Environment(SettingsStore.self) private var settings
     var dimmed: Bool = false
 
+    private let np = NowPlaying.shared
+    private let canvasColors = CanvasColorSampler.shared
     @State private var from: [RGB] = []
     @State private var to: [RGB] = []
     @State private var changedAt = Date.distantPast
@@ -37,7 +39,9 @@ struct PlayerBackground: View {
     private static let pulse = 1.07
 
     var body: some View {
-        let animate = settings.animatedPlayerBackground && !reduceMotion && scenePhase == .active
+        let style = settings.playerBackgroundStyle.effective
+        // Moves only while music plays (round 11); static style never moves.
+        let animate = style != .staticGradient && np.isPlaying && !reduceMotion && scenePhase == .active
         ZStack {
             if animate {
                 TimelineView(.animation(minimumInterval: 1 / 30)) { context in
@@ -64,6 +68,27 @@ struct PlayerBackground: View {
         .onAppear {
             to = target
             from = target
+            canvasColors.setActive(np.isPlaying && scenePhase == .active)
+        }
+        .onDisappear { canvasColors.setActive(false) }
+        .onChange(of: np.isPlaying) { _, playing in canvasColors.setActive(playing && scenePhase == .active) }
+        .onChange(of: scenePhase) { _, phase in canvasColors.setActive(np.isPlaying && phase == .active) }
+        // Canvas colours: the clip of this song, sampled invisibly.
+        .task(id: "\(np.videoId ?? "")|\(style.rawValue)|\(settings.canvasEnabled)") {
+            guard style == .canvasGradient, settings.canvasEnabled, let videoId = np.videoId else {
+                canvasColors.stop()
+                return
+            }
+            let clip = await CanvasRepository.shared.canvasFor(
+                videoId: videoId, title: np.title, artist: np.artist, album: np.albumTitle.isEmpty ? nil : np.albumTitle
+            )
+            guard !Task.isCancelled, np.videoId == videoId else { return }
+            if let clip {
+                canvasColors.start(url: clip.url)
+                canvasColors.setActive(np.isPlaying && scenePhase == .active)
+            } else {
+                canvasColors.stop()
+            }
         }
         .onChange(of: target) { _, new in
             let now = Date()
@@ -73,10 +98,16 @@ struct PlayerBackground: View {
         }
     }
 
-    /// Palette with the user's brightness applied.
+    /// Palette (canvas colours when available) with the user's brightness applied.
     private var target: [RGB] {
         let factor = settings.playerBackgroundBrightness
-        return palette.colors.map { rgb in
+        let source: [RGB]
+        if settings.playerBackgroundStyle.effective == .canvasGradient, let sampled = canvasColors.colors, sampled.count == 4 {
+            source = sampled
+        } else {
+            source = palette.colors
+        }
+        return source.map { rgb in
             let hsv = rgb.hsv
             return RGB(h: hsv.h, s: hsv.s, v: min(0.95, hsv.v * factor))
         }

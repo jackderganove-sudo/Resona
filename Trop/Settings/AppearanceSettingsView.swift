@@ -57,25 +57,20 @@ struct AppearanceSettingsView: View {
                 if settings.playerLayoutStyle == .editorial || settings.playerLayoutStyle == .immersive {
                     SettingsToggleRow("Rotate the cover while playing", icon: "arrow.trianglehead.2.clockwise.rotate.90", isOn: $settings.rotateArtwork)
                 }
-                if settings.playerLayoutStyle != .editorial {
-                    SettingsPickerRow("Player Background", icon: "photo", selection: $settings.playerBackgroundStyle)
-                }
+                SettingsPickerRow("Player Background", icon: "photo", selection: $settings.playerBackgroundStyle)
                 SettingsToggleRow("Show audio details", icon: "waveform.badge.magnifyingglass", isOn: $settings.showAudioDetails)
-                if settings.playerBackgroundStyle == .dynamic {
-                    SettingsToggleRow("Animated", icon: "wind", isOn: $settings.animatedPlayerBackground)
-                    M3SliderRow(
-                        value: $settings.playerBackgroundBrightness,
-                        range: 0.7...1.3,
-                        step: 0.05,
-                        format: { "\(Int(($0 * 100).rounded())) %" }
-                    ) {
-                        Label("Background brightness", systemImage: "sun.max")
-                    }
+                M3SliderRow(
+                    value: $settings.playerBackgroundBrightness,
+                    range: 0.7...1.3,
+                    step: 0.05,
+                    format: { "\(Int(($0 * 100).rounded())) %" }
+                ) {
+                    Label("Background brightness", systemImage: "sun.max")
                 }
             } header: {
                 Text("Player")
             } footer: {
-                Text("Animated: the cover colours flow slowly behind the player. Stays still when Reduce Motion is on. Text contrast is kept readable automatically at any brightness.")
+                Text("The player background is always a colour gradient. Canvas: it follows the colours of the song's animated canvas (the video itself stays hidden); without a canvas the cover colours flow slowly. Pauses with the music and stays still when Reduce Motion is on. Text contrast is kept readable automatically.")
             }
 
             M3Section {
