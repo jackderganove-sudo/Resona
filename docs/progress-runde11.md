@@ -17,7 +17,10 @@ Pixel-Screenshots unter `docs/screens-r11/` dort.
 | C | Angleichung (`docs/angleichung.md`): Logo, Texte, Codec-Zeile, Schriftschnitte, Lyrics-Schrift, Lyrics-Tiefe, Theming-Tabelle | in Arbeit |
 | E | Player-Hintergrund nur Farbverlauf (Canvas-Farben unsichtbar mitlesen / Cover / statisch), beide Apps | umgesetzt, im Test |
 | F | Lyrics-Tiefe im iPad-Hochformat (Blur nur nach Abstand), Tempo-Hinweis „Songlänge unbekannt“ | umgesetzt, im Test |
-| D | KI-Sync + Glas auf Android | offen |
+| G1 | iPad: Immersiv-Layout nach Test von v0.8.16 (Scheibe abgeschnitten, Kopf überlappt, Leerraum, Springen, harter Streifen) | umgesetzt, im Test |
+| G2 | iPad: Drag-Vorschau der Warteschlange (eckig, zu breit, durchscheinend) + Android geprüft | umgesetzt, im Test |
+| D1 | KI-Sync + Kalibrierung auf Android (whisper.cpp) | Code fertig, CI-Build/Messung auf dem Pixel folgt |
+| D2 | Glas auf Android | offen |
 
 ## B1 Immersiv
 Ursache: Der Hintergrund (Canvas/Cover-Scheibe, ignoriert die Safe Area) lag
@@ -58,7 +61,10 @@ bis zum Ende und zurück scrollen, Wischen zum Entfernen, Umsortieren.
 - Android: Farb-Zeitleiste pro Canvas-Clip (8 Bilder à 24×24, einmal
   dekodiert), im Takt des Clips abgespielt; ersetzt ArchiveTunes
   Hintergrundstile im Player und Lyrics-Standard.
-- Messung auf dem Pixel (Bildrate/CPU per adb): folgt mit dem nächsten Build.
+- Messung auf dem Pixel 11 Pro (wip-Build, `dumpsys gfxinfo` über 10 s, `top`):
+  spielend 688 Bilder/10 s (≈ 69 fps, 0 % Ruckler, p90 10 ms), CPU ≈ 50–60 %
+  eines Kerns inkl. Lauftext und Fortschritt; pausiert 0 Bilder, CPU ≈ 6 % –
+  der Verlauf steht mit der Musik still.
 
 ## F Lyrics
 - Blur nur nach Abstand zur aktiven Zeile (symmetrisch, ab 4 konstant). Die
@@ -69,3 +75,48 @@ bis zum Ende und zurück scrollen, Wischen zum Entfernen, Umsortieren.
   Player → „Songlänge unbekannt“. Jetzt Länge aus Queue/Metadaten und neue
   Prüfung, sobald der Player die Länge kennt.
 - UI-Test `test4LyricsDepth` mit 48 Platzhalterzeilen (Hoch/Quer/Hoch).
+
+## G1 Immersiv-Layout (Test von v0.8.16)
+- **Springen / harter Streifen / Steuerung fällt aus dem Bild** – eine
+  Ursache: Die ganze Fläche hatte neben Tippen auch die Cover-Wischgeste.
+  Gewann sie gegen die Herunterzieh-Geste zum Einklappen, wurde diese ohne
+  `onEnded` abgebrochen und der Player blieb um den Zieh-Versatz nach unten
+  verschoben. Dabei rutschten Warteschlange/Songtext aus dem Bild, und oben
+  wurde ein harter Streifen des Hintergrunds frei. Jetzt meldet ein
+  `@GestureState` auch den Abbruch, der Player springt zurück; die
+  Wischgeste liegt nur noch auf der Scheibe.
+- **Feste Geometrie** (`ImmersiveLayoutMetrics`): Kopf („Läuft gerade“,
+  Album) mit eigener Höhe oben, darunter ein vertikal zentrierter Block –
+  Scheibe so groß wie der Platz erlaubt, Titel und Steuerung darunter.
+  Steuerung und Kopf blenden nur aus und behalten ihren Platz, die Scheibe
+  bewegt sich also nie. In kleinen Fenstern fällt zuerst die
+  Schalterreihe weg, dann der Kopf, dann die Scheibe – nichts verlässt den
+  sichtbaren Bereich.
+- Hintergrund: der Farbverlauf wie in allen Stilen (seit E), kein Cover-/
+  Canvas-Hintergrund mehr.
+- Tests: `ImmersiveLayoutTests` rechnet 17 Größen durch – 13"/11"/mini hoch
+  und quer, Querformat mit Seitenleiste, Split View ⅓/½/⅔, Stage-Manager-
+  Fenster – jeweils mit drei Steuerungshöhen. UI-Test
+  `test5ImmersiveLayout`: Scheibe ganz sichtbar, Steuerung im Bild und unter
+  der Scheibe, Scheibe bleibt beim Aus- und Einblenden an ihrem Platz; hoch
+  und quer mit Screenshots. Split View und Stage Manager lassen sich im
+  Simulator-Test nicht steuern, sie sind über die Geometrie-Tests abgedeckt.
+
+## G2 Warteschlange: Drag-Vorschau
+- Ursache: `List.onMove` hebt eine Momentaufnahme der Zelle an; die Zeilen
+  haben einen durchsichtigen Hintergrund, also legte das System seinen
+  eigenen eckigen, dunklen Teller darunter (leicht vergrößert, breiter als
+  das Panel), und die Zeile darunter schien durch. Das lässt sich bei
+  `onMove` nicht zuverlässig gestalten.
+- Jetzt eigenes Umsortieren (`QueueReorder`): Die angehobene Zeile ist eine
+  undurchsichtige Kopie in der Panel-Farbe (Glas-Tönung ohne Transparenz),
+  mit abgerundeten Ecken und leichtem Schatten, auf Panel-Breite. Ihr Platz
+  bleibt als Lücke frei, die anderen Zeilen rücken um genau eine Zeile zur
+  Seite. Der Griff zieht sofort, langes Drücken funktioniert auf der
+  ganzen Zeile. VoiceOver hat „Nach oben/unten“-Aktionen. Die
+  Einklapp-Geste des Players ist bei offener Seitenleiste ganz aus (sie
+  blockierte auch das Wischen zum Entfernen im UI-Test).
+- Android auf dem Pixel geprüft (Screenshot mitten im Ziehen): Die Zeile
+  war schon undurchsichtig, abgerundet und auf Breite, die anderen weichen
+  aus. Ergänzt wurden der leichte Schatten und die Lesbarkeit der aktuellen
+  Zeile (weiße Schrift auf hellgrau bei Schwarz-Weiß-Covern).
