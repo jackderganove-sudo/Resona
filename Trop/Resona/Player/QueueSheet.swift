@@ -451,6 +451,9 @@ struct QueueSheet: View {
             }
             // No M3TapHighlight here: its long press competed with the List's
             // gestures and made drags feel stuck (round 11).
+            // One element for the whole row: VoiceOver reads it as one song
+            // with actions, and the identifier doesn't land on the artwork.
+            .accessibilityElement(children: .combine)
             .accessibilityIdentifier("queue.row.\(index)")
             .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
             .listRowBackground(Color.clear)

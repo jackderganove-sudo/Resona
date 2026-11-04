@@ -114,9 +114,11 @@ final class ResonaUITests: XCTestCase {
     func test5ImmersiveLayout() {
         prefix = "immersive"
         app.launchArguments += ["-ResonaUITestLongQueue", "-ResonaUITestPlayerStyle", "immersive"]
+        // Always a fresh start: the previous test's app may still run (other
+        // arguments, lyrics open).
+        app.launch()
         for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
             XCUIDevice.shared.orientation = orientation
-            if app.state != .runningForeground { app.launch() }
             let name = orientation == .portrait ? "portrait" : "landscape"
             if !element("player.immersive").exists {
                 guard tap("miniplayer", timeout: 25) else { return }
