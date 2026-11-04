@@ -578,6 +578,8 @@ struct FullPlayerView: View {
         .animation(M3Motion.defaultEffects, value: visible)
         .onAppear { showImmersiveControls() }
         .onChange(of: isEditingSlider) { _, editing in if !editing { showImmersiveControls() } }
+        // .contain: otherwise this id replaces the ids of everything inside.
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("player.immersive")
     }
 

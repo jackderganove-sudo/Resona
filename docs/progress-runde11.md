@@ -17,8 +17,8 @@ Pixel-Screenshots unter `docs/screens-r11/` dort.
 | C | Angleichung (`docs/angleichung.md`): Logo, Texte, Codec-Zeile, Schriftschnitte, Lyrics-Schrift, Lyrics-Tiefe, Theming-Tabelle | in Arbeit |
 | E | Player-Hintergrund nur Farbverlauf (Canvas-Farben unsichtbar mitlesen / Cover / statisch), beide Apps | umgesetzt, im Test |
 | F | Lyrics-Tiefe im iPad-Hochformat (Blur nur nach Abstand), Tempo-Hinweis „Songlänge unbekannt“ | umgesetzt, im Test |
-| G1 | iPad: Immersiv-Layout nach Test von v0.8.16 (Scheibe abgeschnitten, Kopf überlappt, Leerraum, Springen, harter Streifen) | umgesetzt, im Test |
-| G2 | iPad: Drag-Vorschau der Warteschlange (eckig, zu breit, durchscheinend) + Android geprüft | umgesetzt, im Test |
+| G1 | iPad: Immersiv-Layout nach Test von v0.8.16 (Scheibe abgeschnitten, Kopf überlappt, Leerraum, Springen, harter Streifen) | Release v0.8.17; Scheibe im Simulator-Screenshot ganz sichtbar, UI-Test wird noch korrigiert |
+| G2 | iPad: Drag-Vorschau der Warteschlange (eckig, zu breit, durchscheinend) + Android geprüft | Release v0.8.17; `test3LongQueue` grün (scrollen, wischen, Griff) |
 | D1 | KI-Sync + Kalibrierung auf Android (whisper.cpp) | Code fertig, CI-Build/Messung auf dem Pixel folgt |
 | D2 | Glas auf Android | offen |
 
