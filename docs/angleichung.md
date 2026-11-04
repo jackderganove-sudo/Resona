@@ -43,7 +43,7 @@ bleiben bewusst.
 | Systemleisten | gleich | beide randlos, Inhalte unter Status-/Navigationsleiste | ja (geprüft) |
 | Miniplayer / Navigationsleiste | iPad (Glas) | Android: eine gemeinsame `ResonaGlassBackground` mit den iPad-Werten (Tönung 50 % Cover bei 0,62, Sättigung 1,4, Rand 1 dp weiß 0,12, Blur 28 dp, kein Rauschen) | ja (wip, Gerät folgt) |
 | Songtext-Pille im Player | iPad („Songtext“) | Android hieß sie „Text“ | ja (wip) |
-| Songtext-Tiefe (Enhanced-Modus, Android-Standard) | iPad | 1,4 dp Blur pro Zeile Abstand; Zeilenwechsel als eine Feder (Dämpfung 0,78, Response 0,5 s) statt 650-ms-Kurve | ja (wip) |
+| Songtext-Tiefe (Enhanced-Modus, Android-Standard) | iPad | Zeilenwechsel als eine Feder (Dämpfung 0,78, Response 0,5 s) ist angeglichen. Blur nach Abstand **nicht**: auf Android zu teuer (66–100 % Janky), vorerst ohne | teilweise |
 | Queue: gezogene Zeile | gleich | undurchsichtig in Panel-Farbe, abgerundet, leichter Schatten, Panel-Breite, Lücke öffnet sich | ja (wip) |
 | Queue: Griff-Seite | je Plattform | iPad rechts (iOS-Konvention), Android links (Upstream-Layout) | bewusst so |
 | Queue: aktuelle Zeile | gleich | Text in der zum Container passenden Farbe (Android war bei S/W-Covern weiß auf hellgrau) | ja (wip) |
