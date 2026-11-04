@@ -15,12 +15,13 @@ Pixel-Screenshots unter `docs/screens-r11/` dort.
 | B2 | iPad: Genre-Kacheln | geprüft: in Suche/Entdecken seit v0.8.12 aktiv, Beleg `docs/screens-r11/ipad-suche-genre-kacheln-v0.8.15.png` |
 | B3 | iPad: Warteschlange scrollt, sortiert um, wischt zum Entfernen; UI-Test mit 60 Songs | Release iPad v0.8.16 |
 | C | Angleichung (`docs/angleichung.md`): Logo, Texte, Codec-Zeile, Schriftschnitte, Lyrics-Schrift, Lyrics-Tiefe, Theming-Tabelle | in Arbeit |
-| E | Player-Hintergrund nur Farbverlauf (Canvas-Farben unsichtbar mitlesen / Cover / statisch), beide Apps | umgesetzt, im Test |
-| F | Lyrics-Tiefe im iPad-Hochformat (Blur nur nach Abstand), Tempo-Hinweis „Songlänge unbekannt“ | umgesetzt, im Test |
+| E | Player-Hintergrund nur Farbverlauf (Canvas-Farben unsichtbar mitlesen / Cover / statisch), beide Apps | iPad v0.8.17, Android v1.0.8 |
+| F | Lyrics-Tiefe im iPad-Hochformat (Blur nur nach Abstand), Tempo-Hinweis „Songlänge unbekannt“ | iPad v0.8.17 |
 | G1 | iPad: Immersiv-Layout nach Test von v0.8.16 (Scheibe abgeschnitten, Kopf überlappt, Leerraum, Springen, harter Streifen) | Release v0.8.17; `test5ImmersiveLayout` grün (hoch/quer: Scheibe ganz sichtbar, bleibt beim Aus-/Einblenden an ihrem Platz) |
 | G2 | iPad: Drag-Vorschau der Warteschlange (eckig, zu breit, durchscheinend) + Android geprüft | Release v0.8.17; `test3LongQueue` grün (scrollen, wischen, Griff) |
-| D1 | KI-Sync + Kalibrierung auf Android (whisper.cpp) | Code fertig, CI-Build/Messung auf dem Pixel folgt |
-| D2 | Glas auf Android | offen |
+| D1 | KI-Sync + Kalibrierung auf Android (whisper.cpp) | Android v1.0.8/v1.0.9; auf dem Pixel: 497 Wörter, 2,4-fache Songlänge |
+| D2 | Glas auf Android | Android v1.0.8; Sheet, Dialoge, Navigation auf dem Pixel gesehen |
+| H | Android: Onboarding-Crash, Abspielen aus der Suche, Lyrics-Ruckeln (0,00 % Janky mit Canvas, dafür ohne Zeilen-Blur) | Android v1.0.8, `docs/progress-android.md` |
 
 ## B1 Immersiv
 Ursache: Der Hintergrund (Canvas/Cover-Scheibe, ignoriert die Safe Area) lag
