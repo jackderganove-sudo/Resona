@@ -47,4 +47,4 @@ bleiben bewusst.
 | Queue: gezogene Zeile | gleich | undurchsichtig in Panel-Farbe, abgerundet, leichter Schatten, Panel-Breite, Lücke öffnet sich | ja (wip) |
 | Queue: Griff-Seite | je Plattform | iPad rechts (iOS-Konvention), Android links (Upstream-Layout) | bewusst so |
 | Queue: aktuelle Zeile | gleich | Text in der zum Container passenden Farbe (Android war bei S/W-Covern weiß auf hellgrau) | ja (wip) |
-| KI-Sync / Kalibrierung | iPad | Android jetzt mit whisper.cpp, gleicher Ablauf und gleiche Texte | ja (wip, Laufzeit auf Gerät folgt) |
+| KI-Sync / Kalibrierung | iPad | Android mit whisper.cpp, gleicher Ablauf und gleiche Texte; auf dem Pixel 0,77-fache Songlänge | ja |
