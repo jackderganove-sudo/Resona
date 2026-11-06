@@ -242,6 +242,6 @@ enum CRC32 {
 
 private extension Data {
     mutating func appendLittle<T: FixedWidthInteger>(_ value: T) {
-        withUnsafeBytes(of: value.littleEndian) { append(contentsOf: $0) }
+        Swift.withUnsafeBytes(of: value.littleEndian) { append(contentsOf: $0) }
     }
 }
