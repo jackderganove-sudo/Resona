@@ -149,6 +149,27 @@ final class ResonaUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
     }
 
+    /// Round 11: music recognition from the search bar. The simulator has no
+    /// microphone, so the app returns an invented song here.
+    func test6MusicRecognition() {
+        prefix = "recognition"
+        app.launchArguments += ["-ResonaUITestRecognition"]
+        app.launch()
+        guard tap("tab.search", timeout: 25) else { return }
+        guard tap("search.recognize") else { return }
+        sleep(1)
+        snap("listening")
+        let title = element("recognition.title")
+        XCTAssertTrue(title.waitForExistence(timeout: 8), "[recognition] shows the song")
+        XCTAssertEqual(title.label, "Testtitel Erkannt")
+        XCTAssertTrue(element("recognition.play").exists, "[recognition] offers to play it")
+        snap("found")
+        if tap("recognition.close") {
+            sleep(1)
+            XCTAssertFalse(title.exists, "[recognition] sheet closes")
+        }
+    }
+
     /// Round 11: lyrics depth (blur by distance) in portrait and landscape
     /// with 48 placeholder lines; screenshots for the record (placeholder
     /// text only, fine for docs).

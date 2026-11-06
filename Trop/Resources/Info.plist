@@ -23,6 +23,8 @@
 	<string>9d0c8ac8a648a485d2cfa0f552c5615c</string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Resona listens for a few seconds to recognize the music playing near you. Nothing is recorded or saved.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

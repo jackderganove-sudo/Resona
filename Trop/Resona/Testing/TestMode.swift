@@ -53,6 +53,12 @@ enum TestMode {
         SettingsStore.shared.playerLayoutStyle = style
     }
 
+    /// UI test: the simulator has no microphone, so recognition returns this invented song.
+    static var recognitionResult: RecognizedSong? {
+        guard isUITest, arguments.contains("-ResonaUITestRecognition") else { return nil }
+        return RecognizedSong(id: "uitest-recognized", title: "Testtitel Erkannt", artist: "Testband", album: nil, coverURL: nil, recognizedAt: Date())
+    }
+
     /// UI tests: invented placeholder lyrics (48 lines, 4 s apart) for the
     /// placeholder songs of the long queue — never real song texts.
     static func placeholderLyrics(for videoId: String) -> [LyricLine]? {

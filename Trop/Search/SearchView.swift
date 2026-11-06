@@ -18,6 +18,7 @@ struct SearchView: View {
     @FocusState private var fieldFocused: Bool
 
     @State private var pendingRoute: DetailRoute?
+    @State private var showRecognition = false
 
     var body: some View {
         NavigationStack(path: $router.searchPath) {
@@ -65,10 +66,26 @@ struct SearchView: View {
     /// Large pill search field with the sort menu inside (reference style).
     private var searchTopBar: some View {
         M3SearchBar(text: $viewModel.fieldText, focus: $fieldFocused, onSubmit: { submit(nil) }) {
+            recognizeButton
             sortMenu
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
+    }
+
+    /// Round 11: recognize the music playing nearby, as on Android.
+    private var recognizeButton: some View {
+        Button {
+            showRecognition = true
+        } label: {
+            Image(systemName: "waveform")
+                .font(.system(size: 22, weight: .regular))
+                .foregroundStyle(m3.onSurface)
+                .frame(width: 40, height: 40)
+        }
+        .accessibilityLabel("Recognize music")
+        .accessibilityIdentifier("search.recognize")
+        .sheet(isPresented: $showRecognition) { MusicRecognitionSheet() }
     }
 
     private var sortMenu: some View {

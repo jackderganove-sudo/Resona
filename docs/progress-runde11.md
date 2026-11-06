@@ -132,3 +132,15 @@ bis zum Ende und zurück scrollen, Wischen zum Entfernen, Umsortieren.
 - `test1Portrait`: „Sprung zum Drop“ prüft den Positionssprung zeitabhängig
   (57 → 55 s, wenn der Drop knapp hinter der Position liegt).
 - `test2Landscape`: „Failed to terminate“ – Simulator-Infrastruktur.
+
+## C: Musikerkennung auf dem iPad
+- Einstieg: Wellenform-Knopf in der Suchleiste, Sheet mit Zuhören (8,4 s, wie Android),
+  Ergebnis, „Abspielen“ (YouTube-Music-Treffer) und Liste der erkannten Songs.
+- Apples ShazamKit braucht einen an die Bundle-ID gebundenen App-Dienst und dürfte nach
+  dem Neu-Signieren mit Feather nicht zuverlässig laufen (nicht ausprobiert). Deshalb
+  Port von Androids Signatur-Generator und derselbe Endpunkt.
+- Es wird nichts gespeichert: Der Ton liegt nur im Speicher, bis die Signatur fertig ist.
+  Eigene Wiedergabe pausiert während des Zuhörens.
+- Tests: Signatur byte-genau gegen einen Referenzwert (derselbe Test auf Android),
+  erfundene Antworten, UI-Test `test6MusicRecognition` mit erfundenem Song. Das echte
+  Mikrofon und ein echter Treffer sind im Simulator nicht testbar.

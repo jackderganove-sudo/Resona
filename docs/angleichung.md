@@ -15,7 +15,7 @@ bleiben bewusst.
 | Quick-Picks-Hero-Karussell | gleich | beide | ja |
 | Featured-Playlist-Karten | gleich | iPad seit v0.8.12, Android nativ | ja |
 | Gestaffelte Genre-Kacheln | gleich | iPad seit v0.8.12 (nach ArchiveTune), Android nativ | ja |
-| Grüner „…“-Schnellaktionsknopf (Musikerkennung, Together, Shuffle) | Android | einziger Zugang zur Musikerkennung; iPad hat keine Musikerkennung | Android bleibt; iPad: offen (Musikerkennung fehlt) |
+| Grüner „…“-Schnellaktionsknopf (Musikerkennung, Together, Shuffle) | Android | einziger Zugang zur Musikerkennung; iPad hat keine Musikerkennung | Android bleibt; iPad: Musikerkennung über die Suchleiste (wip) |
 | Bibliothek-Kacheln | iPad-Namen | „Lieblingssongs“ statt „Songs, die ich mag“ | ja – Android |
 | „Was ist neu“ | iPad-Begriffe | Android war auf Deutsch unübersetzt; jetzt „Neu in Resona“, Neu/Verbessert/Behoben | ja – Android |
 | Player Standard-Stil | gleich | Android-Player (ArchiveTune V-Design) und iPad sehen schon gleich aus: Cover, Titel + Teilen/Like/…, Wellen-Fortschritt, Pillen-Steuerung, Warteschlange/Sleep/Songtext unten | ja |
@@ -24,9 +24,9 @@ bleiben bewusst.
 | Mini-Player | gleich | Cover, Titel/Künstler, Zurück/Play/Weiter | ja |
 | Lyrics-Ansicht | gleich | Kopf mit Cover, ✕ und …, Fortschritt + Steuerung unten | ja |
 | Warteschlange | gleich | beide mit Empfehlungs-Chips, Sperren, Auswahl | ja |
-| Einstellungen | iPad-Gruppierung | Konto/Verlauf · Aussehen/Wiedergabe/Canvas/Songtext/Inhalt · Integration/Equalizer/Speicher/Über – Android hat mehr Unterseiten | offen (Android) |
-| Glas-Look (Mini-Player, Leisten, Sheets, Player) | iPad | Teil D2 | offen |
-| KI-Sync/-Kalibrierung | iPad | Teil D1 | offen |
+| Einstellungen | iPad-Gruppierung | Konto/Verlauf · Aussehen/Wiedergabe/Canvas/Songtext/Inhalt · Integration/Equalizer/Speicher/Über – Android hat dieselbe Reihenfolge plus eigene Unterseiten (Android Auto, Module, Sicherung …) | ja (geprüft) |
+| Glas-Look (Mini-Player, Leisten, Sheets, Player) | iPad | Teil D2 | ja (Android v1.0.8) |
+| KI-Sync/-Kalibrierung | iPad | Teil D1 | ja (Android v1.0.9) |
 
 ## Theming (Ergänzung)
 

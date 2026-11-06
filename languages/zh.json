@@ -426,5 +426,18 @@
   "Unsubscribe from this podcast": "取消订阅此播客",
   "Featured playlists": "精选歌单",
   "Community playlists": "社区歌单",
-  "Music videos": "音乐视频"
+  "Music videos": "音乐视频",
+  "Recognize music": "识别音乐",
+  "Recognized songs": "已识别的歌曲",
+  "Listening…": "正在聆听…",
+  "Hold your iPad close to the music.": "请将 iPad 靠近音乐。",
+  "Identifying…": "正在识别…",
+  "No match found": "未找到匹配",
+  "Try again closer to the music.": "请靠近音乐后重试。",
+  "Microphone access is off": "麦克风访问已关闭",
+  "Allow the microphone for Resona in the iPad's Settings app.": "请在 iPad 的“设置”中允许 Resona 使用麦克风。",
+  "Recognition failed": "识别失败",
+  "Check your connection and try again.": "请检查网络连接后重试。",
+  "Listen again": "重新聆听",
+  "Couldn't find this song on YouTube Music.": "在 YouTube Music 上找不到这首歌。"
 }
