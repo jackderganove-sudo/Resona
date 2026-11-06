@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.18",
+          "buildVersion": "76",
+          "date": "2026-11-06T12:04:55Z",
+          "localizedDescription": "- Recognition: use the global withUnsafeBytes inside the Data extension\n- Music recognition on the iPad (round 11 C): waveform button in the search bar, listens 8.4 s, signature ported byte for byte from Android (same endpoint, ShazamKit depends on an app service a re-signed app can't count on), play the match from YouTube Music, list of recognized songs; nothing is recorded or kept; tests against the same reference as Android, UI test with an invented song\n- Docs: round 11 status\n- Docs: lyrics blur stays iPad-only\n- Docs: lyrics depth on Android not aligned yet\n- Docs: Immersive UI test green\n- Immersive: the container's accessibility id no longer replaces the disc's and controls' ids (UI test could not find them); docs\n- UI tests: Immersive test always starts the app fresh (it ran on the previous test's app: other style, lyrics open); queue rows are one accessibility element, so the row id covers the whole row (swipe and handle drag hit the artwork before) and VoiceOver reads one song with actions",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.18/Resona.ipa",
+          "size": 29480255,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.17",
           "buildVersion": "75",
           "date": "2026-11-04T12:46:35Z",
@@ -143,22 +152,13 @@
           "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.4/Resona.ipa",
           "size": 28660320,
           "minOSVersion": "18.0"
-        },
-        {
-          "version": "0.8.3",
-          "buildVersion": "57",
-          "date": "2026-10-28T00:06:41Z",
-          "localizedDescription": "- Docs: progress round 3 - shortcuts done\n- AppRouter: shortcut actions on the main actor\n- iPad keyboard shortcuts\n- Docs: progress round 3 - crossfade and sleep timer done\n- Sleep timer: fade the volume out before it pauses\n- Crossfade: two equivalent mpv instances (A/B) instead of a tail handover\n- Docs: progress file for round 3",
-          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.3/Resona.ipa",
-          "size": 27933469,
-          "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.17",
-      "versionDate": "2026-11-04T12:46:35Z",
-      "versionDescription": "- Docs: open UI-test points that predate round 11 G\n- Docs: AMOLED is on both platforms (iPad already had Pure black)\n- Docs: alignment table (glass, lyrics pill, lyrics depth/glide, queue, AI sync)\n- Queue: reorder by the handle only — a long-press drag on the whole row kept the List from scrolling and swiping (UI test); Immersive: controls measured at their natural height (a filling child left no room for the disc); UI test reads row titles from the accessibility labels\n- Docs: round 11 G1/G2 (Immersive layout, queue drag preview), gradient measurement on the Pixel\n- Queue drag-to-reorder (round 11): own reorder instead of List.onMove — the lifted row is an opaque, rounded copy in the panel colour with a soft shadow, inset to the panel width; the other rows slide aside to open the gap; handle drags at once, long press anywhere on the row; VoiceOver move up/down actions; layout tests for every iPad size (full screen, side panel, Split View, Stage Manager), reorder tests, Immersive UI test\n- Immersive layout fix (round 11): header in its own strip, disc as large as fits with title and controls below in one centred block; controls and header fade but keep their space, so the disc never moves; short windows drop the toggle row, then the header; a collapse drag cancelled by a competing gesture snaps the player back (it stayed shifted down, pushing queue/lyrics off screen and showing a hard background edge); collapse drag fully off while the side panel is open\n- Docs: round 11 progress (A/B released, E/F)\n- Lyrics (round 11): blur only from the distance to the active line (symmetric, constant from 4, no sharp lines further away — iPad portrait bug); tempo check uses queue/metadata length and re-checks once the player knows it; UI test with placeholder lyrics in portrait/landscape; tests\n- Player background = colour gradient only (round 11): canvas clip plays invisibly, a 24×24 frame per second is quantised into four colours the mesh fades to; without canvas the cover colours flow; pauses with playback, while hidden and in Low Power Mode; readable colour limits; all player styles (Editorial/Immersive now on the gradient too); setting canvas/cover/static; tests",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.17/Resona.ipa",
-      "size": 29421716,
+      "version": "0.8.18",
+      "versionDate": "2026-11-06T12:04:55Z",
+      "versionDescription": "- Recognition: use the global withUnsafeBytes inside the Data extension\n- Music recognition on the iPad (round 11 C): waveform button in the search bar, listens 8.4 s, signature ported byte for byte from Android (same endpoint, ShazamKit depends on an app service a re-signed app can't count on), play the match from YouTube Music, list of recognized songs; nothing is recorded or kept; tests against the same reference as Android, UI test with an invented song\n- Docs: round 11 status\n- Docs: lyrics blur stays iPad-only\n- Docs: lyrics depth on Android not aligned yet\n- Docs: Immersive UI test green\n- Immersive: the container's accessibility id no longer replaces the disc's and controls' ids (UI test could not find them); docs\n- UI tests: Immersive test always starts the app fresh (it ran on the previous test's app: other style, lyrics open); queue rows are one accessibility element, so the row id covers the whole row (swipe and handle drag hit the artwork before) and VoiceOver reads one song with actions",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.18/Resona.ipa",
+      "size": 29480255,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
