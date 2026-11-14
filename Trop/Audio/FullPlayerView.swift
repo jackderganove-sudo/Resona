@@ -914,7 +914,6 @@ struct FullPlayerView: View {
                 }
                 .transition(.scale.combined(with: .opacity))
             }
-            PlayerSpeakerButton()
         }
     }
 
@@ -927,6 +926,8 @@ struct FullPlayerView: View {
                 onOpen: { withAnimation(M3Motion.defaultSpatial) { showSleepTimer = true } },
                 onCancelled: { showToast("Sleep timer off") }
             )
+            // Same place as on Android: between sleep timer and lyrics (round 12).
+            PlayerSpeakerButton()
             PlayerBottomPill(systemName: "quote.bubble", title: "Lyrics", highlighted: showLyrics) {
                 withAnimation(M3Motion.defaultSpatial) { showLyrics.toggle() }
             }
