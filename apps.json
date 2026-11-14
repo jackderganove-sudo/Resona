@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.19",
+          "buildVersion": "77",
+          "date": "2026-11-14T22:56:10Z",
+          "localizedDescription": "- Playback error hint: refused streams recognized by their readable text too (the enum printed as validationFailed(…) fell through to the generic hint)\n- Playback (round 12): one YouTube client after the other with an error log — every attempt logged (time, song id, client, stage, HTTP status, redacted text), a client that failed for a song is skipped for it for 10 min, a stream the player can't load moves on to the next client (failed loads of a new song were ignored: the id was still pending); chain like Android plus WEB and MWEB, without the dead embedded client; Settings → About → Share error log; error banner with Retry\n- Docs: AI sync on Android",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.19/Resona.ipa",
+          "size": 29504873,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.18",
           "buildVersion": "76",
           "date": "2026-11-06T12:04:55Z",
@@ -143,22 +152,13 @@
           "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.5/Resona.ipa",
           "size": 28692121,
           "minOSVersion": "18.0"
-        },
-        {
-          "version": "0.8.4",
-          "buildVersion": "61",
-          "date": "2026-10-28T00:30:15Z",
-          "localizedDescription": "- Docs: progress round 3 - points 7 and 8, limitations, test list\n- PlaylistTools: import GRDB for statement arguments\n- Lyrics: sync with AI (WhisperKit, on-device) + forced alignment\n- Smart downloads (optional, off by default)\n- Docs: progress round 3 - points 4 to 6\n- Playlist tools: automatic playlists, save, split, remove duplicates\n- Lyrics: on-device translation into German\n- Player: 'Most replayed' wave and 'Jump to the drop'",
-          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.4/Resona.ipa",
-          "size": 28660320,
-          "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.18",
-      "versionDate": "2026-11-06T12:04:55Z",
-      "versionDescription": "- Recognition: use the global withUnsafeBytes inside the Data extension\n- Music recognition on the iPad (round 11 C): waveform button in the search bar, listens 8.4 s, signature ported byte for byte from Android (same endpoint, ShazamKit depends on an app service a re-signed app can't count on), play the match from YouTube Music, list of recognized songs; nothing is recorded or kept; tests against the same reference as Android, UI test with an invented song\n- Docs: round 11 status\n- Docs: lyrics blur stays iPad-only\n- Docs: lyrics depth on Android not aligned yet\n- Docs: Immersive UI test green\n- Immersive: the container's accessibility id no longer replaces the disc's and controls' ids (UI test could not find them); docs\n- UI tests: Immersive test always starts the app fresh (it ran on the previous test's app: other style, lyrics open); queue rows are one accessibility element, so the row id covers the whole row (swipe and handle drag hit the artwork before) and VoiceOver reads one song with actions",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.18/Resona.ipa",
-      "size": 29480255,
+      "version": "0.8.19",
+      "versionDate": "2026-11-14T22:56:10Z",
+      "versionDescription": "- Playback error hint: refused streams recognized by their readable text too (the enum printed as validationFailed(…) fell through to the generic hint)\n- Playback (round 12): one YouTube client after the other with an error log — every attempt logged (time, song id, client, stage, HTTP status, redacted text), a client that failed for a song is skipped for it for 10 min, a stream the player can't load moves on to the next client (failed loads of a new song were ignored: the id was still pending); chain like Android plus WEB and MWEB, without the dead embedded client; Settings → About → Share error log; error banner with Retry\n- Docs: AI sync on Android",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.19/Resona.ipa",
+      "size": 29504873,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
