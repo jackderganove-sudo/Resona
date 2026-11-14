@@ -104,17 +104,11 @@ actor PlaybackManager {
     /// Runs the client fallback chain for playback. Only called once per
     /// videoId by `resolveAndPlay`, which owns the in-flight dedup entry.
     private func resolveAndPlayFromNetwork(videoId: String) async throws -> PlaybackResult {
-        var request = StreamResolveRequest.playback(videoId: videoId)
-        request.options.audioQuality = SettingsStore.shared.audioQuality
         // Playback first: downloads wait while this resolves.
         await PlaybackPriorityGate.shared.begin()
         let result: PlaybackResult
         do {
-            result = try await StreamFallback.resolveFirstValid(
-                request,
-                using: InnerTubeClient.tropShared,
-                providers: .tropLive
-            )
+            result = try await resolvePlaybackStream(videoId: videoId)
             await PlaybackPriorityGate.shared.end()
         } catch {
             await PlaybackPriorityGate.shared.end()
@@ -122,6 +116,86 @@ actor PlaybackManager {
         }
         await playNetworkResult(result, videoId: videoId)
         return result
+    }
+
+    /// Client for each video's current stream, and when it started (player failures).
+    private var streamClient: [String: (client: String, started: Date)] = [:]
+
+    /// One client after the other (`StreamClientFallback`), every attempt logged.
+    /// All failed: an expired cached URL is still tried, as before.
+    private func resolvePlaybackStream(videoId: String) async throws -> PlaybackResult {
+        var options = StreamResolveOptions.default
+        options.audioQuality = SettingsStore.shared.audioQuality
+        let signedIn = await CookieStore().isLoggedIn()
+        let chain = ResonaStreamChain.playback.filter { signedIn || $0.client.clientName != "TVHTML5" }
+        do {
+            let result = try await StreamClientFallback.run(
+                videoId: videoId,
+                chain: chain,
+                isBlocked: { await StreamClientBlocklist.shared.isBlocked(videoId: videoId, client: $0) },
+                resolve: { entry in
+                    let request = StreamResolveRequest(
+                        videoId: videoId,
+                        chain: [FallbackClient(client: entry.client, skipValidation: true)],
+                        options: options,
+                        policy: FallbackPolicy(useCache: false, storeInCache: false, validateStreams: false,
+                                               expiredCacheFallback: false, preferAAC: false)
+                    )
+                    return try await StreamFallback.resolveFirstValid(
+                        request, using: InnerTubeClient.tropShared, providers: .tropLive
+                    )
+                },
+                probe: { url in
+                    let status = await StreamClientFallback.probeStatus(url)
+                    if status == 403 { await StreamResolveProviders.tropLive.onStreamRejection?() }
+                    return status
+                },
+                log: { await PlaybackErrorLog.shared.record($0) },
+                block: { await StreamClientBlocklist.shared.block(videoId: videoId, client: $0) }
+            )
+            await StreamCache.shared.set(videoId: videoId, result: result)
+            streamClient[videoId] = (ResonaStreamChain.key(for: result.clientName), Date())
+            return result
+        } catch let failure as StreamClientFallback.Failure {
+            if let expired = await StreamCache.shared.getExpired(videoId: videoId) {
+                await PlaybackErrorLog.shared.record(PlaybackLogEntry(
+                    time: Date(), videoId: videoId, client: expired.clientName, stage: .success,
+                    httpStatus: nil, message: "all clients failed, trying the expired cached stream"))
+                streamClient[videoId] = (ResonaStreamChain.key(for: expired.clientName), Date())
+                return expired
+            }
+            throw failure.lastError ?? failure
+        }
+    }
+
+    /// The player could not load or lost the stream. Early (≤ 15 s) or with an
+    /// HTTP error the client is skipped for this song; the next resolve moves on.
+    /// Returns false when the same song failed late without an HTTP error
+    /// less than 30 s ago (caller stops instead of looping).
+    func playerFailed(videoId: String, httpStatus: Int?, detail: String) async -> Bool {
+        let current = streamClient[videoId]
+        let client = current?.client ?? "unknown"
+        let early = current.map { Date().timeIntervalSince($0.started) <= 15 } ?? true
+        let rejected = httpStatus.map { [403, 404, 410, 416].contains($0) } ?? false
+        await PlaybackErrorLog.shared.record(PlaybackLogEntry(
+            time: Date(), videoId: videoId, client: client, stage: .player, httpStatus: httpStatus, message: detail))
+        await StreamCache.shared.remove(videoId: videoId)
+        if early || rejected {
+            await StreamClientBlocklist.shared.block(videoId: videoId, client: client)
+            return true
+        }
+        if let last = lateFailureAt[videoId], Date().timeIntervalSince(last) < 30 { return false }
+        lateFailureAt[videoId] = Date()
+        return true
+    }
+
+    private var lateFailureAt: [String: Date] = [:]
+
+    /// "Retry" in the error banner: every client again, fresh resolve.
+    func resetFailures(videoId: String) async {
+        await StreamClientBlocklist.shared.reset(videoId: videoId)
+        await StreamCache.shared.remove(videoId: videoId)
+        lateFailureAt.removeValue(forKey: videoId)
     }
 
     private func playNetworkResult(_ result: PlaybackResult, videoId: String) async {

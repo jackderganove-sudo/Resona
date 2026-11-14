@@ -66,7 +66,6 @@ final class NowPlaying {
     var lastManualSkipTime: Date?
     private var isResolvingNext = false
     /// Timestamps of the last mid-play failure per videoId, to bound retries.
-    private var lastFailureAt: [String: Date] = [:]
 
     private static let queueKey = "nowPlaying.queue"
     private static let queueIndexKey = "nowPlaying.queueIndex"
@@ -400,33 +399,28 @@ final class NowPlaying {
         }
     }
 
-    /// A stream that died mid-play (not EOF, not a manual skip): drop the
-    /// possibly-expired cached URL and re-resolve once. Repeated failures for
-    /// the same video are only retried after a cooldown to avoid a loop.
+    /// A stream that failed to load or died mid-play (not EOF, not a manual
+    /// skip): the error log gets the client and HTTP status, the client is
+    /// skipped for this song when it failed early or with an HTTP error, and
+    /// the next client is tried. Every client failed → banner with "Retry".
     private func recoverFromPlaybackFailure(videoId: String?) {
         guard let videoId else {
             isPlaying = false
             return
         }
         PlayerController.shared.handleVideoStreamFailure()
-        if let last = lastFailureAt[videoId], Date().timeIntervalSince(last) < 30 {
-            isPlaying = false
-            return
-        }
-        lastFailureAt[videoId] = Date()
+        let status = PlayerController.shared.takeLastHTTPStatus()
         isPlaying = false
-        Log.nowPlaying.notice("Stream failed mid-play, re-resolving \(videoId)")
+        Log.nowPlaying.notice("Stream failed, trying the next client for \(videoId)")
         Task {
             await PlayerConfigStore.shared.notifyStreamRejection()
-            await StreamCache.shared.remove(videoId: videoId)
+            let retry = await PlaybackManager.shared.playerFailed(
+                videoId: videoId, httpStatus: status, detail: "player could not load the stream")
+            guard retry, self.videoId == videoId else { return }
             do {
                 try await PlaybackManager.shared.resolveAndPlay(videoId: videoId)
-                // Success – allow future retries for this video
-                _ = await MainActor.run { self.lastFailureAt.removeValue(forKey: videoId) }
             } catch {
-                Log.nowPlaying.error("Mid-play recovery failed: \(error)")
-                let title = await MainActor.run { self.title }
-                await MainActor.run { PlaybackErrorCenter.shared.report(error, videoId: videoId, title: title) }
+                Log.nowPlaying.error("Recovery failed: \(error)")
                 if self.videoId == videoId {
                     isPlaying = false
                 }

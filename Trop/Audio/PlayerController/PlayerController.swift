@@ -42,6 +42,20 @@ final class PlayerController {
     nonisolated(unsafe) var isRunning = false
     nonisolated(unsafe) var currentVideoId: String?
     nonisolated(unsafe) var pendingVideoId: String?
+    /// Last "HTTP error NNN" from mpv's network layer (for the error log).
+    nonisolated(unsafe) var lastHTTPStatus: Int?
+
+    /// mpv/ffmpeg log line → HTTP status, e.g. "HTTP error 403 Forbidden".
+    nonisolated static func httpStatus(inLog line: String) -> Int? {
+        guard let range = line.range(of: #"HTTP error (\d{3})"#, options: .regularExpression) else { return nil }
+        return Int(line[range].suffix(3))
+    }
+
+    /// Takes the HTTP status seen since the last call (nil when there was none).
+    func takeLastHTTPStatus() -> Int? {
+        defer { lastHTTPStatus = nil }
+        return lastHTTPStatus
+    }
     private var lastDetectedCrop: String?
     private var detectedCropRepeatCount = 0
     var currentLoudnessDb: Double?
@@ -222,6 +236,7 @@ extension PlayerController {
 
         desiredPlaying = true
         assertAudioSession()
+        lastHTTPStatus = nil
         loadedMuxedURL = nil
         loadedVideoOnlyURL = nil
         voWarmedVideoId = nil
@@ -525,6 +540,9 @@ extension PlayerController {
                 if let crop = detectedCrop(from: trimmed) {
                     Task { @MainActor in self.applyDetectedCrop(crop) }
                 }
+                if let status = Self.httpStatus(inLog: trimmed) {
+                    lastHTTPStatus = status
+                }
             }
         }
     }
@@ -625,7 +643,9 @@ extension PlayerController {
         let reason = endFile.reason
         let isEof = reason == MPV_END_FILE_REASON_EOF
         let isError = reason == MPV_END_FILE_REASON_ERROR
-        let stoppedVideoId = self.currentVideoId
+        // A new song that fails to load never reached FILE_LOADED: its id is still pending.
+        let stoppedVideoId = isError ? (self.pendingVideoId ?? self.currentVideoId) : self.currentVideoId
+        if isError, self.pendingVideoId == stoppedVideoId { self.pendingVideoId = nil }
         Task { @MainActor [weak self] in
             guard let self else { return }
             let videoId = stoppedVideoId

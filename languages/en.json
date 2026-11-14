@@ -888,5 +888,9 @@
   "Recognition failed": "Recognition failed",
   "Check your connection and try again.": "Check your connection and try again.",
   "Listen again": "Listen again",
-  "Couldn't find this song on YouTube Music.": "Couldn't find this song on YouTube Music."
+  "Couldn't find this song on YouTube Music.": "Couldn't find this song on YouTube Music.",
+  "YouTube refused the stream for every app profile we tried. This usually passes within a few hours.": "YouTube refused the stream for every app profile we tried. This usually passes within a few hours.",
+  "Share error log": "Share error log",
+  "Troubleshooting": "Troubleshooting",
+  "Songs that could not be played: time, song ID, YouTube client, HTTP status and error text. No cookies, account data or stream addresses.": "Songs that could not be played: time, song ID, YouTube client, HTTP status and error text. No cookies, account data or stream addresses."
 }

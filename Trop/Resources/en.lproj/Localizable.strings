@@ -643,6 +643,7 @@
 "Shape the sound with presets and bands" = "Shape the sound with presets and bands";
 "Share" = "Share";
 "Share as image" = "Share as image";
+"Share error log" = "Share error log";
 "Share this album with others" = "Share this album with others";
 "Share this playlist with others" = "Share this playlist with others";
 "Share this podcast with others" = "Share this podcast with others";
@@ -697,6 +698,7 @@
 "Song options" = "Song options";
 "Song title — e.g. Adele - Hello" = "Song title — e.g. Adele - Hello";
 "Songs" = "Songs";
+"Songs that could not be played: time, song ID, YouTube client, HTTP status and error text. No cookies, account data or stream addresses." = "Songs that could not be played: time, song ID, YouTube client, HTTP status and error text. No cookies, account data or stream addresses.";
 "Songs you like will appear here" = "Songs you like will appear here";
 "Songs you play will appear here." = "Songs you play will appear here.";
 "Songs, albums and playlists offline, kept up to date automatically." = "Songs, albums and playlists offline, kept up to date automatically.";
@@ -823,6 +825,7 @@
 "Trending" = "Trending";
 "Trending songs for you" = "Trending songs for you";
 "Trop (base project)" = "Trop (base project)";
+"Troubleshooting" = "Troubleshooting";
 "Try again closer to the music." = "Try again closer to the music.";
 "Try again later." = "Try again later.";
 "Turn off sleep timer" = "Turn off sleep timer";
@@ -874,6 +877,7 @@
 "YouTube Music on your iPad, with lyrics that keep up and a player that adapts to every cover." = "YouTube Music on your iPad, with lyrics that keep up and a player that adapts to every cover.";
 "YouTube Music provides no genre or mood per song, so songs are grouped by artist, album or language. Rename groups, drag songs between them, then create the playlists." = "YouTube Music provides no genre or mood per song, so songs are grouped by artist, album or language. Rename groups, drag songs between them, then create the playlists.";
 "YouTube asks for a sign-in (bot check). Sign in to your account or try again later." = "YouTube asks for a sign-in (bot check). Sign in to your account or try again later.";
+"YouTube refused the stream for every app profile we tried. This usually passes within a few hours." = "YouTube refused the stream for every app profile we tried. This usually passes within a few hours.";
 "Your Playlists" = "Your Playlists";
 "Your Spotify “Liked Songs” appear here." = "Your Spotify “Liked Songs” appear here.";
 "Your all-time favourites" = "Your all-time favourites";

@@ -36,6 +36,7 @@ struct PlaybackErrorInfo: Equatable, Identifiable {
     let title: String
     let hint: String
     let details: String
+    var videoId: String = ""
 }
 
 @MainActor
@@ -51,7 +52,7 @@ final class PlaybackErrorCenter {
         current = info
         hideTask?.cancel()
         hideTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(10))
+            try? await Task.sleep(for: .seconds(20))
             guard !Task.isCancelled, self?.current?.id == info.id else { return }
             self?.current = nil
         }
@@ -60,6 +61,18 @@ final class PlaybackErrorCenter {
     func dismiss() {
         hideTask?.cancel()
         current = nil
+    }
+
+    /// "Retry": every client again (failures for this song forgotten), same song.
+    func retry() {
+        guard let info = current, !info.videoId.isEmpty else { return }
+        dismiss()
+        let videoId = info.videoId
+        Task {
+            await PlaybackManager.shared.resetFailures(videoId: videoId)
+            guard NowPlaying.shared.videoId == videoId else { return }
+            try? await PlaybackManager.shared.resolveAndPlay(videoId: videoId)
+        }
     }
 
     /// Readable cause + what to do (German UI via localization).
@@ -75,6 +88,8 @@ final class PlaybackErrorCenter {
             hint = String(localized: "This song is age-restricted. Signing in may help.")
         } else if error is URLError || lower.contains("network") || lower.contains("offline") || lower.contains("timed out") {
             hint = String(localized: "No connection to YouTube. Check the internet connection.")
+        } else if StreamAttemptError.httpStatus(error) == 403 || lower.contains("403") || lower.contains("range validation") || lower.contains("all clients") {
+            hint = String(localized: "YouTube refused the stream for every app profile we tried. This usually passes within a few hours.")
         } else {
             hint = String(localized: "The stream could not be loaded. Try again or play another version.")
         }
@@ -82,7 +97,8 @@ final class PlaybackErrorCenter {
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
         let details = "Resona \(version) (\(build)) · video \(videoId) · \(raw)"
         let name = title.map { "„\($0)“" } ?? String(localized: "This song")
-        return PlaybackErrorInfo(title: String(format: String(localized: "%@ can't be played"), name), hint: hint, details: details)
+        return PlaybackErrorInfo(title: String(format: String(localized: "%@ can't be played"), name), hint: hint,
+                                 details: PlaybackLogRedaction.redact(details), videoId: videoId)
     }
 }
 
@@ -110,9 +126,15 @@ struct PlaybackErrorBanner: View {
                             .font(.m3(.bodySmall))
                             .foregroundStyle(m3.onSurfaceVariant)
                             .fixedSize(horizontal: false, vertical: true)
-                        Button(copied ? String(localized: "Copied") : String(localized: "Copy details")) {
-                            UIPasteboard.general.string = info.details
-                            copied = true
+                        HStack(spacing: 16) {
+                            Button(String(localized: "Retry")) {
+                                center.retry()
+                            }
+                            .accessibilityIdentifier("playback.error.retry")
+                            Button(copied ? String(localized: "Copied") : String(localized: "Copy details")) {
+                                UIPasteboard.general.string = info.details
+                                copied = true
+                            }
                         }
                         .font(.m3(.labelMedium, weight: .semibold))
                         .foregroundStyle(m3.primary)

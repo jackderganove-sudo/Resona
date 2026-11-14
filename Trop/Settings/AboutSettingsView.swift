@@ -88,6 +88,21 @@ struct AboutSettingsView: View {
             }
 
             M3Section {
+                Button {
+                    shareErrorLog()
+                } label: {
+                    Label("Share error log", systemImage: "doc.text.magnifyingglass")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityIdentifier("about.shareErrorLog")
+            } header: {
+                Text("Troubleshooting")
+            } footer: {
+                Text("Songs that could not be played: time, song ID, YouTube client, HTTP status and error text. No cookies, account data or stream addresses.")
+            }
+
+            M3Section {
                 SettingsLinkRow("GitHub", icon: "chevron.left.forwardslash.chevron.right", url: URL(string: "https://github.com/\(UpdateChecker.repository)")!)
                 SettingsLinkRow("Trop (base project)", icon: "arrow.triangle.branch", url: URL(string: "https://github.com/SwiftyMedia/Trop")!)
                 SettingsLinkRow("ArchiveTune by rukamori & contributors", icon: "heart", url: URL(string: "https://github.com/rukamori/ArchiveTune")!)
@@ -110,6 +125,19 @@ struct AboutSettingsView: View {
             isLoadingNotes = false
             currentNotes = CurrentNotes(releases: releases.isEmpty
                 ? [WhatsNewRelease(version: installed, sections: [], pageURL: nil)] : releases)
+        }
+    }
+
+    private func shareErrorLog() {
+        let version = versionText
+        let system = "\(UIDevice.current.model) \(UIDevice.current.systemName) \(UIDevice.current.systemVersion)"
+        Task {
+            let text = await PlaybackErrorLog.shared.exportText(appVersion: version, system: system)
+            let folder = FileManager.default.temporaryDirectory.appendingPathComponent("error-log", isDirectory: true)
+            try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let url = folder.appendingPathComponent("Resona-Fehlerprotokoll.txt")
+            guard (try? Data(text.utf8).write(to: url, options: .atomic)) != nil else { return }
+            presentShareSheet(items: [url])
         }
     }
 
