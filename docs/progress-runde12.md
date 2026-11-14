@@ -5,7 +5,7 @@ Reihenfolge 1 → 2 → 3 → 4, nach jedem Punkt ein Release. Android-Details:
 
 | Punkt | Inhalt | Status |
 |---|---|---|
-| 1 | iPad: Wiedergabefehler protokollieren, Client-Fallback wie Android, „Erneut versuchen“ | in Arbeit |
+| 1 | iPad: Wiedergabefehler protokollieren, Client-Fallback wie Android, „Erneut versuchen“ | Release iPad v0.8.19 (Unit-Tests grün, auf dem iPad nicht getestet) |
 | 2 | Beide: Lautsprecher-Auswahl im Player | in Arbeit |
 | 3 | Android: Downloads als sichtbare Dateien, „Nur Downloads“ | offen |
 | 4 | Android: PS5-Stick | offen |
