@@ -78,7 +78,8 @@ final class PlaybackErrorCenter {
     /// Readable cause + what to do (German UI via localization).
     nonisolated static func describe(_ error: Error, videoId: String, title: String?) -> PlaybackErrorInfo {
         let raw = String(describing: error)
-        let lower = raw.lowercased()
+        // Readable text too: enum cases print as "validationFailed(…)" otherwise.
+        let lower = (raw + " " + error.localizedDescription).lowercased()
         let hint: String
         if lower.contains("sign in") || lower.contains("bot") || lower.contains("login_required") {
             hint = String(localized: "YouTube asks for a sign-in (bot check). Sign in to your account or try again later.")
@@ -88,7 +89,8 @@ final class PlaybackErrorCenter {
             hint = String(localized: "This song is age-restricted. Signing in may help.")
         } else if error is URLError || lower.contains("network") || lower.contains("offline") || lower.contains("timed out") {
             hint = String(localized: "No connection to YouTube. Check the internet connection.")
-        } else if StreamAttemptError.httpStatus(error) == 403 || lower.contains("403") || lower.contains("range validation") || lower.contains("all clients") {
+        } else if StreamAttemptError.httpStatus(error) == 403 || lower.contains("403") || lower.contains("range validation")
+                    || lower.contains("validationfailed") || lower.contains("all clients") || error is StreamClientFallback.Failure {
             hint = String(localized: "YouTube refused the stream for every app profile we tried. This usually passes within a few hours.")
         } else {
             hint = String(localized: "The stream could not be loaded. Try again or play another version.")
