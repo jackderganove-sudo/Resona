@@ -135,6 +135,7 @@
 "Chill/Sad" = "Chill/Sad";
 "Choose artist" = "Choose artist";
 "Choose how the app follows your device appearance." = "选择应用如何跟随设备外观。";
+"Choose output" = "Choose output";
 "Choose which library sections sync from your YouTube Music account." = "选择要从 YouTube Music 账户同步的资料库内容。";
 "Classical" = "古典";
 "Clear" = "清除";
@@ -156,6 +157,7 @@
 "Connect to enable Spotify Canvas" = "连接以启用 Spotify 动态画布";
 "Connect to enable scrobbling" = "连接以启用音乐记录";
 "Connect to show listening activity" = "连接以显示聆听活动";
+"Connected" = "Connected";
 "Content" = "内容";
 "Content & Lyrics" = "内容与歌词";
 "Content Filtering" = "内容过滤";
@@ -440,6 +442,7 @@
 "Name" = "Name";
 "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps." = "Negative values move to the next line earlier, positive values later. Word highlighting always stays on the timestamps.";
 "New" = "New";
+"New Bluetooth device? Pair it once in the iPad settings." = "New Bluetooth device? Pair it once in the iPad settings.";
 "New Music Videos" = "最新音乐视频";
 "New Playlist" = "新建播放列表";
 "New albums & singles" = "新专辑与单曲";
@@ -469,6 +472,7 @@
 "No lyrics found" = "No lyrics found";
 "No lyrics text to align." = "No lyrics text to align.";
 "No match found" = "未找到匹配";
+"No other output found yet" = "No other output found yet";
 "No playlist data" = "无播放列表数据";
 "No podcast data" = "无播客数据";
 "No release notes for this version." = "No release notes for this version.";
@@ -501,6 +505,7 @@
 "Only %d %% of the lyrics are sung in this song — maybe a remix or the wrong lyrics?" = "Only %d %% of the lyrics are sung in this song — maybe a remix or the wrong lyrics?";
 "Only %d %% of the words were recognized — not reliable enough." = "Only %d %% of the words were recognized — not reliable enough.";
 "Only sync the matching lines" = "Only sync the matching lines";
+"Open Settings" = "Open Settings";
 "Open in YouTube Music" = "Open in YouTube Music";
 "OpenRouter API key" = "OpenRouter API key";
 "OpenRouter answered with HTTP %d." = "OpenRouter answered with HTTP %d.";
@@ -706,6 +711,7 @@
 "Sort results" = "排序结果";
 "Sound" = "声音";
 "Source" = "来源";
+"Speakers" = "Speakers";
 "Speed Dial" = "快捷入口";
 "Split into several new playlists" = "Split into several new playlists";
 "Split playlist" = "Split playlist";
@@ -790,6 +796,7 @@
 "Theme" = "主题";
 "Theme Mode" = "主题模式";
 "Themes, colors and visual style" = "Themes, colors and visual style";
+"This device" = "This device";
 "This login was not accepted. Please check it and try again." = "This login was not accepted. Please check it and try again.";
 "This permanently deletes all offline tracks from your device." = "这会永久删除设备上的所有离线歌曲。";
 "This song" = "This song";
@@ -890,6 +897,7 @@
 "Your stats" = "Your stats";
 "Your top artist · %d min" = "Your top artist · %d min";
 "Your top songs" = "Your top songs";
+"iPad, Bluetooth devices in range and AirPlay" = "iPad, Bluetooth devices in range and AirPlay";
 "minutes of music" = "minutes of music";
 "s" = "秒";
 "subscribers" = "位订阅者";

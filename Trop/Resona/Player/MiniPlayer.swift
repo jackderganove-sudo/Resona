@@ -188,9 +188,17 @@ private struct MiniPlayerInfo: View {
                 MarqueeText(text: title, font: .m3(.titleMedium, weight: .medium), frameHeight: 24, textColor: .white)
                     .id("title-\(title)")
                     .transition(.opacity)
-                MarqueeText(text: artist, font: .m3(.bodySmall), frameHeight: 18, textColor: .white.opacity(0.72))
-                    .id("artist-\(artist)")
-                    .transition(.opacity)
+                HStack(spacing: 8) {
+                    MarqueeText(text: artist, font: .m3(.bodySmall), frameHeight: 18, textColor: .white.opacity(0.72))
+                        .id("artist-\(artist)")
+                        .transition(.opacity)
+                    // Where it plays, when that isn't this device (same as Android).
+                    if isCurrent {
+                        CurrentOutputLabel(font: .m3(.labelSmall, weight: .semibold), color: m3.primary)
+                            .fixedSize()
+                            .frame(maxWidth: 120, alignment: .trailing)
+                    }
+                }
             }
             .padding(.horizontal, 10)
             .animation(M3Motion.defaultEffects, value: title)

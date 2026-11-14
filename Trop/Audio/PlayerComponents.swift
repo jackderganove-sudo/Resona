@@ -177,16 +177,20 @@ struct SecondaryActionsRow: View {
     }
 }
 
+/// Output button of the older layouts: opens the same speaker sheet.
 struct PlayerAirPlayControl: View {
+    @State private var showPicker = false
+    private let monitor = AudioOutputMonitor.shared
+
     var body: some View {
-        Button {} label: {
-            Image(systemName: "airplayaudio")
+        Button { showPicker = true } label: {
+            Image(systemName: monitor.current.systemImage)
                 .font(.title3)
                 .foregroundStyle(.white.opacity(0.7))
                 .padding(10)
         }
-        .overlay(AirPlayButton())
-        .accessibilityLabel("AirPlay")
+        .accessibilityLabel(Text("Speakers"))
+        .sheet(isPresented: $showPicker) { SpeakerPickerSheet() }
     }
 }
 

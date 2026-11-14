@@ -892,5 +892,13 @@
   "YouTube refused the stream for every app profile we tried. This usually passes within a few hours.": "YouTube refused the stream for every app profile we tried. This usually passes within a few hours.",
   "Share error log": "Share error log",
   "Troubleshooting": "Troubleshooting",
-  "Songs that could not be played: time, song ID, YouTube client, HTTP status and error text. No cookies, account data or stream addresses.": "Songs that could not be played: time, song ID, YouTube client, HTTP status and error text. No cookies, account data or stream addresses."
+  "Songs that could not be played: time, song ID, YouTube client, HTTP status and error text. No cookies, account data or stream addresses.": "Songs that could not be played: time, song ID, YouTube client, HTTP status and error text. No cookies, account data or stream addresses.",
+  "Speakers": "Speakers",
+  "This device": "This device",
+  "Connected": "Connected",
+  "Choose output": "Choose output",
+  "iPad, Bluetooth devices in range and AirPlay": "iPad, Bluetooth devices in range and AirPlay",
+  "No other output found yet": "No other output found yet",
+  "New Bluetooth device? Pair it once in the iPad settings.": "New Bluetooth device? Pair it once in the iPad settings.",
+  "Open Settings": "Open Settings"
 }

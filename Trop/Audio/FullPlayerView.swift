@@ -914,7 +914,7 @@ struct FullPlayerView: View {
                 }
                 .transition(.scale.combined(with: .opacity))
             }
-            PlayerAirPlayButton()
+            PlayerSpeakerButton()
         }
     }
 
