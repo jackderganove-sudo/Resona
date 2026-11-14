@@ -94,14 +94,18 @@ for _ in range(60):
     lines.append(f"{random.choice(subjects).capitalize()} {random.choice(verbs)} {random.choice(objects)} {random.choice(places)}.")
 open(sys.argv[1], "w").write("\n".join(lines) + "\n")
 PY
+SPEECH_SECONDS=0
 if say -r 165 -f "$SPEECH_DIR/lines.txt" -o "$SPEECH_DIR/speech.aiff" 2> "$OUT/logs/say.log"; then
     SPEECH_SECONDS="$(afinfo "$SPEECH_DIR/speech.aiff" | awk '/estimated duration/ {print $3}')"
+fi
+# Some runner images have no working voice: `say` then writes a few milliseconds of silence.
+if awk -v s="$SPEECH_SECONDS" 'BEGIN { exit !(s >= 30) }'; then
     echo "speech: ${SPEECH_SECONDS} s, $(wc -l < "$SPEECH_DIR/lines.txt") lines"
     export TEST_RUNNER_RESONA_SPEECH_AUDIO="$SPEECH_DIR/speech.aiff"
     export TEST_RUNNER_RESONA_SPEECH_TEXT="$SPEECH_DIR/lines.txt"
     export TEST_RUNNER_RESONA_SPEECH_SECONDS="$SPEECH_SECONDS"
 else
-    echo "say failed — AI sync test will be skipped"; cat "$OUT/logs/say.log"
+    echo "say failed or produced only ${SPEECH_SECONDS} s — AI sync test will be skipped"; cat "$OUT/logs/say.log"
 fi
 
 step "Unit + UI tests (video + console)"
