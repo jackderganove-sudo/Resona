@@ -27,6 +27,9 @@ bleiben bewusst.
 | Einstellungen | iPad-Gruppierung | Konto/Verlauf · Aussehen/Wiedergabe/Canvas/Songtext/Inhalt · Integration/Equalizer/Speicher/Über – Android hat dieselbe Reihenfolge plus eigene Unterseiten (Android Auto, Module, Sicherung …) | ja (geprüft) |
 | Glas-Look (Mini-Player, Leisten, Sheets, Player) | iPad | Teil D2 | ja (Android v1.0.8) |
 | KI-Sync/-Kalibrierung | iPad | Teil D1 | ja (Android v1.0.9) |
+| Lautsprecher-Auswahl (Runde 12) | gleich | Knopf in der unteren Player-Leiste zwischen Sleep-Timer und Songtext; Sheet „Lautsprecher“: aktuelle Ausgabe „Verbunden“, „Ausgabe wählen“ (System-Liste), neue Bluetooth-Geräte (iPad: Hinweis + „Einstellungen öffnen“, Android: „In der Nähe suchen“, koppeln, verbinden); externe Ausgabe mit Icon + Name in Player und Mini-Player | ja (wip, Gerät folgt) |
+| Wiedergabefehler (Runde 12) | gleich | Client-Kette wie Android plus WEB/MWEB, Client 10 min je Song gesperrt, Banner mit „Erneut versuchen“; iPad zusätzlich Fehlerprotokoll unter Über | ja – iPad (wip) |
+| Downloads als Dateien, „Nur Downloads“, PS5-Stick (Runde 12) | Android | iOS hat keinen frei sichtbaren Musikordner; Stick-Abgleich aufs iPad erst nach dem PS5-Test | Android (wip), iPad offen |
 
 ## Theming (Ergänzung)
 
