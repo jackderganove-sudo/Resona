@@ -137,46 +137,35 @@ final class AILyricsSync {
     private func run(videoId: String, texts: [String], originals: [LyricLine], duration: Double, mode: Mode) async {
         let log = Log.player
         do {
-            let transcription = try await transcribeSong(videoId: videoId, duration: duration)
-            lastTranscription = (videoId, transcription, texts)
-            let audioSeconds = transcription.audioSeconds
+            phase = .preparingAudio
+            let samples = try await loadSamples(videoId: videoId, duration: duration)
+            let audioSeconds = Double(samples.count) / 16_000
 
-            // A) Calibrate synced lyrics (keep them, fix tempo + offset).
-            if !originals.isEmpty, mode != .fullSync {
-                phase = .aligning
-                let anchors = LyricsAligner.anchors(lines: originals, recognized: transcription.words)
-                let outcome = TempoCalibrator.fit(anchors)
-                switch outcome {
-                case .fitted(let calibration):
-                    log.info("AISYNC calibration factor=\(String(format: "%.4f", calibration.factor)) offset=\(String(format: "%.2f", calibration.offset)) s inliers=\(calibration.anchors)/\(anchors.count) rms=\(String(format: "%.2f", calibration.rms))")
-                    LyricsCalibrationStore.shared.set(calibration, for: videoId)
-                    LyricsState.shared.refreshToken += 1
-                    phase = .calibrated(calibration)
-                    return
-                case .tooFewAnchors(let count):
-                    log.info("AISYNC calibration: only \(count) anchors")
-                    if mode == .calibrate { phase = .calibrationFailed(anchors: count); return }
-                case .poorFit(let calibration):
-                    log.info("AISYNC calibration: poor fit (factor \(String(format: "%.3f", calibration.factor)), rms \(String(format: "%.2f", calibration.rms)), \(calibration.anchors) inliers)")
-                    if mode == .calibrate { phase = .calibrationFailed(anchors: calibration.anchors); return }
+            // 1. Lyrics known: forced alignment with the CTC model (same as Android:
+            //    10 s for 169 s on the Pixel, line error 0.07 s vs 2.2 s with Whisper).
+            //    Whisper stays for "lyrics from audio", non-Latin lyrics and as fallback.
+            if CtcModel.suits(texts) {
+                do {
+                    let started = Date()
+                    let words = try await ctcWords(samples: samples, texts: texts)
+                    log.info("AISYNC CTC \(words.count) words in \(String(format: "%.1f", Date().timeIntervalSince(started))) s")
+                    if await evaluate(videoId: videoId, texts: texts, originals: originals, words: words,
+                                total: max(duration, audioSeconds), mode: mode, final: false) {
+                        return
+                    }
+                    log.info("AISYNC CTC gave no usable result → Whisper")
+                } catch is CancellationError {
+                    throw CancellationError()
+                } catch {
+                    log.error("AISYNC CTC failed: \(error.localizedDescription)")
                 }
             }
 
-            // B) Full sync: the lyrics' words matched to the recognition.
-            phase = .aligning
-            let aligned = LyricsAligner.align(lines: texts, recognized: transcription.words, duration: max(duration, audioSeconds))
-            log.info("AISYNC matched \(Int(aligned.matchedRatio * 100)) % of \(texts.count) lines' words")
-            if aligned.matchedRatio >= 0.3 {
-                let raw = LyricsParsing.serializeLines(aligned.lines)
-                await LyricsService.shared.saveCustom(videoId: videoId, rawText: raw, providerName: Self.providerName)
-                phase = .done(matched: aligned.matchedRatio)
-                return
-            }
-            // Little matches: probably a remix (only parts of the lyrics)
-            // or the wrong lyrics — offer partial sync / transcription.
-            let occurrences = LyricsAligner.lineOccurrences(lines: texts, recognized: transcription.words)
-            log.info("AISYNC low match: \(occurrences.count) sung line occurrences found")
-            phase = .lowMatch(ratio: aligned.matchedRatio, partialLines: occurrences.count)
+            // 2. Whisper.
+            let transcription = try await whisper(samples: samples, videoId: videoId)
+            lastTranscription = (videoId, transcription, texts)
+            _ = await evaluate(videoId: videoId, texts: texts, originals: originals, words: transcription.words,
+                         total: max(duration, audioSeconds), mode: mode, final: true)
         } catch is CancellationError {
             phase = .idle
         } catch let SyncError.message(text) {
@@ -185,6 +174,79 @@ final class AILyricsSync {
             log.error("AISYNC failed: \(error)")
             phase = .failed(error.localizedDescription)
         }
+    }
+
+    /// Calibrate synced lyrics or align all words (same for CTC and Whisper).
+    /// false = nothing usable and not [final] (the caller tries Whisper next).
+    private func evaluate(videoId: String, texts: [String], originals: [LyricLine], words: [RecognizedWord],
+                          total: Double, mode: Mode, final: Bool) async -> Bool {
+        let log = Log.player
+        // A) Calibrate synced lyrics (keep them, fix tempo + offset).
+        if !originals.isEmpty, mode != .fullSync {
+            phase = .aligning
+            let anchors = LyricsAligner.anchors(lines: originals, recognized: words)
+            switch TempoCalibrator.fit(anchors) {
+            case .fitted(let calibration):
+                log.info("AISYNC calibration factor=\(String(format: "%.4f", calibration.factor)) offset=\(String(format: "%.2f", calibration.offset)) s inliers=\(calibration.anchors)/\(anchors.count) rms=\(String(format: "%.2f", calibration.rms))")
+                LyricsCalibrationStore.shared.set(calibration, for: videoId)
+                LyricsState.shared.refreshToken += 1
+                phase = .calibrated(calibration)
+                return true
+            case .tooFewAnchors(let count):
+                log.info("AISYNC calibration: only \(count) anchors")
+                if mode == .calibrate {
+                    guard final else { return false }
+                    phase = .calibrationFailed(anchors: count)
+                    return true
+                }
+            case .poorFit(let calibration):
+                log.info("AISYNC calibration: poor fit (factor \(String(format: "%.3f", calibration.factor)), rms \(String(format: "%.2f", calibration.rms)), \(calibration.anchors) inliers)")
+                if mode == .calibrate {
+                    guard final else { return false }
+                    phase = .calibrationFailed(anchors: calibration.anchors)
+                    return true
+                }
+            }
+        }
+
+        // B) Full sync: the lyrics' words matched to the recognition.
+        phase = .aligning
+        let aligned = LyricsAligner.align(lines: texts, recognized: words, duration: total)
+        log.info("AISYNC matched \(Int(aligned.matchedRatio * 100)) % of \(texts.count) lines' words")
+        if aligned.matchedRatio >= 0.3 {
+            let raw = LyricsParsing.serializeLines(aligned.lines)
+            await LyricsService.shared.saveCustom(videoId: videoId, rawText: raw, providerName: Self.providerName)
+            phase = .done(matched: aligned.matchedRatio)
+            return true
+        }
+        guard final else { return false }
+        // Little matches: probably a remix (only parts of the lyrics)
+        // or the wrong lyrics — offer partial sync / transcription.
+        let occurrences = LyricsAligner.lineOccurrences(lines: texts, recognized: words)
+        log.info("AISYNC low match: \(occurrences.count) sung line occurrences found")
+        phase = .lowMatch(ratio: aligned.matchedRatio, partialLines: occurrences.count)
+        return true
+    }
+
+    /// CTC model (downloaded once) → letter probabilities per 20 ms → lyric words on the best path.
+    private func ctcWords(samples: [Float], texts: [String]) async throws -> [RecognizedWord] {
+        if !CtcModel.isDownloaded {
+            phase = .downloadingModel(0)
+            try await CtcModel.download { done in
+                Task { @MainActor in AILyricsSync.shared.phase = .downloadingModel(done) }
+            }
+        }
+        phase = .transcribing(0)
+        let path = CtcModel.file.path
+        let lyricWords = texts.flatMap { $0.split(whereSeparator: { $0 == " " || $0 == "\t" }).map(String.init) }
+        return try await Task.detached(priority: .userInitiated) {
+            let emissions = try CtcEmissions.compute(modelPath: path, audio: samples, threads: CtcModel.threads) { done, total in
+                Task { @MainActor in
+                    if case .transcribing = AILyricsSync.shared.phase { AILyricsSync.shared.phase = .transcribing(Double(done) / Double(max(1, total))) }
+                }
+            }
+            return CtcAligner.words(emissions, lyricWords: lyricWords, minConfidence: CtcModel.minConfidence)
+        }.value
     }
 
     /// "Only sync the matching lines": every sung occurrence (repeats
@@ -222,9 +284,18 @@ final class AILyricsSync {
         phase = .done(matched: 1)
     }
 
-    /// Model + audio + Whisper (larger model when the small one hears too
-    /// little: fewer than 3 words per 10 s).
-    private func transcribeSong(videoId: String, duration: Double) async throws -> Transcription {
+    /// The song as 16 kHz mono samples (from the downloaded file or the cache).
+    private func loadSamples(videoId: String, duration: Double) async throws -> [Float] {
+        let wav = try await Self.prepareAudio(videoId: videoId)
+        defer { try? FileManager.default.removeItem(at: wav) }
+        try Task.checkCancellation()
+        let samples = try AudioProcessor.loadAudioAsFloatArray(fromPath: wav.path)
+        Log.player.info("AISYNC wav \(Int(Double(samples.count) / 16_000)) s (song \(Int(duration)) s), 16 kHz mono")
+        return samples
+    }
+
+    /// Whisper (larger model when the small one hears too little: fewer than 3 words per 10 s).
+    private func whisper(samples: [Float], videoId: String) async throws -> Transcription {
         let log = Log.player
         let variant = SettingsStore.shared.aiSyncModel.variant
         if pipe == nil || loadedVariant != variant {
@@ -235,14 +306,7 @@ final class AILyricsSync {
             loadedVariant = variant
         }
         guard let pipe else { throw SyncError.message(String(localized: "Model could not be loaded.")) }
-
-        phase = .preparingAudio
-        let wav = try await Self.prepareAudio(videoId: videoId)
-        defer { try? FileManager.default.removeItem(at: wav) }
-        try Task.checkCancellation()
-        let samples = try AudioProcessor.loadAudioAsFloatArray(fromPath: wav.path)
         let audioSeconds = Double(samples.count) / 16_000
-        log.info("AISYNC wav \(Int(audioSeconds)) s (song \(Int(duration)) s), 16 kHz mono")
 
         phase = .transcribing(0)
         let current = await LyricsService.shared.currentLines(videoId: videoId)

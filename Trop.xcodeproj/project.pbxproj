@@ -27,6 +27,7 @@
 		14B578DC2FF20002006B3990 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 14B578DB2FF20001006B3990 /* GRDB */; };
 		14B578DF2FF20DCD006B3990 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 14B578DE2FF20DCC006B3990 /* Nuke */; };
 		14C1A0032FF30000006B3990 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 14C1A0022FF30000006B3990 /* WhisperKit */; };
+		14C1B0032FF40000006B3990 /* onnxruntime in Frameworks */ = {isa = PBXBuildFile; productRef = 14C1B0022FF40000006B3990 /* onnxruntime */; };
 		14B578E52FF20DCF006B3990 /* Marquee in Frameworks */ = {isa = PBXBuildFile; productRef = 14B578E42FF20DCF006B3990 /* Marquee */; };
 		14B578F32FF21002006B3990 /* SwiftyTube in Frameworks */ = {isa = PBXBuildFile; productRef = 14B578F22FF21001006B3990 /* SwiftyTube */; };
 /* End PBXBuildFile section */
@@ -102,6 +103,7 @@
 				14B578DC2FF20002006B3990 /* GRDB in Frameworks */,
 				14B578DF2FF20DCD006B3990 /* Nuke in Frameworks */,
 				14C1A0032FF30000006B3990 /* WhisperKit in Frameworks */,
+				14C1B0032FF40000006B3990 /* onnxruntime in Frameworks */,
 				14B578E52FF20DCF006B3990 /* Marquee in Frameworks */,
 				14B578F32FF21002006B3990 /* SwiftyTube in Frameworks */,
 			);
@@ -177,6 +179,7 @@
 				14B578DB2FF20001006B3990 /* GRDB */,
 				14B578DE2FF20DCC006B3990 /* Nuke */,
 				14C1A0022FF30000006B3990 /* WhisperKit */,
+				14C1B0022FF40000006B3990 /* onnxruntime */,
 				14B578E42FF20DCF006B3990 /* Marquee */,
 				14B578F22FF21001006B3990 /* SwiftyTube */,
 			);
@@ -215,6 +218,7 @@
 				14B578DA2FF20000006B3990 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
 				14B578DD2FF20DCC006B3990 /* XCRemoteSwiftPackageReference "Nuke" */,
 				14C1A0012FF30000006B3990 /* XCRemoteSwiftPackageReference "WhisperKit" */,
+				14C1B0012FF40000006B3990 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */,
 				14B578E32FF20DCF006B3990 /* XCRemoteSwiftPackageReference "Marquee" */,
 				14B578F12FF21000006B3990 /* XCRemoteSwiftPackageReference "SwiftyTube" */,
 			);
@@ -526,6 +530,14 @@
 				minimumVersion = 1.1.1;
 			};
 		};
+		14C1B0012FF40000006B3990 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/microsoft/onnxruntime-swift-package-manager";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.24.2;
+			};
+		};
 		14B578DD2FF20DCC006B3990 /* XCRemoteSwiftPackageReference "Nuke" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke.git";
@@ -582,6 +594,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 14B578F12FF21000006B3990 /* XCRemoteSwiftPackageReference "SwiftyTube" */;
 			productName = SwiftyTube;
+		};
+		14C1B0022FF40000006B3990 /* onnxruntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 14C1B0012FF40000006B3990 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */;
+			productName = onnxruntime;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
