@@ -28,8 +28,9 @@ bleiben bewusst.
 | Glas-Look (Mini-Player, Leisten, Sheets, Player) | iPad | Teil D2 | ja (Android v1.0.8) |
 | KI-Sync/-Kalibrierung | iPad | Teil D1 | ja (Android v1.0.9) |
 | Lautsprecher-Auswahl (Runde 12) | gleich | Knopf in der unteren Player-Leiste zwischen Sleep-Timer und Songtext; Sheet „Lautsprecher“: aktuelle Ausgabe „Verbunden“, „Ausgabe wählen“ (System-Liste), neue Bluetooth-Geräte (iPad: Hinweis + „Einstellungen öffnen“, Android: „In der Nähe suchen“, koppeln, verbinden); externe Ausgabe mit Icon + Name in Player und Mini-Player | ja (wip, Gerät folgt) |
-| Wiedergabefehler (Runde 12) | gleich | Client-Kette wie Android plus WEB/MWEB, Client 10 min je Song gesperrt, Banner mit „Erneut versuchen“; iPad zusätzlich Fehlerprotokoll unter Über | ja – iPad (wip) |
-| Downloads als Dateien, „Nur Downloads“, PS5-Stick (Runde 12) | Android | iOS hat keinen frei sichtbaren Musikordner; Stick-Abgleich aufs iPad erst nach dem PS5-Test | Android (wip), iPad offen |
+| Wiedergabefehler (Runde 12) | gleich | Client-Kette wie Android plus WEB/MWEB, Client 10 min je Song gesperrt, abgelaufene URLs neu holen, Banner mit „Erneut versuchen“ (vergisst Sperren), gleiche Texte, Fehlerprotokoll unter Über → „Fehlerprotokoll teilen“ auf beiden | ja (iPad v0.8.19, Android v1.0.14) |
+| Downloads als Dateien, „Nur Downloads“, PS5-Stick (Runde 12) | Android | iOS hat keinen frei sichtbaren Musikordner; PS5-Stick aufs iPad mit gleicher Struktur, gleichem Manifest und Formatversion (Stick per Dokumentauswahl, manueller Abgleich) – vorbereitet, nur im Entwicklermodus, Freigabe nach dem Cover-Test an der PS5 | Android (v1.0.13), iPad hinter Schalter |
+| KI-Sync mit bekannten Lyrics (Runde 12) | Android (CTC) | CTC-Alignment (wav2vec2-base-960h int8, ONNX Runtime) ist Standard, wenn die Lyrics bekannt und lateinisch sind; Whisper für „Lyrics aus Audio“, nicht-lateinische Lyrics und als Fallback; gleiche synthetische Tests inkl. deutscher Platzhaltertexte | ja (iPad wip) |
 
 ## Theming (Ergänzung)
 

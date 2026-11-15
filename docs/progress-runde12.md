@@ -124,8 +124,7 @@ v1.0.14, gesammelte Gerätetests).
   - Im Simulator ist CTC also nicht schneller als Whisper (ONNX Runtime läuft hier mit der
     CPU-Ausführung, 4 Threads). Auf dem Pixel war CTC deutlich schneller als whisper.cpp
     (10,2 s für 169 s). Wie es auf einem echten iPad aussieht, ist offen; falls zu langsam:
-    Core-ML-Execution-Provider von ONNX Runtime ausprobieren. Genauer ist CTC in jedem Fall
-    beim Zeilenanfang, weil die Lyrics bekannt sind.
+    Core-ML-Execution-Provider von ONNX Runtime ausprobieren.
   - Zum Vergleich Android (Pixel 11 Pro, echter Song 169 s): CTC 10,2 s, Zeilenfehler
     Median 0,07 s.
 - Auf einem echten iPad nicht gemessen.
