@@ -6,7 +6,7 @@ Reihenfolge 1 → 2 → 3 → 4, nach jedem Punkt ein Release. Android-Details:
 | Punkt | Inhalt | Status |
 |---|---|---|
 | 1 | iPad: Wiedergabefehler protokollieren, Client-Fallback wie Android, „Erneut versuchen“ | Release iPad v0.8.19 (Unit-Tests grün, auf dem iPad nicht getestet) |
-| 2 | Beide: Lautsprecher-Auswahl im Player | in Arbeit |
+| 2 | Beide: Lautsprecher-Auswahl im Player | iPad v0.8.20, Android v1.0.12 (ohne echten Lautsprecher getestet) |
 | 3 | Android: Downloads als sichtbare Dateien, „Nur Downloads“ | offen |
 | 4 | Android: PS5-Stick | offen |
 
@@ -56,3 +56,30 @@ Reihenfolge 1 → 2 → 3 → 4, nach jedem Punkt ein Release. Android-Details:
 - Auf einem echten iPad nicht getestet (nur Simulator-CI, dort bekommt YouTube eine
   Bot-Prüfung, die UI-Tests spielen einen Testton). Ob WEB/MWEB ohne Login auf dem iPad
   zuverlässig Streams liefern, zeigt erst das Fehlerprotokoll im Alltag.
+
+## 2. Lautsprecher-Auswahl (beide Apps)
+
+- Knopf in der unteren Player-Leiste zwischen Sleep-Timer und Songtext (iPad und Android an
+  derselben Stelle, in jedem Player-Stil sichtbar). Auf dem Gerät selbst ein runder Knopf,
+  bei externer Ausgabe eine Pille mit Icon + Name (z. B. „Echo Dot“) in der Cover-Farbe;
+  der Mini-Player zeigt Icon + Name ebenfalls, nur bei externer Ausgabe.
+- Sheet „Lautsprecher“ im Glas-Look, gleiche Reihenfolge und Texte: aktuelle Ausgabe
+  („Verbunden“, Haken) → „Ausgabe wählen“ (System-Liste) → neue Bluetooth-Geräte.
+- iPad: „Ausgabe wählen“ ist AVRoutePickerView (iPad, Bluetooth-Geräte in Reichweite,
+  AirPlay); AVRouteDetector meldet, ob andere Ausgaben da sind (nur solange das Sheet offen
+  ist). Hinweis „Neues Bluetooth-Gerät? Einmal in den iPad-Einstellungen koppeln“ mit
+  „Einstellungen öffnen“ (App-Einstellungen – mehr erlaubt iOS nicht). Keine eigene Suche.
+- Android: zusätzlich „Dieses Gerät“ und die gekoppelten Bluetooth-Audiogeräte (Verbunden /
+  In Reichweite / Gekoppelt), „In der Nähe suchen“ (nur Audio-Geräte), Antippen koppelt und
+  verbindet. Direktes Verbinden ist auf Android 13+ nur System-Apps erlaubt; dann öffnet
+  Resona die System-Ausgabeauswahl, wo ein Tipp verbindet. Shizuku: geprüft, aber nicht
+  eingebaut – es gibt keinen Shell-Befehl zum Verbinden, und der Weg über interne
+  Bluetooth-Schnittstellen ist ohne Tests mit echtem Gerät zu unsicher.
+- Getestet auf dem Pixel ohne Lautsprecher: Sheet, „Bluetooth ist aus / Einschalten“,
+  System-Ausgabeauswahl öffnet sich. Nicht getestet: Suchen, Koppeln, Verbinden mit echtem
+  Lautsprecher/Echo Dot; iPad nur Unit-Tests (Ausgabe-Arten, Icons, Namen).
+
+## 3./4. Android: Downloads als Dateien, PS5-Stick
+Details in `docs/progress-android.md` (Android-Repo). Auf dem iPad offen: PS5-Stick mit
+gleicher Struktur und gleichem Manifest, Stick per Dokumentauswahl, manueller Sync – erst
+nach dem Test auf der PS5.
