@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.24",
+          "buildVersion": "82",
+          "date": "2026-11-15T17:30:24Z",
+          "localizedDescription": "- PS5 stick on the iPad released (the PS5 plays format 2; it shows no covers for USB music): no switch, Settings → Downloads → PS5 stick with the cover hint, German texts, only the app's own .m4a downloads are copied\n- Docs: lyrics depth measured on the Pixel",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.24/Resona.ipa",
+          "size": 36802805,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.23",
           "buildVersion": "81",
           "date": "2026-11-15T14:34:17Z",
@@ -143,22 +152,13 @@
           "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.10/Resona.ipa",
           "size": 28881193,
           "minOSVersion": "18.0"
-        },
-        {
-          "version": "0.8.9",
-          "buildVersion": "67",
-          "date": "2026-10-28T21:58:25Z",
-          "localizedDescription": "- UI test: drop jump checked via the elapsed time; test report: drop menu proof screenshots\n- Docs: round 8 progress\n- More lyrics sources: SimpMusic and Unison (per YouTube upload — remixes/edits), Megalobiz, QQ Music; candidates with title/artist/duration, version-aware ranking; manual search lists every hit (provider, title, artist, duration, sync type, 'this version') and offers AI calibration after a pick; tests\n- Drop menu: plain buttons only (the Toggle took the app-wide custom toggle style); UI test proves both entries (screenshot, curve hides/shows, jump toast)",
-          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.9/Resona.ipa",
-          "size": 28819319,
-          "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.23",
-      "versionDate": "2026-11-15T14:34:17Z",
-      "versionDescription": "- CLAUDE.md: pixel-adb skill for Android device tests\n- Docs: EQ per output device\n- EQ per output device (iPad): the equalizer is remembered per output (iPad speaker, Bluetooth name, AirPlay name) and switches with the route, hint 'EQ: <preset> for <device>'; EQ screen shows 'Applies to: <device>', 'Same for all devices' and 'Use default EQ'; unknown devices use the default EQ; unit tests for mapping and switching\n- Docs: no unmeasured accuracy claim\n- Docs: round 12 closing numbers (CTC runtime in the simulator, UI test findings)\n- UI test: elapsed time read from the leftmost time label (the other one can show the remaining time, read as a jump to 243 s)",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.23/Resona.ipa",
-      "size": 36800843,
+      "version": "0.8.24",
+      "versionDate": "2026-11-15T17:30:24Z",
+      "versionDescription": "- PS5 stick on the iPad released (the PS5 plays format 2; it shows no covers for USB music): no switch, Settings → Downloads → PS5 stick with the cover hint, German texts, only the app's own .m4a downloads are copied\n- Docs: lyrics depth measured on the Pixel",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.24/Resona.ipa",
+      "size": 36802805,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
