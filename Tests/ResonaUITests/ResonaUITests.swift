@@ -394,13 +394,15 @@ final class ResonaUITests: XCTestCase {
     }
 
     /// The player's elapsed time ("m:ss", the smaller of the two labels).
+    /// The elapsed time is the leftmost "m:ss" label (the right one can show the
+    /// remaining time: 4:03 left of 5:00 was once read as "jumped to 243 s").
     private func elapsedSeconds() -> Int? {
-        let labels = app.staticTexts.allElementsBoundByIndex.compactMap { element -> Int? in
+        let labels = app.staticTexts.allElementsBoundByIndex.compactMap { element -> (x: CGFloat, seconds: Int)? in
             let parts = element.label.split(separator: ":")
-            guard parts.count == 2, let m = Int(parts[0]), let s = Int(parts[1]), parts[1].count == 2 else { return nil }
-            return m * 60 + s
+            guard parts.count == 2, let m = Int(parts[0]), m >= 0, let s = Int(parts[1]), parts[1].count == 2 else { return nil }
+            return (element.frame.minX, m * 60 + s)
         }
-        return labels.min()
+        return labels.min(by: { $0.x < $1.x })?.seconds
     }
 
     /// Back to the tabs: chevron if there is one (portrait), otherwise the
