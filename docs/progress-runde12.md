@@ -99,8 +99,8 @@ v1.0.14, gesammelte Gerätetests).
 | 3 | iPad: CTC-Alignment wie Android | Release iPad **v0.8.21** |
 | 4 | CTC mit deutschen Platzhaltertexten | Test grün auf beiden; kein MMS |
 | 5 | Lyrics-Tiefe Android | nicht gemessen (kein Gerät) |
-| 6 | Glas unter Android 12; iPad-UI-Test test1Portrait | siehe unten |
-| 7 | PS5-Stick fürs iPad | vorbereitet, nur im Entwicklermodus |
+| 6 | Glas unter Android 12; iPad-UI-Test test1Portrait | Android: CI-Emulator API 30 ok; iPad: zwei Ursachen behoben, Querformat-Pille offen |
+| 7 | PS5-Stick fürs iPad | in v0.8.22 enthalten, nur im Entwicklermodus + Schalter |
 
 ## 3. KI-Sync: CTC auf dem iPad
 
@@ -117,8 +117,15 @@ v1.0.14, gesammelte Gerätetests).
   Log-Softmax. Neu nur auf dem iPad: `AISyncPipelineTests.testCtcAlignsTheSameSpeech` –
   dieselbe synthetische Sprache (macOS `say`, erfundene Sätze) wie der Whisper-Test.
 - Laufzeit im Simulator (GitHub-Runner, macOS 26, Apple Silicon):
-  - Whisper base, gleiche Sprachdatei: 80,5 s (Testlauf vom 15.11.)
-  - CTC: CTC_LAUFZEIT
+  - Sprachdatei 200 s, 60 erfundene Sätze (macOS `say`), Lauf vom 15.11. (wip 6368750):
+  - CTC: Modell (Emissionen + Pfad) **52,1 s**, ganzer Test 75,9 s inkl. Download (95 MB)
+    und Umwandlung; 580 Wörter, **99 %** der Zeilen zugeordnet, alle Zeilen mit Zeit, steigend.
+  - Whisper base, gleiche Datei: Erkennung ≈ 61 s, ganzer Test 69,4 s; 584 Wörter, 100 %.
+  - Im Simulator ist CTC also nicht schneller als Whisper (ONNX Runtime läuft hier mit der
+    CPU-Ausführung, 4 Threads). Auf dem Pixel war CTC deutlich schneller als whisper.cpp
+    (10,2 s für 169 s). Wie es auf einem echten iPad aussieht, ist offen; falls zu langsam:
+    Core-ML-Execution-Provider von ONNX Runtime ausprobieren. Genauer ist CTC in jedem Fall
+    beim Zeilenanfang, weil die Lyrics bekannt sind.
   - Zum Vergleich Android (Pixel 11 Pro, echter Song 169 s): CTC 10,2 s, Zeilenfehler
     Median 0,07 s.
 - Auf einem echten iPad nicht gemessen.
@@ -134,7 +141,12 @@ alle weiteren Player-Schritte. Fix: Drop-Menü mit Wiederholungen öffnen (Butto
 Menüpunkt), Rest-Menü vorher schließen, Pille erneut tippen, wenn der Player noch vorne
 liegt; Drop-Sprung geprüft als „zwei Sprünge landen an derselben Stelle“ statt „> 4 s
 bewegt“; Live-Vorschläge nur notiert (hängen von YouTubes Antwort an den Runner ab).
-Ergebnis: UI_ERGEBNIS
+Ergebnis: Lauf mit dem Fix (wip 6368750): Lyrics-Pille im Hochformat jetzt ok, dafür meldete der
+Drop-Test „56 / 243 s“ bzw. „56 / 133 s“ – die Hilfsfunktion nahm die kleinste Zeitangabe
+auf dem Bildschirm, und das war beim zweiten Lesen offenbar die rechte Anzeige (Restzeit
+4:03 von 5:00). Jetzt zählt die linke Zeitangabe (wip 42b49ce). Im Querformat kam der Tipp
+auf die Songtext-Pille einmal nicht an („close button appears after a tap“) – noch offen.
+Die UI-Tests blockieren kein Release (nur Build + Unit-Tests).
 
 ## 7. PS5-Stick fürs iPad (nicht freigegeben)
 - Einstellungen → Speicher (Downloads) → Abschnitt „Developer (testing)“ nur im
