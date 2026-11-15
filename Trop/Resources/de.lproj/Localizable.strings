@@ -912,3 +912,18 @@
 "Default EQ – changes apply to this device only" = "Standard-EQ – Änderungen gelten nur für dieses Gerät";
 "Same for all devices" = "Für alle Geräte gleich";
 "Use default EQ" = "Standard-EQ verwenden";
+
+/* PS5 stick (round 12) */
+"PS5 stick" = "PS5-Stick";
+"Copies downloaded playlists to a USB stick for the PS5, like Resona for Android. The PS5 does not show covers for USB music." = "Kopiert heruntergeladene Playlists auf einen USB-Stick für die PS5, wie Resona für Android. Die PS5 zeigt bei USB-Musik keine Cover an.";
+"Stick" = "Stick";
+"Choose…" = "Auswählen …";
+"Choose the top folder of the USB stick. Songs go to Music/<Playlist>/ as .m4a with title, artist and cover, the same as Resona for Android. Only files Resona put there are moved or deleted. The PS5 does not show covers for USB music." = "Wähle den obersten Ordner des USB-Sticks. Die Songs kommen als .m4a mit Titel, Künstler und Cover nach Music/<Playlist>/, wie bei Resona für Android. Verschoben oder gelöscht werden nur Dateien, die Resona dort abgelegt hat. Die PS5 zeigt bei USB-Musik keine Cover an.";
+"Only downloaded songs are copied; download the playlists first." = "Kopiert werden nur heruntergeladene Songs – lade die Playlists vorher herunter.";
+"Syncing %lld/%lld…" = "Wird synchronisiert %lld/%lld …";
+"Sync now" = "Jetzt synchronisieren";
+"Sync and remove playlists no longer chosen" = "Synchronisieren und abgewählte Playlists entfernen";
+"Remove playlists from the stick?" = "Playlists vom Stick entfernen?";
+"Sync and remove" = "Synchronisieren und entfernen";
+"Folders of playlists that are no longer chosen are deleted from the stick (only files Resona copied)." = "Ordner abgewählter Playlists werden vom Stick gelöscht (nur Dateien, die Resona kopiert hat).";
+"%lld songs copied, %lld not downloaded." = "%lld Songs kopiert, %lld nicht heruntergeladen.";

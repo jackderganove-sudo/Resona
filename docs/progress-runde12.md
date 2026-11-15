@@ -100,7 +100,7 @@ v1.0.14, gesammelte Gerätetests).
 | 4 | CTC mit deutschen Platzhaltertexten | Test grün auf beiden; kein MMS |
 | 5 | Lyrics-Tiefe Android | nicht gemessen (kein Gerät) |
 | 6 | Glas unter Android 12; iPad-UI-Test test1Portrait | Android: CI-Emulator API 30 ok; iPad: zwei Ursachen behoben, Querformat-Pille offen |
-| 7 | PS5-Stick fürs iPad | in v0.8.22 enthalten, nur im Entwicklermodus + Schalter |
+| 7 | PS5-Stick fürs iPad | nach dem PS5-Test freigegeben (Einstellungen → Speicher → PS5-Stick) |
 
 ## 3. KI-Sync: CTC auf dem iPad
 
@@ -198,3 +198,18 @@ Die UI-Tests blockieren kein Release (nur Build + Unit-Tests).
   speichert); nach einem Umschalten werden die eigenen Schreibvorgänge 3 s lang nicht als
   Änderung gezählt.
 - Getestet: Unit-Tests. Gerätetest mit Kopfhörer am Pixel steht aus (Emil).
+
+## Nachtrag 15.11.: PS5-Test und Freigabe
+
+- PS5 (Emil): Android-Dateien in Format 2 laufen; die iPad-Datei lief schon vorher. Cover zeigt
+  die PS5 bei USB-Musik in keiner Variante (M4A `covr`, `folder.jpg`, `cover.jpg`, MP3 APIC,
+  FLAC PICTURE).
+- iPad-PS5-Stick freigegeben: Schalter und Entwicklermodus-Bedingung entfernt, Eintrag
+  „PS5-Stick“ unter Einstellungen → Speicher mit Hinweis „Die PS5 zeigt bei USB-Musik keine Cover
+  an.“, deutsche Texte ergänzt.
+- Struktur geprüft: Eine iPad-Datei auf dem Stick (ffmpeg-Download, `Music/XXXTENTACION - changes
+  [2yoIPB8sowA].m4a`) hat `ftyp M4A ` (minor 512, `M4A isom iso2`), kein `moof`, `stco`,
+  AAC-LC, Tags `©nam`/`©ART`/`©too` + JPEG-`covr` – das ist Format 2 wie bei Android (Unterschiede:
+  moov hinten, 44,1 kHz/128 kbit/s, siehe Vergleich in `progress-android.md`). Der iPad-Abgleich
+  kopiert genau diese Downloads unverändert. Aus der Dateien-App importierte Songs (können MP3/FLAC
+  sein) werden nicht kopiert, sie zählen als „nicht heruntergeladen“.

@@ -2,8 +2,9 @@
 //  StickSync.swift
 //  Resona
 //
-//  PS5 stick on the iPad (round 12, prepared, behind a switch until the PS5
-//  cover test): the same layout and manifest as Resona-Android — chosen
+//  PS5 stick on the iPad (round 12, released after the PS5 test: Android's
+//  format 2 plays, the PS5 shows no covers for USB music): the same layout and
+//  manifest as Resona-Android — chosen
 //  playlists as Music/<Playlist>/<Nr> - <Artist> - <Title>.m4a, manifest
 //  Music/.resona-sync.json with a format version, FAT32-safe names, only
 //  files the manifest knows are moved or deleted. The stick is picked with
@@ -193,7 +194,6 @@ enum StickPlan {
 @MainActor
 final class StickSync {
     static let shared = StickSync()
-    static let enabledKey = "resona.ps5Stick.enabled"
     private let bookmarkKey = "resona.ps5Stick.bookmark"
     private let playlistsKey = "resona.ps5Stick.playlists"
 
@@ -284,7 +284,10 @@ final class StickSync {
                 if !movesFinished { finishMoves(); movesFinished = true }
                 done += 1
                 progress(done, total)
-                guard let source = await DownloadManager.shared.localURL(for: songId) else {
+                // Only the app's own downloads (ffmpeg .m4a = format 2); songs imported
+                // from the Files app may be MP3/FLAC and would get a wrong name.
+                guard let source = await DownloadManager.shared.localURL(for: songId),
+                      source.pathExtension.lowercased() == "m4a" else {
                     missing += 1
                     manifest.songs = manifest.songs.filter { $0.value.path != path }
                     continue

@@ -13,8 +13,6 @@ struct DownloadSettingsView: View {
     @State private var trackCount = 0
     @State private var cacheSizes: [StorageMaintenance.Area: Int64?] = [:]
     @State private var confirmDeleteAll = false
-    @AppStorage("resona.developerMode") private var developerMode = false
-    @AppStorage(StickSync.enabledKey) private var stickEnabled = false
 
     private var storageLabel: String {
         ByteCountFormatter.string(fromByteCount: storageBytes, countStyle: .file)
@@ -72,17 +70,11 @@ struct DownloadSettingsView: View {
                 Text("Clearing caches never touches your downloads; images and lyrics are loaded again when needed.")
             }
 
-            if developerMode {
-                M3Section {
-                    SettingsToggleRow("PS5 stick (preview)", icon: "externaldrive", isOn: $stickEnabled)
-                    if stickEnabled {
-                        SettingsNavigationRow("PS5 stick", icon: "gamecontroller") { StickSyncView() }
-                    }
-                } header: {
-                    Text("Developer (testing)")
-                } footer: {
-                    Text("Copies downloaded playlists to a USB stick for the PS5, like Resona for Android. Hidden until the cover test on the PS5 is done.")
-                }
+            // PS5 stick (round 12): same layout, manifest and file format 2 as Resona-Android.
+            M3Section {
+                SettingsNavigationRow("PS5 stick", icon: "gamecontroller") { StickSyncView() }
+            } footer: {
+                Text("Copies downloaded playlists to a USB stick for the PS5, like Resona for Android. The PS5 does not show covers for USB music.")
             }
 
             M3Section {

@@ -2,8 +2,7 @@
 //  StickSyncView.swift
 //  Resona
 //
-//  Settings → Downloads → PS5 stick (preview, developer mode only until the
-//  PS5 cover test): pick the stick in the Files picker, choose playlists,
+//  Settings → Downloads → PS5 stick: pick the stick in the Files picker, choose playlists,
 //  sync by hand. Same layout and manifest as Resona-Android.
 //
 
@@ -39,7 +38,7 @@ struct StickSyncView: View {
                 }
                 .buttonStyle(M3RowPressStyle())
             } footer: {
-                Text("Choose the top folder of the USB stick. Songs go to Music/<Playlist>/ as .m4a with title, artist, album, track number and cover, the same as Resona for Android. Only files Resona put there are moved or deleted.")
+                Text("Choose the top folder of the USB stick. Songs go to Music/<Playlist>/ as .m4a with title, artist and cover, the same as Resona for Android. Only files Resona put there are moved or deleted. The PS5 does not show covers for USB music.")
             }
 
             M3Section {
