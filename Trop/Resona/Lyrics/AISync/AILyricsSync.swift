@@ -406,6 +406,22 @@ final class AILyricsSync {
         return (result.words, Double(samples.count) / 16_000)
     }
 
+    /// Test hook (CI, round 12): CTC forced alignment of a file with known text;
+    /// also returns how long the model took (emissions + path, without download).
+    nonisolated static func ctcAlignFile(_ path: String, lines: [String]) async throws
+        -> (words: [RecognizedWord], audioSeconds: Double, seconds: Double) {
+        let wav = FileManager.default.temporaryDirectory.appendingPathComponent("aisync-ctc-test-\(UUID().uuidString).wav")
+        defer { try? FileManager.default.removeItem(at: wav) }
+        try await convertToWhisperWAV(input: path, output: wav)
+        let samples = try AudioProcessor.loadAudioAsFloatArray(fromPath: wav.path)
+        if !CtcModel.isDownloaded { try await CtcModel.download { _ in } }
+        let lyricWords = lines.flatMap { $0.split(whereSeparator: { $0 == " " || $0 == "\t" }).map(String.init) }
+        let start = Date()
+        let emissions = try CtcEmissions.compute(modelPath: CtcModel.file.path, audio: samples, threads: CtcModel.threads)
+        let words = CtcAligner.words(emissions, lyricWords: lyricWords, minConfidence: CtcModel.minConfidence)
+        return (words, Double(samples.count) / 16_000, Date().timeIntervalSince(start))
+    }
+
     /// Local download or stream → temporary 16 kHz mono WAV (ffmpeg).
     private static func prepareAudio(videoId: String) async throws -> URL {
         var input: String?

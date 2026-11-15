@@ -40,4 +40,24 @@ final class AISyncPipelineTests: XCTestCase {
         XCTAssertEqual(starts, starts.sorted(), "line times increase")
         XCTAssertGreaterThan(starts.last ?? 0, result.audioSeconds * 0.8, "last line near the end")
     }
+
+    /// Round 12: the same speech through CTC forced alignment (the default when
+    /// the lyrics are known). Prints the runtime for docs/progress-runde12.md.
+    func testCtcAlignsTheSameSpeech() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let audio = env["RESONA_SPEECH_AUDIO"], let textPath = env["RESONA_SPEECH_TEXT"],
+              FileManager.default.fileExists(atPath: audio) else {
+            throw XCTSkip("no synthetic speech fixture (only created by scripts/simulator_tests.sh)")
+        }
+        let lines = try String(contentsOfFile: textPath, encoding: .utf8)
+            .split(separator: "\n").map(String.init).filter { !$0.isEmpty }
+        let result = try await AILyricsSync.ctcAlignFile(audio, lines: lines)
+        let aligned = LyricsAligner.align(lines: lines, recognized: result.words, duration: result.audioSeconds)
+        print("AISYNC CTC test: \(result.words.count) words, audio \(Int(result.audioSeconds)) s, model \(String(format: "%.1f", result.seconds)) s, matched \(Int(aligned.matchedRatio * 100)) %")
+        XCTAssertGreaterThan(aligned.matchedRatio, 0.8)
+        let starts = aligned.lines.compactMap(\.startTime)
+        XCTAssertEqual(starts.count, lines.count, "every line gets a time")
+        XCTAssertEqual(starts, starts.sorted(), "line times increase")
+        XCTAssertGreaterThan(starts.last ?? 0, result.audioSeconds * 0.8, "last line near the end")
+    }
 }
