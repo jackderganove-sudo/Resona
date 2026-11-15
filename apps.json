@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.25",
+          "buildVersion": "83",
+          "date": "2026-11-15T22:30:49Z",
+          "localizedDescription": "- Downloads on the iPad like Android: 8 MB range blocks via URLSession instead of one ffmpeg request (throttled to about real time, long mixes broke off and started over); a refused block (403/410, expired link) continues at the same byte with a freshly resolved link, another format starts the file again; MB and percent in the song row; failed blocks in the error log (stage download)",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.25/Resona.ipa",
+          "size": 36814482,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.24",
           "buildVersion": "82",
           "date": "2026-11-15T17:30:24Z",
@@ -143,22 +152,13 @@
           "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.11/Resona.ipa",
           "size": 28920741,
           "minOSVersion": "18.0"
-        },
-        {
-          "version": "0.8.10",
-          "buildVersion": "68",
-          "date": "2026-10-29T08:13:28Z",
-          "localizedDescription": "- Fix optional chaining in the Deezer lyrics parser\n- Docs: round 9 progress\n- Lyrics accounts: Deezer (web login reads the ARL cookie, or paste; JWT + pipe GraphQL with word/line sync; Keychain only, sign out, expiry → 'sign in again') and Musixmatch with the user's own token (desktop API, falls back to guest); settings section with status and 'create free account'; tests\n- Full-screen lyrics: status bar + home indicator hidden, ✕/⋯ hidden until a tap on a free area (3 s), both as lyrics settings (default on); UI test reveals the buttons by a header tap",
-          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.10/Resona.ipa",
-          "size": 28881193,
-          "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.24",
-      "versionDate": "2026-11-15T17:30:24Z",
-      "versionDescription": "- PS5 stick on the iPad released (the PS5 plays format 2; it shows no covers for USB music): no switch, Settings → Downloads → PS5 stick with the cover hint, German texts, only the app's own .m4a downloads are copied\n- Docs: lyrics depth measured on the Pixel",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.24/Resona.ipa",
-      "size": 36802805,
+      "version": "0.8.25",
+      "versionDate": "2026-11-15T22:30:49Z",
+      "versionDescription": "- Downloads on the iPad like Android: 8 MB range blocks via URLSession instead of one ffmpeg request (throttled to about real time, long mixes broke off and started over); a refused block (403/410, expired link) continues at the same byte with a freshly resolved link, another format starts the file again; MB and percent in the song row; failed blocks in the error log (stage download)",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.25/Resona.ipa",
+      "size": 36814482,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
