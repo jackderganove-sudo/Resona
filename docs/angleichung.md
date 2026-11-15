@@ -31,6 +31,7 @@ bleiben bewusst.
 | Wiedergabefehler (Runde 12) | gleich | Client-Kette wie Android plus WEB/MWEB, Client 10 min je Song gesperrt, abgelaufene URLs neu holen, Banner mit „Erneut versuchen“ (vergisst Sperren), gleiche Texte, Fehlerprotokoll unter Über → „Fehlerprotokoll teilen“ auf beiden | ja (iPad v0.8.19, Android v1.0.14) |
 | Downloads als Dateien, „Nur Downloads“, PS5-Stick (Runde 12) | Android | iOS hat keinen frei sichtbaren Musikordner; PS5-Stick aufs iPad mit gleicher Struktur, gleichem Manifest und Formatversion (Stick per Dokumentauswahl, manueller Abgleich) – vorbereitet, nur im Entwicklermodus, Freigabe nach dem Cover-Test an der PS5 | Android (v1.0.13), iPad hinter Schalter |
 | KI-Sync mit bekannten Lyrics (Runde 12) | Android (CTC) | CTC-Alignment (wav2vec2-base-960h int8, ONNX Runtime) ist Standard, wenn die Lyrics bekannt und lateinisch sind; Whisper für „Lyrics aus Audio“, nicht-lateinische Lyrics und als Fallback; gleiche synthetische Tests inkl. deutscher Platzhaltertexte | ja (iPad wip) |
+| EQ pro Ausgabegerät (Runde 12) | gleich | EQ wird je Ausgabe gemerkt (Gerätelautsprecher, Bluetooth-/USB-/AirPlay-Name) und beim Wechsel umgeschaltet, Hinweis „EQ: <Preset> für <Gerät>“; oben im EQ-Bildschirm „Gilt für: <Gerät>“, Schalter „Für alle Geräte gleich“, „Standard-EQ verwenden“; unbekannte Geräte nutzen den Standard-EQ; gleiche Regeln und Unit-Tests. Gespeichert wird je Plattform der ganze EQ-Zustand (iPad: an/aus, Preset, 10 Bänder; Android zusätzlich Ausgangsverstärkung, Bass-Boost, Virtualizer) | wip |
 
 ## Theming (Ergänzung)
 
