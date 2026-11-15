@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.22",
+          "buildVersion": "80",
+          "date": "2026-11-15T12:57:04Z",
+          "localizedDescription": "- PS5 stick view: import UniformTypeIdentifiers; docs: round 12 closing section\n- Test: CTC forced alignment on the same synthetic speech as the Whisper pipeline test, runtime printed for the docs (round 12, point 3)\n- PS5 stick on the iPad, prepared behind a switch (round 12, point 7): same layout and manifest as Resona-Android (Music/<Playlist>/NN - Artist - Title.m4a, Music/.resona-sync.json with format version, FAT32-safe names, only manifest files moved or deleted), stick picked in the Files picker (bookmark), manual sync; visible only in developer mode with 'PS5 stick (preview)' on until the PS5 cover test",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.22/Resona.ipa",
+          "size": 36783184,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.21",
           "buildVersion": "79",
           "date": "2026-11-15T11:39:42Z",
@@ -143,22 +152,13 @@
           "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.8/Resona.ipa",
           "size": 28794027,
           "minOSVersion": "18.0"
-        },
-        {
-          "version": "0.8.7",
-          "buildVersion": "65",
-          "date": "2026-10-28T15:38:52Z",
-          "localizedDescription": "- Docs: round 6 progress\n- Crossfade dropouts: audio session identical to mpv's iOS output (no mode/policy flip-flop), fixed 48 kHz stereo float output so outputs stay open across files, faded instance parked on silence instead of stopped (no setActive(NO)), spare warmed up on creation, timestamped logs; revive only as watchdog\n- AI sync: larger model tried automatically below 30 %, aligner more tolerant (phonetic similarity for longer words, sung spellings, digits as words, threshold 0.5); tests\n- AI lyrics: outlier anchors dropped (longest non-decreasing run) and interpolated, strictly increasing word/line times; lyrics never jump backwards (monotonic timing on load); tests with scrambled times\n- Slowed: cross-check the original length with the original's YouTube Music audio track (used when within 6 % of LRCLIB, both logged); tempo fine tuning ±0.01 in the lyrics menu\n- Most-replayed curve can be switched off: long press on the drop button (menu) or Settings → Playback; default on",
-          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.7/Resona.ipa",
-          "size": 28750021,
-          "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.21",
-      "versionDate": "2026-11-15T11:39:42Z",
-      "versionDescription": "- UI test test1Portrait: drop menu opened with retries (button or menu item), jump checked as two jumps landing on the same spot instead of 'moved by more than 4 s', leftover menu dismissed before the lyrics pill, lyrics pill tapped again when the player is still in front; live suggestions depend on YouTube answering the runner and are only noted\n- AI sync on the iPad like Android (round 12): CTC forced alignment (wav2vec2-base-960h int8, ONNX Runtime) is the default when the lyrics are known and Latin script; WhisperKit for lyrics from audio, non-Latin lyrics and as fallback; same aligner and calibration; synthetic tests shared with Android incl. German placeholder lyrics\n- Docs: round 11 closing summary with open items",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.21/Resona.ipa",
-      "size": 36737445,
+      "version": "0.8.22",
+      "versionDate": "2026-11-15T12:57:04Z",
+      "versionDescription": "- PS5 stick view: import UniformTypeIdentifiers; docs: round 12 closing section\n- Test: CTC forced alignment on the same synthetic speech as the Whisper pipeline test, runtime printed for the docs (round 12, point 3)\n- PS5 stick on the iPad, prepared behind a switch (round 12, point 7): same layout and manifest as Resona-Android (Music/<Playlist>/NN - Artist - Title.m4a, Music/.resona-sync.json with format version, FAT32-safe names, only manifest files moved or deleted), stick picked in the Files picker (bookmark), manual sync; visible only in developer mode with 'PS5 stick (preview)' on until the PS5 cover test",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.22/Resona.ipa",
+      "size": 36783184,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
