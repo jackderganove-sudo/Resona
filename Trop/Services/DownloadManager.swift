@@ -20,6 +20,9 @@ final class DownloadManager: ObservableObject {
     static let shared = DownloadManager()
 
     @Published private(set) var downloads: [String: DownloadState] = [:]
+    /// Round 12: bytes so far / total while a song downloads ("12.3 of 58.0 MB · 21 %").
+    struct ByteProgress: Equatable { var done: Int64; var total: Int64? }
+    @Published fileprivate(set) var downloadBytes: [String: ByteProgress] = [:]
     @Published private(set) var tracks: [DownloadedTrackEntity] = []
     @Published private(set) var persistedDownloadCount = 0
     @Published private(set) var isLoaded = false
@@ -601,36 +604,42 @@ extension DownloadManager {
 
     // MARK: - File Transfer (ffmpeg)
 
+    /// Round 12: in 8 MB range blocks (ChunkedDownload) instead of one ffmpeg request –
+    /// YouTube throttled that to about real time and long mixes broke off and started over.
+    /// A refused block (403/410, expired link) gets a freshly resolved link at the same byte.
     private func downloadToFile(
         from url: URL,
         to destination: URL,
         videoId: String
     ) async throws {
-        guard let caPath = Bundle.main.path(forResource: "cacert", ofType: "pem") else {
-            throw NSError(
-                domain: "DownloadManager",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "CA certificate bundle not found"]
-            )
-        }
-
-        let args = [
-            "-y",
-            "-rw_timeout", "30000000",
-            "-cafile", caPath,
-            "-headers", "User-Agent: Mozilla/5.0\r\n",
-            "-i", url.absoluteString,
-            "-c", "copy",
-            destination.path
-        ]
-
-        try await runFFmpeg(arguments: args, videoId: videoId) { [weak self] size in
-            Task { @MainActor in
-                // Asymptotic map so unknown Content-Length still moves the bar.
-                let fraction = 0.05 + 0.80 * (1 - exp(-Double(size) / 5_000_000))
-                self?.setProgress(fraction, for: videoId)
+        let stats = try await ChunkedDownload.run(
+            url: url,
+            to: destination,
+            refresh: {
+                let fresh = try await PlaybackManager.shared.resolve(videoId: videoId, forDownload: true)
+                guard let next = URL(string: fresh.streamUrl) else { throw DownloadError.invalidStreamURL }
+                return next
+            },
+            onRetry: { position, status in
+                Task {
+                    await PlaybackErrorLog.shared.record(PlaybackLogEntry(
+                        time: Date(), videoId: videoId, client: "download", stage: .download, httpStatus: status,
+                        message: String(format: "block at %.1f MB failed", Double(position) / 1_048_576)
+                    ))
+                }
+            },
+            progress: { [weak self] done, total in
+                Task { @MainActor in
+                    // Known total: real fraction; otherwise the old asymptotic bar.
+                    let fraction = total.map { 0.05 + 0.80 * Double(done) / Double(max($0, 1)) }
+                        ?? 0.05 + 0.80 * (1 - exp(-Double(done) / 5_000_000))
+                    self?.setProgress(fraction, for: videoId)
+                    self?.downloadBytes[videoId] = ByteProgress(done: done, total: total)
+                }
             }
-        }
+        )
+        downloadBytes[videoId] = nil
+        Log.downloadManager.info("DOWNLOAD \(videoId): \(String(format: "%.1f MB in %.1f s (%.0f KB/s)", Double(stats.bytes) / 1_048_576, stats.seconds, Double(stats.bytes) / 1024 / max(stats.seconds, 0.001))), \(stats.requests) requests, \(stats.retries) retries")
     }
 
     /// Runs FFmpeg off the main actor via the async API; optionally reports size stats.

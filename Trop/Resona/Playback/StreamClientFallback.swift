@@ -55,7 +55,7 @@ enum ResonaStreamChain {
 /// One line of the error log. Never cookies, tokens, account names or full stream URLs.
 struct PlaybackLogEntry: Codable, Equatable, Sendable {
     enum Stage: String, Codable, Sendable {
-        case resolve, validate, player, success
+        case resolve, validate, player, success, download
     }
 
     var time: Date

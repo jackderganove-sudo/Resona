@@ -124,5 +124,23 @@ struct DownloadCellProgressView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: state)
+        // Round 12: MB and percent, so a long mix visibly moves.
+        .overlay(alignment: .bottomTrailing) {
+            if case .downloading = state, let bytes = downloadManager.downloadBytes[song.videoId], bytes.done > 0 {
+                Text(Self.text(bytes))
+                    .font(.m3(.labelSmall))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .padding(.trailing, 12)
+                    .padding(.bottom, 2)
+                    .accessibilityIdentifier("download.bytes")
+            }
+        }
+    }
+
+    static func text(_ bytes: DownloadManager.ByteProgress) -> String {
+        let done = String(format: "%.1f", Double(bytes.done) / 1_048_576)
+        guard let total = bytes.total, total > 0 else { return "\(done) MB" }
+        return String(format: "%@ / %.1f MB · %d %%", done, Double(total) / 1_048_576, Int(Double(bytes.done) * 100 / Double(total)))
     }
 }
