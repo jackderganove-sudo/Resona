@@ -144,3 +144,16 @@ bis zum Ende und zurück scrollen, Wischen zum Entfernen, Umsortieren.
 - Tests: Signatur byte-genau gegen einen Referenzwert (derselbe Test auf Android),
   erfundene Antworten, UI-Test `test6MusicRecognition` mit erfundenem Song. Das echte
   Mikrofon und ein echter Treffer sind im Simulator nicht testbar.
+
+## Abschluss Runde 11 (Stand 15.11.)
+Alle Punkte A–H sind released (iPad bis v0.8.18, Android bis v1.0.11; KI-Sync-Beschleunigung
+und Messungen in Android v1.0.12, siehe `Resona-Android/docs/progress-runde11.md`).
+
+Offen:
+- Musikerkennung auf dem iPad mit echter Musik und echtem Treffer (Simulator kann kein Mikrofon).
+- UI-Tests `test1Portrait`/`test2Landscape` rot (vor Runde 11, siehe oben).
+- KI-Sync: iPad-Messwert für „Let Me Down Slowly“ zum Vergleich mit Android (CTC 10,2 s,
+  Whisper 11,2 s für 169 s); CTC-Forced-Alignment gibt es auf dem iPad noch nicht.
+- Lyrics-Tiefe auf Android weiter ohne Zeilen-Blur (Messung mit laufendem Song offen).
+- CI: Auf dem macOS-Runner erzeugt `say` keine Sprache mehr; der KI-Sync-Pipeline-Test wird
+  übersprungen, bis eine Stimme verfügbar ist.
