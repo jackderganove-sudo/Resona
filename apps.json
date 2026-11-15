@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.20",
+          "buildVersion": "78",
+          "date": "2026-11-15T02:29:37Z",
+          "localizedDescription": "- Docs: round 12 point 2 (speakers) and the open iPad stick item\n- Docs: round 12 point 1 released as v0.8.19\n- CI: skip the AI sync speech test when macOS say writes only silence (the runner image's voice gave 0.005 s)\n- Docs: round 12 progress (playback errors), alignment table\n- Speakers: button in the bottom row between sleep timer and lyrics (same place as on Android, visible in every player style)\n- Speakers (round 12): the player's output button opens a glass sheet — current output with name, the system list (iPad, Bluetooth devices in range, AirPlay) and a hint to pair new Bluetooth devices in the iPad settings; on an external output the button shows icon + name, the mini player too",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.20/Resona.ipa",
+          "size": 29523787,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.19",
           "buildVersion": "77",
           "date": "2026-11-14T22:56:10Z",
@@ -143,22 +152,13 @@
           "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.6/Resona.ipa",
           "size": 28731675,
           "minOSVersion": "18.0"
-        },
-        {
-          "version": "0.8.5",
-          "buildVersion": "63",
-          "date": "2026-10-28T12:40:57Z",
-          "localizedDescription": "- Simulator tests: retry package resolution; test report draft with crossfade diagrams\n- UI tests: query buttons only (any-type query timed out in the lyrics view)\n- UI tests: tap the visible element when an id exists twice; video as its own artifact\n- UI tests: close buttons of lyrics/queue/menu overlays get identifiers\n- UI tests: local test tone instead of YouTube stream (CI IPs get a bot check), artist back button id; crossfade analysis: continuous clock, instance role swap, pause handling\n- Equalizer: preset chips wrap instead of being cut off at the column edge\n- Crossfade: equal power through mpv's cubic volume curve (measured -6 dB dip); test fixes: cleanup, song tap, export names, landscape rotation\n- Docs: round 4 progress [skip ci]\n- Split playlist: genre/mood grouping from Last.fm tags (cached, API key only), tests\n- Simulator test workflow: iPad sim build, unit+UI tests, video, screenshots, crossfade measurement\n- Unit + UI tests (placeholder texts only), testable tempo/scroll/split helpers, result identifiers\n- Test hooks: accessibility identifiers, TestMode (ao=null), DEBUG crossfade harness\n- Docs: progress file for round 4 [skip ci]\n- CI: don't build/release for documentation-only pushes [skip ci]\n- Docs: round 3 finished (v0.8.3, v0.8.4)",
-          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.5/Resona.ipa",
-          "size": 28692121,
-          "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.19",
-      "versionDate": "2026-11-14T22:56:10Z",
-      "versionDescription": "- Playback error hint: refused streams recognized by their readable text too (the enum printed as validationFailed(…) fell through to the generic hint)\n- Playback (round 12): one YouTube client after the other with an error log — every attempt logged (time, song id, client, stage, HTTP status, redacted text), a client that failed for a song is skipped for it for 10 min, a stream the player can't load moves on to the next client (failed loads of a new song were ignored: the id was still pending); chain like Android plus WEB and MWEB, without the dead embedded client; Settings → About → Share error log; error banner with Retry\n- Docs: AI sync on Android",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.19/Resona.ipa",
-      "size": 29504873,
+      "version": "0.8.20",
+      "versionDate": "2026-11-15T02:29:37Z",
+      "versionDescription": "- Docs: round 12 point 2 (speakers) and the open iPad stick item\n- Docs: round 12 point 1 released as v0.8.19\n- CI: skip the AI sync speech test when macOS say writes only silence (the runner image's voice gave 0.005 s)\n- Docs: round 12 progress (playback errors), alignment table\n- Speakers: button in the bottom row between sleep timer and lyrics (same place as on Android, visible in every player style)\n- Speakers (round 12): the player's output button opens a glass sheet — current output with name, the system list (iPad, Bluetooth devices in range, AirPlay) and a hint to pair new Bluetooth devices in the iPad settings; on an external output the button shows icon + name, the mini player too",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.20/Resona.ipa",
+      "size": 29523787,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
