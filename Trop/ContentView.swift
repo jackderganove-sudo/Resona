@@ -85,6 +85,11 @@ struct ContentView: View {
                     .frame(maxHeight: .infinity, alignment: .top)
                     .zIndex(40)
 
+                // "EQ: <preset> for <device>" when the output changes (round 12).
+                OutputEqHintView()
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .zIndex(41)
+
                 if let update = updates.available, !updates.bannerDismissed, !isExpanded {
                     VStack {
                         UpdateBanner(update: update)
@@ -103,6 +108,7 @@ struct ContentView: View {
             let firstLaunch = onboarding.checkOnLaunch()
             WhatsNewCenter.shared.checkOnLaunch(isFirstLaunch: firstLaunch)
             updates.checkIfDue()
+            OutputEqualizer.shared.start()
         }
         .fullScreenCover(isPresented: $onboarding.isPresented) {
             OnboardingView()

@@ -21,6 +21,9 @@ struct EqualizerView: View {
             VStack(spacing: 20) {
                 SettingsPageTitle(title: "Equalizer")
                     .padding(.horizontal, 16)
+                // EQ per output device (round 12).
+                OutputEqHeader()
+                    .padding(.horizontal, 16)
                 VStack(spacing: 16) {
                     Toggle(isOn: $settings.equalizerEnabled) {
                         Text(LocalizedStringKey(settings.equalizerEnabled ? "Equalizer On" : "Equalizer Off"))
@@ -49,6 +52,18 @@ struct EqualizerView: View {
         .onChange(of: settings.equalizerEnabled) { _, _ in
             PlayerController.shared.applyPlaybackSettings()
         }
+        // Remember every change for the current output (or for all devices).
+        .onChange(of: settings.equalizerEnabled) { _, _ in recordIfEdited() }
+        .onChange(of: settings.equalizerPresetID) { _, _ in recordIfEdited() }
+        .onChange(of: dragIndex) { _, index in if index == nil { recordIfEdited() } }
+    }
+
+    /// Changes made by a device switch are not edits (they equal what the device resolves to).
+    private func recordIfEdited() {
+        let eq = OutputEqualizer.shared
+        let now = OutputEqualizer.currentSnapshot()
+        guard now != OutputEqRules.resolve(eq.state, key: eq.key) else { return }
+        eq.recordEdit()
     }
 
     /// Presets as chips that wrap onto further lines — a horizontal strip

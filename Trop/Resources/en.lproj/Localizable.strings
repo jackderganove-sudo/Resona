@@ -902,3 +902,13 @@
 "s" = "s";
 "subscribers" = "subscribers";
 "“%@” wasn't found on YouTube Music." = "“%@” wasn't found on YouTube Music.";
+
+/* EQ per output device (round 12) */
+"Custom" = "Custom";
+"EQ: %1$@ for %2$@" = "EQ: %1$@ for %2$@";
+"Applies to: %@" = "Applies to: %@";
+"All devices" = "All devices";
+"Own EQ for this device" = "Own EQ for this device";
+"Default EQ – changes apply to this device only" = "Default EQ – changes apply to this device only";
+"Same for all devices" = "Same for all devices";
+"Use default EQ" = "Use default EQ";

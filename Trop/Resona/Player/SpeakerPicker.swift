@@ -95,11 +95,13 @@ final class AudioOutputMonitor {
     }
 
     func refresh() {
-        guard let port = AVAudioSession.sharedInstance().currentRoute.outputs.first else {
+        if let port = AVAudioSession.sharedInstance().currentRoute.outputs.first {
+            current = AudioOutput(kind: AudioOutput.kind(forPortType: port.portType.rawValue), name: port.portName)
+        } else {
             current = .builtInSpeaker
-            return
         }
-        current = AudioOutput(kind: AudioOutput.kind(forPortType: port.portType.rawValue), name: port.portName)
+        // EQ per output device (round 12).
+        OutputEqualizer.shared.outputChanged(current)
     }
 
     /// Route detection costs battery: only while the sheet is visible.
