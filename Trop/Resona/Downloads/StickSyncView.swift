@@ -9,6 +9,7 @@
 
 import GRDB
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct StickSyncView: View {
     @Environment(\.m3) private var m3
