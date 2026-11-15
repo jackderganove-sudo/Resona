@@ -19,6 +19,15 @@
       "screenshots": [],
       "versions": [
         {
+          "version": "0.8.21",
+          "buildVersion": "79",
+          "date": "2026-11-15T11:39:42Z",
+          "localizedDescription": "- UI test test1Portrait: drop menu opened with retries (button or menu item), jump checked as two jumps landing on the same spot instead of 'moved by more than 4 s', leftover menu dismissed before the lyrics pill, lyrics pill tapped again when the player is still in front; live suggestions depend on YouTube answering the runner and are only noted\n- AI sync on the iPad like Android (round 12): CTC forced alignment (wav2vec2-base-960h int8, ONNX Runtime) is the default when the lyrics are known and Latin script; WhisperKit for lyrics from audio, non-Latin lyrics and as fallback; same aligner and calibration; synthetic tests shared with Android incl. German placeholder lyrics\n- Docs: round 11 closing summary with open items",
+          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.21/Resona.ipa",
+          "size": 36737445,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.8.20",
           "buildVersion": "78",
           "date": "2026-11-15T02:29:37Z",
@@ -143,22 +152,13 @@
           "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.7/Resona.ipa",
           "size": 28750021,
           "minOSVersion": "18.0"
-        },
-        {
-          "version": "0.8.6",
-          "buildVersion": "64",
-          "date": "2026-10-28T14:24:38Z",
-          "localizedDescription": "- UI tests: close lyrics that are already open, wait for the close button, safe attachment names; export: always .png, rotation errors don't abort\n- Docs: round 5 progress\n- AI sync: ffmpeg with CA bundle/user agent/timeout for streams, no-speech window skipping off (singing), whole-song diagnostics per 30 s; end-to-end test on synthetic say speech\n- Crossfade (device): clean stop of the faded instance (volume 0, drain, pause, stop), re-activate the audio session that mpv's iOS audio output deactivates on shutdown, restart the active AudioUnit only if it stalled, watchdog with ao-reload, audio state logs\n- Slowed lyrics: tempo diagnosis (logged, shown under 'Lyrics from'), original length also via title + lyrics match (re-uploads credited to the channel), hand-picked/refetched provider lyrics get the check too, cache v3; fix inverted slowed/sped-up note\n- Lyrics: swipe down on handle/header to close (follows the finger, 25 % or flick, springs back); UI test for it\n- Lyrics: translation, background vocals and romanization wrap fully (were truncated with …)\n- UI tests: no automatic update check (banner covered the account menu)\n- Full-screen lyrics: controls always visible, auto-hide as opt-in setting; title and artist left-aligned\n- UI tests: lyrics close diagnostics (app log + per-attempt screenshots), wake landscape chrome; test.yml inputs for single tests / skipping crossfade",
-          "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.6/Resona.ipa",
-          "size": 28731675,
-          "minOSVersion": "18.0"
         }
       ],
-      "version": "0.8.20",
-      "versionDate": "2026-11-15T02:29:37Z",
-      "versionDescription": "- Docs: round 12 point 2 (speakers) and the open iPad stick item\n- Docs: round 12 point 1 released as v0.8.19\n- CI: skip the AI sync speech test when macOS say writes only silence (the runner image's voice gave 0.005 s)\n- Docs: round 12 progress (playback errors), alignment table\n- Speakers: button in the bottom row between sleep timer and lyrics (same place as on Android, visible in every player style)\n- Speakers (round 12): the player's output button opens a glass sheet — current output with name, the system list (iPad, Bluetooth devices in range, AirPlay) and a hint to pair new Bluetooth devices in the iPad settings; on an external output the button shows icon + name, the mini player too",
-      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.20/Resona.ipa",
-      "size": 29523787,
+      "version": "0.8.21",
+      "versionDate": "2026-11-15T11:39:42Z",
+      "versionDescription": "- UI test test1Portrait: drop menu opened with retries (button or menu item), jump checked as two jumps landing on the same spot instead of 'moved by more than 4 s', leftover menu dismissed before the lyrics pill, lyrics pill tapped again when the player is still in front; live suggestions depend on YouTube answering the runner and are only noted\n- AI sync on the iPad like Android (round 12): CTC forced alignment (wav2vec2-base-960h int8, ONNX Runtime) is the default when the lyrics are known and Latin script; WhisperKit for lyrics from audio, non-Latin lyrics and as fallback; same aligner and calibration; synthetic tests shared with Android incl. German placeholder lyrics\n- Docs: round 11 closing summary with open items",
+      "downloadURL": "https://github.com/jackderganove-sudo/Resona/releases/download/v0.8.21/Resona.ipa",
+      "size": 36737445,
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
